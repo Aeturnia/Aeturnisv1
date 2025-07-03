@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+coverage/
+*.min.js
+*.bundle.js
+.env*
+*.log
+package-lock.json
+.next/
+.nuxt/
+.vite/

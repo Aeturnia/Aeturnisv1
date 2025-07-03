@@ -1,0 +1,17 @@
+{
+  "packages/shared/src/**/*.{ts}": [
+    "cd packages/shared && npm run lint:fix",
+    "cd packages/shared && npm run format"
+  ],
+  "packages/server/src/**/*.{ts}": [
+    "cd packages/server && npm run lint:fix",
+    "cd packages/server && npm run format"
+  ],
+  "packages/client/src/**/*.{ts,tsx}": [
+    "cd packages/client && npm run lint:fix",
+    "cd packages/client && npm run format"
+  ],
+  "*.{js,ts,tsx,json,md}": [
+    "prettier --write"
+  ]
+}
