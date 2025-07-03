@@ -1,27 +1,54 @@
-import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { GameProvider } from './stores/gameStore';
+import { GameProvider, useGame } from './stores/gameStore';
+import { GameEngine } from './components/GameEngine';
+import { GameUI } from './components/GameUI';
 import './App.css';
 
 const queryClient = new QueryClient();
+
+function GameContent() {
+  const game = useGame();
+  const { isConnected, currentCharacter } = game;
+
+  return (
+    <div className="app">
+      <header>
+        <h1>Aeturnis Online</h1>
+        <div className="connection-status">
+          Status: {isConnected ? 'Connected' : 'Disconnected'}
+        </div>
+      </header>
+      
+      <main className="game-container">
+        <GameEngine />
+        <GameUI />
+        
+        <div className="game-info">
+          <h3>Character Info</h3>
+          {currentCharacter ? (
+            <div>
+              <p>Name: {currentCharacter.name}</p>
+              <p>Level: {currentCharacter.level}</p>
+              <p>Race: {currentCharacter.race}</p>
+            </div>
+          ) : (
+            <p>No character selected</p>
+          )}
+        </div>
+      </main>
+      
+      <footer>
+        <p>MMORPG Development Environment Ready</p>
+      </footer>
+    </div>
+  );
+}
 
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <GameProvider>
-        <div className="app">
-          <header className="app-header">
-            <h1>Aeturnis Online</h1>
-            <p>Game client initialized</p>
-          </header>
-          <main className="app-main">
-            <div className="game-container">
-              <canvas id="game-canvas" width="800" height="600">
-                Your browser does not support the HTML5 canvas element.
-              </canvas>
-            </div>
-          </main>
-        </div>
+        <GameContent />
       </GameProvider>
     </QueryClientProvider>
   );

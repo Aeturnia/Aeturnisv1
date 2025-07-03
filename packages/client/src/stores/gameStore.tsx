@@ -1,32 +1,45 @@
 import { create } from 'zustand';
 import { ReactNode, createContext, useContext } from 'react';
 
+interface Character {
+  name: string;
+  level: number;
+  race: string;
+  health: number;
+  maxHealth: number;
+  mana: number;
+  maxMana: number;
+}
+
 interface GameState {
   isConnected: boolean;
-  currentCharacter: any | null;
+  currentCharacter: Character | null;
   setConnected: (connected: boolean) => void;
-  setCharacter: (character: any) => void;
+  setCharacter: (character: Character) => void;
 }
 
 const useGameStore = create<GameState>((set) => ({
   isConnected: false,
   currentCharacter: null,
-  setConnected: (connected) => set({ isConnected: connected }),
-  setCharacter: (character) => set({ currentCharacter: character })
+  setConnected: (connected: boolean) => set({ isConnected: connected }),
+  setCharacter: (character: Character) => set({ currentCharacter: character })
 }));
 
-const GameContext = createContext<ReturnType<typeof useGameStore> | null>(null);
+const GameContext = createContext<GameState | null>(null);
 
 export function GameProvider({ children }: { children: ReactNode }) {
+  const store = useGameStore();
   return (
-    <GameContext.Provider value={useGameStore()}>
+    <GameContext.Provider value={store}>
       {children}
     </GameContext.Provider>
   );
 }
 
-export const useGame = () => {
+export const useGame = (): GameState => {
   const context = useContext(GameContext);
-  if (!context) throw new Error('useGame must be used within GameProvider');
+  if (!context) {
+    throw new Error('useGame must be used within GameProvider');
+  }
   return context;
 };

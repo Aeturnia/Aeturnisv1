@@ -34,7 +34,8 @@ export function generateId(): string {
  * Validate character name
  */
 export function isValidCharacterName(name: string): boolean {
-  return /^[a-zA-Z][a-zA-Z0-9_-]{2,19}$/.test(name);
+  const namePattern = /^[a-zA-Z][a-zA-Z0-9_]{2,15}$/;
+  return namePattern.test(name);
 }
 
 /**
