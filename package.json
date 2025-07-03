@@ -9,6 +9,26 @@
     "dev": "cd packages/server && npx ts-node src/index.ts",
     "build": "npx tsc --project packages/server/tsconfig.json",
     "test": "npx vitest run",
-    "typecheck": "npx tsc --project packages/server/tsconfig.json --noEmit"
+    "typecheck": "npx tsc --project packages/server/tsconfig.json --noEmit",
+    "build:all": "npm run build:shared && npm run build:server && npm run build:client",
+    "build:shared": "cd packages/shared && npm run build",
+    "build:server": "cd packages/server && npm run build",
+    "build:client": "cd packages/client && npm run build",
+    "test:all": "npm run test:shared && npm run test:server && npm run test:client",
+    "test:shared": "cd packages/shared && npm run test",
+    "test:server": "cd packages/server && npm run test",
+    "test:client": "cd packages/client && npm run test"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.81.5",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "concurrently": "^9.2.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "socket.io-client": "^4.8.1",
+    "vite": "^6.3.5",
+    "zustand": "^5.0.6"
   }
 }
