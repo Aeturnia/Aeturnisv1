@@ -1,44 +1,86 @@
-# Completely Empty Development Environment - Replit.md
+# Aeturnis Online TypeScript Monorepo - Replit.md
 
 ## Overview
 
-This is a completely empty development environment. All files, directories, and dependencies have been removed per user request. Only the basic Replit configuration files remain.
+This is a production-ready TypeScript monorepo using Yarn workspaces with comprehensive tooling for code quality, testing, and CI/CD. The project is set up according to enterprise-grade development standards with proper linting, formatting, testing, and pre-commit hooks.
 
-## Current State
+## Project Architecture
 
-- **Project Files**: All removed
-- **Dependencies**: All removed (no node_modules, no package.json)
-- **Source Code**: All removed (no client, server, or shared directories)
-- **Configuration**: Only basic Replit configuration files remain
+### Monorepo Structure
+- **Root**: Yarn workspace configuration with shared tooling
+- **Packages**: Individual workspace packages under `packages/`
+- **Server Package**: `@aeturnis/server` - Express.js TypeScript server
+- **Testing**: Vitest with coverage reporting and thresholds
+- **Linting**: ESLint with TypeScript and Prettier integration
+- **Git Hooks**: Husky for pre-commit code quality checks
 
-## What Was Removed
+### Current State
 
-### Deleted Files and Directories
-- All source code files (client/, server/, shared/)
-- All configuration files (package.json, tsconfig.json, vite.config.ts, etc.)
-- All dependencies (node_modules/)
-- All build artifacts and generated files
+The monorepo includes:
+- **TypeScript Configuration**: Shared base config with package-specific extensions
+- **Testing Setup**: Vitest with 80% coverage thresholds
+- **Code Quality**: ESLint v9 with TypeScript and Prettier
+- **CI/CD**: GitHub Actions workflow for automated testing
+- **Pre-commit Hooks**: Husky integration for code quality gates
 
-### Deleted Dependencies
-- React ecosystem and TypeScript
-- Express.js backend framework
-- Database configurations and ORM
-- UI libraries and styling frameworks
-- All game development libraries and utilities
+## Technology Stack
 
-## Current Environment
+### Core Dependencies
+- **TypeScript**: Latest stable version for type safety
+- **Yarn Workspaces**: Package management and monorepo organization
+- **Vitest**: Modern testing framework with native TypeScript support
+- **ESLint**: Code linting with TypeScript rules
+- **Prettier**: Code formatting and style consistency
+- **Husky**: Git hooks for pre-commit quality checks
 
-The environment is now completely empty and ready for any type of development project. The user has full control to build whatever they want from scratch.
+### Development Dependencies
+- **Express**: Web framework for server package
+- **ts-node**: TypeScript execution for development
+- **@types/node & @types/express**: TypeScript definitions
+
+## Key Features
+
+### Testing Framework
+- Vitest with native TypeScript support
+- Coverage reporting with v8 provider
+- 80% minimum coverage thresholds
+- Watch mode for development
+
+### Code Quality Pipeline
+- ESLint v9 with modern flat configuration
+- TypeScript-aware linting rules
+- Prettier integration for consistent formatting
+- Pre-commit hooks prevent bad commits
+
+### Workspace Configuration
+- Yarn workspace with proper package isolation
+- Shared TypeScript configuration inheritance
+- Cross-package script orchestration
+- Individual package build and test capabilities
+
+## Available Scripts
+
+- `yarn dev` - Start development server (server package)
+- `yarn build` - Build all workspace packages
+- `yarn test` - Run all tests
+- `yarn test:coverage` - Run tests with coverage report
+- `yarn lint` - Lint all TypeScript files
+- `yarn format` - Format all code with Prettier
+- `yarn typecheck` - Run TypeScript type checking
 
 ## Recent Changes
 
 ### July 03, 2025
-- Removed all project files and directories
-- Deleted all dependencies and node_modules
-- Cleaned up all configuration files
-- Created completely empty development environment per user request
+- Initialized TypeScript monorepo with Yarn workspaces
+- Created production-ready server package with Express
+- Set up comprehensive testing with Vitest and coverage
+- Configured ESLint v9 with modern flat configuration
+- Added Prettier for consistent code formatting
+- Implemented Husky pre-commit hooks for code quality
+- Created GitHub Actions CI pipeline
+- Added comprehensive documentation and README
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
-User requested: Completely empty development environment with all files and dependencies deleted.
+User requested: Production-ready TypeScript monorepo with comprehensive tooling.
