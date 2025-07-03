@@ -29,10 +29,24 @@ export interface GameMessage {
   sender?: string;
 }
 
+export interface GameUpdateData {
+  type: 'status' | 'world' | 'player' | 'system';
+  payload: Record<string, unknown>;
+  timestamp: number;
+}
+
+export interface CombatData {
+  combatId: string;
+  participants: string[];
+  type: 'player-vs-player' | 'player-vs-monster' | 'monster-vs-monster';
+  location: Position;
+  startTime: number;
+}
+
 export interface ServerToClientEvents {
-  gameUpdate: (data: any) => void;
+  gameUpdate: (data: GameUpdateData) => void;
   characterMoved: (character: Character) => void;
-  combatStarted: (data: any) => void;
+  combatStarted: (data: CombatData) => void;
   chatMessage: (message: GameMessage) => void;
 }
 
