@@ -1,115 +1,117 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
+import { createApp } from './app';
+import { logger } from './utils/logger';
+import { checkDatabaseConnection } from './database/config';
 import { config } from 'dotenv';
-// Authentication system
-import authRoutes from './routes/auth.routes';
-import { errorHandler } from './middleware/errorHandler';
-import './database'; // Initialize database connection
-// import './cache/redis'; // Initialize Redis connection - disabled until Redis setup
+import os from 'os';
 
 // Load environment variables
 config();
 
+// Environment validation
+const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'JWT_REFRESH_SECRET'];
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+
+if (missingEnvVars.length > 0) {
+  logger.error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
+  process.exit(1);
+}
+
+// Export greet function for backward compatibility
 export const greet = (name: string): string => {
   return `Hello, ${name}! Welcome to Aeturnis Online.`;
 };
 
-// Create Express application
-const createServer = () => {
-  const app = express();
+// Startup function
+const startServer = async () => {
+  try {
+    // Initialize database connection
+    logger.info('Initializing database connection...');
+    const dbConnected = await checkDatabaseConnection();
+    if (!dbConnected) {
+      logger.error('Failed to connect to database');
+      process.exit(1);
+    }
+    logger.info('Database connection established');
 
-  // Security middleware
-  app.use(helmet());
-  
-  // CORS configuration
-  app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
-      ? ['https://your-domain.com'] 
-      : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'],
-    credentials: true,
-  }));
-
-  // Body parsing middleware
-  app.use(express.json({ limit: '10mb' }));
-  app.use(express.urlencoded({ extended: true }));
-
-  // Request logging middleware
-  app.use((req, _res, next) => {
-    console.log(`📩 ${req.method} ${req.url} from ${req.ip}`);
-    next();
-  });
-
-  // Health check endpoints
-  app.get('/', (_req, res) => {
-    res.json({
-      message: greet('World'),
-      status: 'Server is running',
-      timestamp: new Date().toISOString(),
-      version: '1.0.0'
+    // Create Express application
+    const app = createApp();
+    
+    // Configure server
+    const PORT = Number(process.env.PORT) || 5000;
+    const HOST = '0.0.0.0';
+    
+    // Start server
+    const server = app.listen(PORT, HOST, () => {
+      logger.info('Server started successfully', {
+        port: PORT,
+        host: HOST,
+        environment: process.env.NODE_ENV || 'development',
+        nodeVersion: process.version,
+        platform: os.platform(),
+        cpuCount: os.cpus().length,
+        totalMemory: `${Math.round(os.totalmem() / 1024 / 1024 / 1024)}GB`,
+      });
+      
+      console.log(`🚀 Aeturnis Online server running on http://${HOST}:${PORT}`);
+      console.log(`📊 Health check: http://localhost:${PORT}/health`);
+      console.log(`🔍 API status: http://localhost:${PORT}/api/status`);
+      console.log(`🔐 Auth endpoints: http://localhost:${PORT}/api/v1/auth`);
+      console.log(`📝 Registration: POST http://localhost:${PORT}/api/v1/auth/register`);
+      console.log(`🔑 Login: POST http://localhost:${PORT}/api/v1/auth/login`);
     });
-  });
 
-  app.get('/health', (_req, res) => {
-    res.json({
-      status: 'healthy',
-      uptime: process.uptime(),
-      timestamp: new Date().toISOString(),
-      services: {
-        database: 'ready',
-        redis: 'ready',
-      }
+    // Graceful shutdown handlers
+    const gracefulShutdown = async (signal: string) => {
+      logger.info(`${signal} received, shutting down gracefully...`);
+      
+      server.close(async () => {
+        logger.info('HTTP server closed');
+        
+        try {
+          // Close database connections
+          const { closeDatabaseConnection } = await import('./database/config');
+          await closeDatabaseConnection();
+          logger.info('Database connections closed');
+          
+          logger.info('Graceful shutdown completed');
+          process.exit(0);
+        } catch (error) {
+          logger.error('Error during graceful shutdown:', error);
+          process.exit(1);
+        }
+      });
+      
+      // Force exit after 10 seconds
+      setTimeout(() => {
+        logger.error('Forced shutdown after timeout');
+        process.exit(1);
+      }, 10000);
+    };
+
+    // Handle shutdown signals
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    
+    // Handle uncaught exceptions
+    process.on('uncaughtException', (error) => {
+      logger.error('Uncaught exception:', error);
+      gracefulShutdown('UNCAUGHT_EXCEPTION');
     });
-  });
-
-  app.get('/api/status', (_req, res) => {
-    res.json({
-      server: 'Aeturnis Online',
-      status: 'operational',
-      environment: process.env.NODE_ENV || 'development',
-      features: ['authentication-ready', 'rate-limiting-ready', 'redis-cache-ready']
+    
+    process.on('unhandledRejection', (reason, promise) => {
+      logger.error('Unhandled rejection at:', promise, 'reason:', reason);
+      gracefulShutdown('UNHANDLED_REJECTION');
     });
-  });
 
-  // API routes - Authentication enabled
-  app.use('/api/auth', authRoutes);
-
-  // 404 handler
-  app.use('*', (req, res) => {
-    res.status(404).json({
-      success: false,
-      error: 'Not Found',
-      path: req.originalUrl
-    });
-  });
-
-  // Error handling middleware
-  app.use(errorHandler);
-
-  return app;
+  } catch (error) {
+    logger.error('Failed to start server:', error);
+    process.exit(1);
+  }
 };
 
-// Start server
+// Start server if this is the main module
 if (require.main === module) {
-  const PORT = process.env.PORT || 5000;
-  const app = createServer();
-  
-  const server = app.listen(Number(PORT), '0.0.0.0', () => {
-    console.log(`🚀 Aeturnis Online server running on http://0.0.0.0:${PORT}`);
-    console.log(`📊 Health check: http://localhost:${PORT}/health`);
-    console.log(`🔍 API status: http://localhost:${PORT}/api/status`);
-    console.log(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth`);
-    console.log(`📝 Registration: POST http://localhost:${PORT}/api/auth/register`);
-    console.log(`🔑 Login: POST http://localhost:${PORT}/api/auth/login`);
-  });
-
-  // Graceful shutdown
-  process.on('SIGTERM', () => {
-    console.log('SIGTERM received, shutting down gracefully');
-    server.close(() => {
-      console.log('Server closed');
-    });
-  });
+  startServer();
 }
 
-export default createServer;
+export default createApp;
