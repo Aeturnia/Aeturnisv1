@@ -1,0 +1,961 @@
+Run npm run test:coverage
+
+> @aeturnis/monorepo@1.0.0 test:coverage
+> npm run test:coverage --workspaces --if-present
+
+
+> @aeturnis/client@1.0.0 test:coverage
+> vitest run --coverage
+
+
+ RUN  v3.2.4 /home/runner/work/Aeturnisv1/Aeturnisv1/packages/client
+      Coverage enabled with v8
+
+ ✓ src/__tests__/App.test.tsx (8 tests) 296ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  04:54:38
+   Duration  1.57s (transform 93ms, setup 221ms, collect 114ms, tests 296ms, environment 484ms, prepare 85ms)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   12.34 |       25 |      30 |   12.34 |                   
+ client            |       0 |        0 |       0 |       0 |                   
+  .eslintrc.js     |       0 |        0 |       0 |       0 | 1-39              
+  vite.config.ts   |       0 |        0 |       0 |       0 | 1-40              
+  vitest.config.ts |       0 |        0 |       0 |       0 | 1-31              
+ client/src        |   73.58 |       40 |   66.66 |   73.58 |                   
+  App.tsx          |   88.63 |       50 |     100 |   88.63 | 29-33             
+  main.tsx         |       0 |        0 |       0 |       0 | 1-10              
+ ...src/components |       0 |        0 |       0 |       0 |                   
+  GameEngine.tsx   |       0 |        0 |       0 |       0 | 1-101             
+  GameUI.tsx       |       0 |        0 |       0 |       0 | 1-66              
+ client/src/stores |       0 |        0 |       0 |       0 |                   
+  gameStore.tsx    |       0 |        0 |       0 |       0 | 1-45              
+ client/src/types  |       0 |        0 |       0 |       0 |                   
+  css.d.ts         |       0 |        0 |       0 |       0 |                   
+-------------------|---------|----------|---------|---------|-------------------
+
+> @aeturnis/server@1.0.0 test:coverage
+> vitest run --coverage
+
+
+ RUN  v3.2.4 /home/runner/work/Aeturnisv1/Aeturnisv1/packages/server
+      Coverage enabled with v8
+
+ ❯ src/__tests__/auth.endpoints.test.ts (5 tests | 5 failed) 110ms
+   × Authentication API Endpoints > should register a new user successfully 91ms
+     → fetch failed
+   × Authentication API Endpoints > should login successfully 7ms
+     → fetch failed
+   × Authentication API Endpoints > should handle validation errors 6ms
+     → fetch failed
+   × Authentication API Endpoints > should handle unauthorized access 3ms
+     → fetch failed
+   × Authentication API Endpoints > should return server health status 2ms
+     → fetch failed
+ ❯ src/services/AuthService.test.ts (24 tests | 12 failed) 96ms
+   × AuthService > User Registration > should register a new user successfully 39ms
+     → Cannot read properties of undefined (reading 'rows')
+   × AuthService > User Registration > should throw ConflictError if email already exists 8ms
+     → expected error to be instance of ConflictError
+   × AuthService > User Registration > should throw ConflictError if username already exists 2ms
+     → expected error to be instance of ConflictError
+   ✓ AuthService > User Registration > should throw ValidationError for invalid email format 5ms
+   ✓ AuthService > User Registration > should throw ValidationError for weak password 1ms
+   ✓ AuthService > User Registration > should throw ValidationError for invalid username 1ms
+   × AuthService > User Login > should login successfully with email 2ms
+     → Cannot read properties of undefined (reading 'rows')
+   × AuthService > User Login > should login successfully with username 1ms
+     → Cannot read properties of undefined (reading 'rows')
+   × AuthService > User Login > should throw UnauthorizedError for invalid credentials 1ms
+     → expected error to be instance of UnauthorizedError
+   ✓ AuthService > User Login > should throw ValidationError for invalid input 1ms
+   × AuthService > Token Refresh > should refresh tokens successfully 2ms
+     → Invalid refresh token
+   ✓ AuthService > Token Refresh > should throw UnauthorizedError for invalid refresh token 1ms
+   ✓ AuthService > Token Refresh > should throw UnauthorizedError for expired token 1ms
+   ✓ AuthService > Token Refresh > should throw UnauthorizedError for token reuse 1ms
+   × AuthService > Token Refresh > should invalidate old refresh token after successful refresh 1ms
+     → Invalid refresh token
+   ✓ AuthService > Token Verification > should verify valid access token 8ms
+   ✓ AuthService > Token Verification > should throw error for invalid token 1ms
+   ✓ AuthService > Token Verification > should throw error for expired token 2ms
+   ✓ AuthService > Token Verification > should throw error for malformed token 4ms
+   × AuthService > Logout > should logout successfully 4ms
+     → expected "spy" to be called with arguments: [ StringContaining "refresh_token:" ]
+
+Number of calls: 0
+
+   ✓ AuthService > Logout > should handle logout with invalid token gracefully 2ms
+   × AuthService > Security Edge Cases > should handle SQL injection attempts in email 2ms
+     → expected error to be instance of ValidationError
+   × AuthService > Security Edge Cases > should normalize email addresses to lowercase 1ms
+     → Cannot read properties of undefined (reading 'rows')
+   × AuthService > Security Edge Cases > should not include password hash in response 1ms
+     → Cannot read properties of undefined (reading 'rows')
+ ✓ src/__tests__/index.test.ts (5 tests) 5ms
+ ✓ src/index.test.ts (2 tests) 3ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 17 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/auth.endpoints.test.ts > Authentication API Endpoints > should register a new user successfully
+TypeError: fetch failed
+ ❯ src/__tests__/auth.endpoints.test.ts:14:22
+     12| 
+     13|   it('should register a new user successfully', async () => {
+     14|     const response = await fetch(`${baseUrl}/api/auth/register`, {
+       |                      ^
+     15|       method: 'POST',
+     16|       headers: {
+
+{
+  stack: 'AggregateError: \n' +
+    '    at internalConnectMultiple (node:net:1122:18)\n' +
+    '    at afterConnectMultiple (node:net:1689:7)',
+  errors: [
+    {
+      stack: 'Error: connect ECONNREFUSED ::1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED ::1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED 127.0.0.1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    }
+  ],
+  code: 'ECONNREFUSED',
+  message: '',
+  constructor: 'Function<AggregateError>',
+  name: 'Caused by: AggregateError',
+  toString: 'Function<toString>',
+  stacks: []
+}
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { errors: [ { stack: 'Error: connect ECONNREFUSED ::1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED ::1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '::1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' }, { stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED 127.0.0.1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' } ], code: 'ECONNREFUSED' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/17]⎯
+
+ FAIL  src/__tests__/auth.endpoints.test.ts > Authentication API Endpoints > should login successfully
+TypeError: fetch failed
+ ❯ src/__tests__/auth.endpoints.test.ts:35:22
+     33| 
+     34|   it('should login successfully', async () => {
+     35|     const response = await fetch(`${baseUrl}/api/auth/login`, {
+       |                      ^
+     36|       method: 'POST',
+     37|       headers: {
+
+{
+  stack: 'AggregateError: \n' +
+    '    at internalConnectMultiple (node:net:1122:18)\n' +
+    '    at afterConnectMultiple (node:net:1689:7)',
+  errors: [
+    {
+      stack: 'Error: connect ECONNREFUSED ::1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED ::1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED 127.0.0.1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    }
+  ],
+  code: 'ECONNREFUSED',
+  message: '',
+  constructor: 'Function<AggregateError>',
+  name: 'Caused by: AggregateError',
+  toString: 'Function<toString>',
+  stacks: []
+}
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { errors: [ { stack: 'Error: connect ECONNREFUSED ::1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED ::1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '::1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' }, { stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED 127.0.0.1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' } ], code: 'ECONNREFUSED' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/17]⎯
+
+ FAIL  src/__tests__/auth.endpoints.test.ts > Authentication API Endpoints > should handle validation errors
+TypeError: fetch failed
+ ❯ src/__tests__/auth.endpoints.test.ts:56:22
+     54| 
+     55|   it('should handle validation errors', async () => {
+     56|     const response = await fetch(`${baseUrl}/api/auth/register`, {
+       |                      ^
+     57|       method: 'POST',
+     58|       headers: {
+
+{
+  stack: 'AggregateError: \n' +
+    '    at internalConnectMultiple (node:net:1122:18)\n' +
+    '    at afterConnectMultiple (node:net:1689:7)',
+  errors: [
+    {
+      stack: 'Error: connect ECONNREFUSED ::1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED ::1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED 127.0.0.1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    }
+  ],
+  code: 'ECONNREFUSED',
+  message: '',
+  constructor: 'Function<AggregateError>',
+  name: 'Caused by: AggregateError',
+  toString: 'Function<toString>',
+  stacks: []
+}
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { errors: [ { stack: 'Error: connect ECONNREFUSED ::1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED ::1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '::1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' }, { stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED 127.0.0.1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' } ], code: 'ECONNREFUSED' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/17]⎯
+
+ FAIL  src/__tests__/auth.endpoints.test.ts > Authentication API Endpoints > should handle unauthorized access
+TypeError: fetch failed
+ ❯ src/__tests__/auth.endpoints.test.ts:75:22
+     73| 
+     74|   it('should handle unauthorized access', async () => {
+     75|     const response = await fetch(`${baseUrl}/api/auth/login`, {
+       |                      ^
+     76|       method: 'POST',
+     77|       headers: {
+
+{
+  stack: 'AggregateError: \n' +
+    '    at internalConnectMultiple (node:net:1122:18)\n' +
+    '    at afterConnectMultiple (node:net:1689:7)',
+  errors: [
+    {
+      stack: 'Error: connect ECONNREFUSED ::1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED ::1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED 127.0.0.1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    }
+  ],
+  code: 'ECONNREFUSED',
+  message: '',
+  constructor: 'Function<AggregateError>',
+  name: 'Caused by: AggregateError',
+  toString: 'Function<toString>',
+  stacks: []
+}
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { errors: [ { stack: 'Error: connect ECONNREFUSED ::1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED ::1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '::1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' }, { stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED 127.0.0.1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' } ], code: 'ECONNREFUSED' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/17]⎯
+
+ FAIL  src/__tests__/auth.endpoints.test.ts > Authentication API Endpoints > should return server health status
+TypeError: fetch failed
+ ❯ src/__tests__/auth.endpoints.test.ts:93:22
+     91| 
+     92|   it('should return server health status', async () => {
+     93|     const response = await fetch(`${baseUrl}/health`);
+       |                      ^
+     94|     
+     95|     expect(response.status).toBe(200);
+
+{
+  stack: 'AggregateError: \n' +
+    '    at internalConnectMultiple (node:net:1122:18)\n' +
+    '    at afterConnectMultiple (node:net:1689:7)',
+  errors: [
+    {
+      stack: 'Error: connect ECONNREFUSED ::1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED ::1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED 127.0.0.1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    }
+  ],
+  code: 'ECONNREFUSED',
+  message: '',
+  constructor: 'Function<AggregateError>',
+  name: 'Caused by: AggregateError',
+  toString: 'Function<toString>',
+  stacks: []
+}
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { errors: [ { stack: 'Error: connect ECONNREFUSED ::1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED ::1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '::1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' }, { stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED 127.0.0.1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' } ], code: 'ECONNREFUSED' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/17]⎯
+
+ FAIL  src/services/AuthService.test.ts > AuthService > User Registration > should register a new user successfully
+TypeError: Cannot read properties of undefined (reading 'rows')
+ ❯ AuthService.register src/services/AuthService.ts:85:22
+     83|     );
+     84| 
+     85|     if (existingUser.rows.length > 0) {
+       |                      ^
+     86|       throw new ConflictError('Email or username already exists');
+     87|     }
+ ❯ src/services/AuthService.test.ts:53:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/17]⎯
+
+ FAIL  src/services/AuthService.test.ts > AuthService > User Registration > should throw ConflictError if email already exists
+AssertionError: expected error to be instance of ConflictError
+
+- Expected: 
+[Function ConflictError]
+
++ Received: 
+TypeError {
+  "message": "Cannot read properties of undefined (reading 'rows')",
+}
+
+ ❯ src/services/AuthService.test.ts:68:7
+     66|       mockDb.query.mockResolvedValueOnce({ rows: [mockUser] });
+     67| 
+     68|       await expect(
+       |       ^
+     69|         authService.register({
+     70|           email: 'test@example.com',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/17]⎯
+
+ FAIL  src/services/AuthService.test.ts > AuthService > User Registration > should throw ConflictError if username already exists
+AssertionError: expected error to be instance of ConflictError
+
+- Expected: 
+[Function ConflictError]
+
++ Received: 
+TypeError {
+  "message": "Cannot read properties of undefined (reading 'rows')",
+}
+
+ ❯ src/services/AuthService.test.ts:82:7
+     80|         .mockResolvedValueOnce({ rows: [mockUser] }); // Username chec…
+     81| 
+     82|       await expect(
+       |       ^
+     83|         authService.register({
+     84|           email: 'test@example.com',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/17]⎯
+
+ FAIL  src/services/AuthService.test.ts > AuthService > User Login > should login successfully with email
+TypeError: Cannot read properties of undefined (reading 'rows')
+ ❯ AuthService.login src/services/AuthService.ts:133:16
+    131|     );
+    132| 
+    133|     if (result.rows.length === 0) {
+       |                ^
+    134|       throw new UnauthorizedError('Invalid credentials');
+    135|     }
+ ❯ src/services/AuthService.test.ts:126:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/17]⎯
+
+ FAIL  src/services/AuthService.test.ts > AuthService > User Login > should login successfully with username
+TypeError: Cannot read properties of undefined (reading 'rows')
+ ❯ AuthService.login src/services/AuthService.ts:133:16
+    131|     );
+    132| 
+    133|     if (result.rows.length === 0) {
+       |                ^
+    134|       throw new UnauthorizedError('Invalid credentials');
+    135|     }
+ ❯ src/services/AuthService.test.ts:139:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/17]⎯
+
+ FAIL  src/services/AuthService.test.ts > AuthService > User Login > should throw UnauthorizedError for invalid credentials
+AssertionError: expected error to be instance of UnauthorizedError
+
+- Expected: 
+[Function UnauthorizedError]
+
++ Received: 
+TypeError {
+  "message": "Cannot read properties of undefined (reading 'rows')",
+}
+
+ ❯ src/services/AuthService.test.ts:152:7
+    150|       mockDb.query.mockResolvedValueOnce({ rows: [] });
+    151| 
+    152|       await expect(
+       |       ^
+    153|         authService.login({
+    154|           emailOrUsername: 'nonexistent@example.com',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/17]⎯
+
+ FAIL  src/services/AuthService.test.ts > AuthService > Token Refresh > should refresh tokens successfully
+UnauthorizedError: Invalid refresh token
+ ❯ AuthService.refreshTokens src/services/AuthService.ts:206:15
+    204|       }
+    205|       if (error instanceof jwt.JsonWebTokenError) {
+    206|         throw new UnauthorizedError('Invalid refresh token');
+       |               ^
+    207|       }
+    208|       throw error;
+ ❯ src/services/AuthService.test.ts:178:40
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/17]⎯
+
+ FAIL  src/services/AuthService.test.ts > AuthService > Token Refresh > should invalidate old refresh token after successful refresh
+UnauthorizedError: Invalid refresh token
+ ❯ AuthService.refreshTokens src/services/AuthService.ts:206:15
+    204|       }
+    205|       if (error instanceof jwt.JsonWebTokenError) {
+    206|         throw new UnauthorizedError('Invalid refresh token');
+       |               ^
+    207|       }
+    208|       throw error;
+ ❯ src/services/AuthService.test.ts:212:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/17]⎯
+
+ FAIL  src/services/AuthService.test.ts > AuthService > Logout > should logout successfully
+AssertionError: expected "spy" to be called with arguments: [ StringContaining "refresh_token:" ]
+
+Number of calls: 0
+
+ ❯ src/services/AuthService.test.ts:259:29
+    257|       await authService.logout(mockRefreshToken);
+    258| 
+    259|       expect(mockRedis.del).toHaveBeenCalledWith(expect.stringContaini…
+       |                             ^
+    260|     });
+    261| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/17]⎯
+
+ FAIL  src/services/AuthService.test.ts > AuthService > Security Edge Cases > should handle SQL injection attempts in email
+AssertionError: expected error to be instance of ValidationError
+
+- Expected: 
+[Function ValidationError]
+
++ Received: 
+TypeError {
+  "message": "Cannot read properties of undefined (reading 'rows')",
+}
+
+ ❯ src/services/AuthService.test.ts:273:7
+    271|   describe('Security Edge Cases', () => {
+    272|     it('should handle SQL injection attempts in email', async () => {
+    273|       await expect(
+       |       ^
+    274|         authService.login({
+    275|           emailOrUsername: "'; DROP TABLE users; --",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/17]⎯
+
+ FAIL  src/services/AuthService.test.ts > AuthService > Security Edge Cases > should normalize email addresses to lowercase
+TypeError: Cannot read properties of undefined (reading 'rows')
+ ❯ AuthService.register src/services/AuthService.ts:85:22
+     83|     );
+     84| 
+     85|     if (existingUser.rows.length > 0) {
+       |                      ^
+     86|       throw new ConflictError('Email or username already exists');
+     87|     }
+ ❯ src/services/AuthService.test.ts:287:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/17]⎯
+
+ FAIL  src/services/AuthService.test.ts > AuthService > Security Edge Cases > should not include password hash in response
+TypeError: Cannot read properties of undefined (reading 'rows')
+ ❯ AuthService.register src/services/AuthService.ts:85:22
+     83|     );
+     84| 
+     85|     if (existingUser.rows.length > 0) {
+       |                      ^
+     86|       throw new ConflictError('Email or username already exists');
+     87|     }
+ ❯ src/services/AuthService.test.ts:302:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/17]⎯
+
+
+ Test Files  2 failed | 2 passed (4)
+      Tests  17 failed | 19 passed (36)
+   Start at  04:54:40
+   Duration  1.14s (transform 246ms, setup 0ms, collect 1.06s, tests 214ms, environment 1ms, prepare 439ms)
+
+
+Error: TypeError: fetch failed
+ ❯ src/__tests__/auth.endpoints.test.ts:14:22
+
+{
+  stack: 'AggregateError: \n' +
+    '    at internalConnectMultiple (node:net:1122:18)\n' +
+    '    at afterConnectMultiple (node:net:1689:7)',
+  errors: [
+    {
+      stack: 'Error: connect ECONNREFUSED ::1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED ::1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED 127.0.0.1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    }
+  ],
+  code: 'ECONNREFUSED',
+  message: '',
+  constructor: 'Function<AggregateError>',
+  name: 'Caused by: Caused by: AggregateError',
+  toString: 'Function<toString>',
+  stacks: []
+}
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { errors: [ { stack: 'Error: connect ECONNREFUSED ::1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED ::1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '::1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' }, { stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED 127.0.0.1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' } ], code: 'ECONNREFUSED' }
+
+
+Error: TypeError: fetch failed
+ ❯ src/__tests__/auth.endpoints.test.ts:35:22
+
+{
+  stack: 'AggregateError: \n' +
+    '    at internalConnectMultiple (node:net:1122:18)\n' +
+    '    at afterConnectMultiple (node:net:1689:7)',
+  errors: [
+    {
+      stack: 'Error: connect ECONNREFUSED ::1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED ::1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED 127.0.0.1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    }
+  ],
+  code: 'ECONNREFUSED',
+  message: '',
+  constructor: 'Function<AggregateError>',
+  name: 'Caused by: Caused by: AggregateError',
+  toString: 'Function<toString>',
+  stacks: []
+}
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { errors: [ { stack: 'Error: connect ECONNREFUSED ::1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED ::1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '::1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' }, { stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED 127.0.0.1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' } ], code: 'ECONNREFUSED' }
+
+
+Error: TypeError: fetch failed
+ ❯ src/__tests__/auth.endpoints.test.ts:56:22
+
+{
+  stack: 'AggregateError: \n' +
+    '    at internalConnectMultiple (node:net:1122:18)\n' +
+    '    at afterConnectMultiple (node:net:1689:7)',
+  errors: [
+    {
+      stack: 'Error: connect ECONNREFUSED ::1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED ::1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED 127.0.0.1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    }
+  ],
+  code: 'ECONNREFUSED',
+  message: '',
+  constructor: 'Function<AggregateError>',
+  name: 'Caused by: Caused by: AggregateError',
+  toString: 'Function<toString>',
+  stacks: []
+}
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { errors: [ { stack: 'Error: connect ECONNREFUSED ::1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED ::1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '::1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' }, { stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED 127.0.0.1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' } ], code: 'ECONNREFUSED' }
+
+
+Error: TypeError: fetch failed
+ ❯ src/__tests__/auth.endpoints.test.ts:75:22
+
+{
+  stack: 'AggregateError: \n' +
+    '    at internalConnectMultiple (node:net:1122:18)\n' +
+    '    at afterConnectMultiple (node:net:1689:7)',
+  errors: [
+    {
+      stack: 'Error: connect ECONNREFUSED ::1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED ::1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED 127.0.0.1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    }
+  ],
+  code: 'ECONNREFUSED',
+  message: '',
+  constructor: 'Function<AggregateError>',
+  name: 'Caused by: Caused by: AggregateError',
+  toString: 'Function<toString>',
+  stacks: []
+}
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { errors: [ { stack: 'Error: connect ECONNREFUSED ::1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED ::1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '::1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' }, { stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED 127.0.0.1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' } ], code: 'ECONNREFUSED' }
+
+
+Error: TypeError: fetch failed
+ ❯ src/__tests__/auth.endpoints.test.ts:93:22
+
+{
+  stack: 'AggregateError: \n' +
+    '    at internalConnectMultiple (node:net:1122:18)\n' +
+    '    at afterConnectMultiple (node:net:1689:7)',
+  errors: [
+    {
+      stack: 'Error: connect ECONNREFUSED ::1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED ::1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n' +
+        '    at createConnectionError (node:net:1652:14)\n' +
+        '    at afterConnectMultiple (node:net:1682:16)',
+      message: 'connect ECONNREFUSED 127.0.0.1:5000',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 5000,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    }
+  ],
+  code: 'ECONNREFUSED',
+  message: '',
+  constructor: 'Function<AggregateError>',
+  name: 'Caused by: Caused by: AggregateError',
+  toString: 'Function<toString>',
+  stacks: []
+}
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { errors: [ { stack: 'Error: connect ECONNREFUSED ::1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED ::1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '::1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' }, { stack: 'Error: connect ECONNREFUSED 127.0.0.1:5000\n    at createConnectionError (node:net:1652:14)\n    at afterConnectMultiple (node:net:1682:16)', message: 'connect ECONNREFUSED 127.0.0.1:5000', errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 5000, constructor: 'Function<Error>', name: 'Error', toString: 'Function<toString>' } ], code: 'ECONNREFUSED' }
+
+
+Error: TypeError: Cannot read properties of undefined (reading 'rows')
+ ❯ AuthService.register src/services/AuthService.ts:85:22
+ ❯ src/services/AuthService.test.ts:53:22
+
+
+
+Error: AssertionError: expected error to be instance of ConflictError
+
+- Expected: 
+[Function ConflictError]
+
++ Received: 
+TypeError {
+  "message": "Cannot read properties of undefined (reading 'rows')",
+}
+
+ ❯ src/services/AuthService.test.ts:68:7
+
+
+
+Error: AssertionError: expected error to be instance of ConflictError
+
+- Expected: 
+[Function ConflictError]
+
++ Received: 
+TypeError {
+  "message": "Cannot read properties of undefined (reading 'rows')",
+}
+
+ ❯ src/services/AuthService.test.ts:82:7
+
+
+
+Error: TypeError: Cannot read properties of undefined (reading 'rows')
+ ❯ AuthService.login src/services/AuthService.ts:133:16
+ ❯ src/services/AuthService.test.ts:126:22
+
+
+
+Error: TypeError: Cannot read properties of undefined (reading 'rows')
+ ❯ AuthService.login src/services/AuthService.ts:133:16
+ ❯ src/services/AuthService.test.ts:139:22
+
+
+
+Error: AssertionError: expected error to be instance of UnauthorizedError
+
+- Expected: 
+[Function UnauthorizedError]
+
++ Received: 
+TypeError {
+  "message": "Cannot read properties of undefined (reading 'rows')",
+}
+
+ ❯ src/services/AuthService.test.ts:152:7
+
+
+
+Error: UnauthorizedError: Invalid refresh token
+ ❯ AuthService.refreshTokens src/services/AuthService.ts:206:15
+ ❯ src/services/AuthService.test.ts:178:40
+
+
+
+Error: UnauthorizedError: Invalid refresh token
+ ❯ AuthService.refreshTokens src/services/AuthService.ts:206:15
+ ❯ src/services/AuthService.test.ts:212:25
+
+
+
+Error: AssertionError: expected "spy" to be called with arguments: [ StringContaining "refresh_token:" ]
+
+Number of calls: 0
+
+ ❯ src/services/AuthService.test.ts:259:29
+
+
+
+Error: AssertionError: expected error to be instance of ValidationError
+
+- Expected: 
+[Function ValidationError]
+
++ Received: 
+TypeError {
+  "message": "Cannot read properties of undefined (reading 'rows')",
+}
+
+ ❯ src/services/AuthService.test.ts:273:7
+
+
+
+Error: TypeError: Cannot read properties of undefined (reading 'rows')
+ ❯ AuthService.register src/services/AuthService.ts:85:22
+ ❯ src/services/AuthService.test.ts:287:22
+
+
+
+Error: TypeError: Cannot read properties of undefined (reading 'rows')
+ ❯ AuthService.register src/services/AuthService.ts:85:22
+ ❯ src/services/AuthService.test.ts:302:22
+
+
+npm error Lifecycle script `test:coverage` failed with error:
+npm error code 1
+npm error path /home/runner/work/Aeturnisv1/Aeturnisv1/packages/server
+npm error workspace @aeturnis/server@1.0.0
+npm error location /home/runner/work/Aeturnisv1/Aeturnisv1/packages/server
+npm error command failed
+npm error command sh -c vitest run --coverage
+
+
+> @aeturnis/shared@1.0.0 test:coverage
+> vitest run --coverage
+
+
+ RUN  v3.2.4 /home/runner/work/Aeturnisv1/Aeturnisv1/packages/shared
+      Coverage enabled with v8
+
+ ✓ src/__tests__/utils.test.ts (13 tests) 6ms
+
+ Test Files  1 passed (1)
+      Tests  13 passed (13)
+   Start at  04:54:42
+   Duration  384ms (transform 46ms, setup 0ms, collect 38ms, tests 6ms, environment 0ms, prepare 76ms)
+
+ % Coverage report from v8
+----------------|---------|----------|---------|---------|-------------------
+File            | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+----------------|---------|----------|---------|---------|-------------------
+All files       |   44.64 |       90 |   88.88 |   44.64 |                   
+ src            |       0 |      100 |     100 |       0 |                   
+  index.ts      |       0 |      100 |     100 |       0 | 2-5               
+ src/constants  |       0 |        0 |       0 |       0 |                   
+  index.ts      |       0 |        0 |       0 |       0 | 1-27              
+ src/interfaces |       0 |        0 |       0 |       0 |                   
+  index.ts      |       0 |        0 |       0 |       0 |                   
+ src/types      |       0 |        0 |       0 |       0 |                   
+  index.ts      |       0 |        0 |       0 |       0 |                   
+ src/utils      |   92.59 |    93.75 |     100 |   92.59 |                   
+  index.ts      |   92.59 |    93.75 |     100 |   92.59 | 23-24             
+----------------|---------|----------|---------|---------|-------------------
+Error: Process completed with exit code 1.
