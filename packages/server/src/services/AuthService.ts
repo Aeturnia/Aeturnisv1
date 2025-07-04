@@ -1,7 +1,9 @@
 import jwt from 'jsonwebtoken';
 import argon2 from 'argon2';
 import { randomUUID } from 'crypto';
-import { db } from '../database';
+import { db } from '../database/config';
+import { users } from '../database/schema';
+import { eq, or } from 'drizzle-orm';
 // import { redis } from '../cache/redis'; // Disabled until Redis is available
 import Joi from 'joi';
 import { ValidationError, UnauthorizedError, ConflictError } from '../utils/errors';
@@ -30,7 +32,7 @@ interface UserData {
   email: string;
   username: string;
   roles: string[];
-  password_hash?: string;
+  passwordHash?: string;
 }
 
 export class AuthService {
@@ -77,12 +79,16 @@ export class AuthService {
     const { email, username, password } = data;
 
     // Check if user exists
-    const existingUser = await db.query(
-      'SELECT id FROM users WHERE LOWER(email) = LOWER($1) OR LOWER(username) = LOWER($2)',
-      [email, username]
+    const existingUser = await db.select({
+      id: users.id
+    }).from(users).where(
+      or(
+        eq(users.email, email.toLowerCase()),
+        eq(users.username, username.toLowerCase())
+      )
     );
 
-    if (existingUser.rows.length > 0) {
+    if (existingUser.length > 0) {
       throw new ConflictError('Email or username already exists');
     }
 
@@ -90,14 +96,17 @@ export class AuthService {
     const passwordHash = await argon2.hash(password, this.argon2Options);
 
     // Create user
-    const result = await db.query(
-      `INSERT INTO users (email, username, password_hash)
-       VALUES ($1, $2, $3)
-       RETURNING id, email, username, roles, created_at`,
-      [email.toLowerCase(), username.toLowerCase(), passwordHash]
-    );
-
-    const user = result.rows[0];
+    const [user] = await db.insert(users).values({
+      email: email.toLowerCase(),
+      username: username.toLowerCase(),
+      passwordHash,
+    }).returning({
+      id: users.id,
+      email: users.email,
+      username: users.username,
+      roles: users.roles,
+      createdAt: users.createdAt,
+    });
 
     // Generate tokens
     const tokens = await this.generateTokenPair(user);
@@ -123,30 +132,33 @@ export class AuthService {
     const { emailOrUsername, password } = data;
 
     // Find user
-    const result = await db.query(
-      `SELECT id, email, username, password_hash, roles
-       FROM users
-       WHERE LOWER(email) = LOWER($1) OR LOWER(username) = LOWER($1)`,
-      [emailOrUsername]
+    const [user] = await db.select({
+      id: users.id,
+      email: users.email,
+      username: users.username,
+      passwordHash: users.passwordHash,
+      roles: users.roles,
+    }).from(users).where(
+      or(
+        eq(users.email, emailOrUsername.toLowerCase()),
+        eq(users.username, emailOrUsername.toLowerCase())
+      )
     );
 
-    if (result.rows.length === 0) {
+    if (!user) {
       throw new UnauthorizedError('Invalid credentials');
     }
 
-    const user = result.rows[0];
-
     // Verify password
-    const isValid = await argon2.verify(user.password_hash, password);
+    const isValid = await argon2.verify(user.passwordHash, password);
     if (!isValid) {
       throw new UnauthorizedError('Invalid credentials');
     }
 
     // Update last login
-    await db.query(
-      'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
-      [user.id]
-    );
+    await db.update(users).set({
+      lastLogin: new Date(),
+    }).where(eq(users.id, user.id));
 
     // Generate tokens
     const tokens = await this.generateTokenPair(user);
@@ -180,16 +192,16 @@ export class AuthService {
       // }
 
       // Get fresh user data
-      const result = await db.query(
-        'SELECT id, email, username, roles FROM users WHERE id = $1',
-        [payload.userId]
-      );
+      const [user] = await db.select({
+        id: users.id,
+        email: users.email,
+        username: users.username,
+        roles: users.roles,
+      }).from(users).where(eq(users.id, payload.userId));
 
-      if (result.rows.length === 0) {
+      if (!user) {
         throw new UnauthorizedError('User not found');
       }
-
-      const user = result.rows[0];
 
       // Redis disabled - skip token deletion for now
       // await redis.del(`session:${payload.jti}`);
