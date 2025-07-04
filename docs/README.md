@@ -28,10 +28,20 @@ Welcome to the comprehensive documentation for Aeturnis Online MMORPG. The proje
 - **[API Documentation](./api/README.md)** - Complete REST API reference with authentication endpoints
 - **[Architecture Documentation](./architecture/)** - System design and technical specifications
 - **[Getting Started Guide](./guides/getting-started.md)** - Development setup and workflow
+- **[Implementation Timeline](./guides/implementation-timeline.md)** - Complete development history (Steps 1.1-1.4)
 
 ### 🏗️ Architecture Documentation
-- **[Express API Infrastructure](./architecture/express-api-infrastructure.md)** - Complete server architecture guide
+- **[Architecture Overview](./architecture/README.md)** - Complete architecture documentation index
+- **[Development Phases](./architecture/development-phases.md)** - Architectural evolution through all phases
+- **[Express API Infrastructure](./architecture/express-api-infrastructure.md)** - Current production server architecture
 - **[Database Schema](./architecture/database-schema.md)** - PostgreSQL schema design and optimization
+
+### 📈 Development History
+- **[Implementation Timeline](./guides/implementation-timeline.md)** - Detailed phase-by-phase development journey
+  - **Step 1.1**: Project Setup & TypeScript Monorepo (9.8/10)
+  - **Step 1.2**: JWT Authentication System (9.2/10)  
+  - **Step 1.3**: Database Schema & Drizzle ORM (10/10)
+  - **Step 1.4**: Express API Infrastructure (9.8/10)
 
 ### 🎮 Game Design Documentation  
 - **[Game Design Overview](./game-design/overview.md)** - MMORPG concept and mechanics
