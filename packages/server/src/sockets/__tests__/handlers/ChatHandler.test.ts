@@ -139,25 +139,33 @@ describe('ChatHandler', () => {
     });
 
     it('should handle unauthenticated user', async () => {
-      // Socket without authentication
+      // Create a fresh socket without authentication
+      const unauthenticatedSocket = new MockSocket();
+      // Explicitly remove the user to make it unauthenticated
+      unauthenticatedSocket.user = undefined;
+      
       const messageData = {
         type: 'zone' as const,
         message: 'test message',
       };
 
-      chatHandler.handleConnection(mockSocket as any);
+      chatHandler.handleConnection(unauthenticatedSocket as any);
       
-      const handlers = mockSocket.getHandlers('chat:message');
+      const handlers = unauthenticatedSocket.getHandlers('chat:message');
       expect(handlers.length).toBeGreaterThan(0);
       
       if (handlers[0]) {
         await handlers[0](messageData);
       }
 
-      expect(mockSocket.emit).toHaveBeenCalledWith('error', {
+      // Should emit authentication error
+      expect(unauthenticatedSocket.emit).toHaveBeenCalledWith('error', {
         code: 'AUTH_REQUIRED',
         message: 'Authentication required'
       });
+      
+      // Should not call RealtimeService since function returns early
+      expect(mockRealtimeService.emitToZone).not.toHaveBeenCalled();
     });
   });
 
