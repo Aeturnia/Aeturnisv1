@@ -196,6 +196,8 @@ The expanded monorepo now includes:
 - **Fixed Workspace Commands**: Changed from `cd packages/package && npm run test:coverage` to `npm run test:coverage`
 - **Proper Dependency Resolution**: CI now uses workspace-aware commands for proper package dependency access
 - **Updated CI Configuration**: Modified .github/workflows/ci.yml to use root-level workspace commands
+- **Fixed Linting Errors**: Removed unused mockJti variable in AuthService.test.ts to resolve TypeScript linting issues
+- **CI Pipeline Clean**: All packages now pass linting with only acceptable console warnings
 
 ## User Preferences
 

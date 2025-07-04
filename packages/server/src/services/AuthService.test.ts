@@ -169,7 +169,6 @@ describe('AuthService', () => {
 
   describe('Token Refresh', () => {
     const mockRefreshToken = 'valid-refresh-token';
-    const mockJti = 'jti-123';
 
     it('should refresh tokens successfully', async () => {
       // Mock Redis get for refresh token
