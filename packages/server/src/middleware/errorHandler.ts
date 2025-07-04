@@ -7,7 +7,7 @@ interface ErrorResponse {
   error: {
     code: string;
     message: string;
-    details?: any;
+    details?: unknown;
   };
   requestId?: string;
 }
@@ -37,7 +37,7 @@ export const errorHandler = (
   let statusCode = 500;
   let code = 'INTERNAL_ERROR';
   let message = 'An unexpected error occurred';
-  let details: any = undefined;
+  let details: unknown = undefined;
 
   // Handle known error types
   if (err instanceof AppError) {

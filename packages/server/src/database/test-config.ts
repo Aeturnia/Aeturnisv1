@@ -21,9 +21,11 @@ export const testDb = drizzle(testPool, { schema });
 export async function checkTestDatabaseConnection(): Promise<boolean> {
   try {
     await testPool.query('SELECT 1');
+    // eslint-disable-next-line no-console
     console.log('✅ Test database connection established');
     return true;
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('❌ Test database connection failed:', error);
     return false;
   }
@@ -32,5 +34,6 @@ export async function checkTestDatabaseConnection(): Promise<boolean> {
 // Graceful shutdown for tests
 export async function closeTestDatabaseConnection(): Promise<void> {
   await testPool.end();
+  // eslint-disable-next-line no-console
   console.log('Test database connection pool closed');
 }
