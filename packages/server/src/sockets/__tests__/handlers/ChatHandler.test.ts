@@ -69,14 +69,9 @@ describe('ChatHandler', () => {
 
       chatHandler.handleConnection(mockSocket as any);
       
-      // Trigger the message event
-      const messageHandler = mockSocket.on.mock.calls.find(
-        call => call[0] === 'chat:message'
-      )?.[1];
-      
-      if (messageHandler) {
-        await messageHandler(messageData);
-      }
+      // Trigger the message event directly
+      // In vitest, we can trigger the event handler directly
+      mockSocket.emit('chat:message', messageData);
 
       expect(mockRealtimeService.emitToZone).toHaveBeenCalledWith(
         'tavern-district', // Default zone

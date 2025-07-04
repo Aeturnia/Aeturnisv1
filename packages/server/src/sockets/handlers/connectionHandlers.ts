@@ -244,34 +244,48 @@ export class ConnectionHandlers {
   private broadcastUserOfflineStatus(socket: SocketWithAuth): void {
     try {
       const user = requireAuth(socket);
+      if (!user) {
+        return;
+      }
       const { userId, email } = user;
     
-    // Get user's rooms and broadcast offline status
-    const userRooms = this.roomService.getUserRooms(userId);
-    
-    userRooms.forEach(({ type, identifier }) => {
-      if (type !== RoomType.USER) { // Don't broadcast to private room
-        this.roomService.broadcastToRoom(
-          type,
-          identifier,
-          'user:offline',
-          {
-            userId,
-            username: email.split('@')[0],
-            timestamp: Date.now(),
-          },
-          userId // Exclude the disconnecting user
-        );
-      }
-    });
+      // Get user's rooms and broadcast offline status
+      const userRooms = this.roomService.getUserRooms(userId);
+      
+      userRooms.forEach(({ type, identifier }) => {
+        if (type !== RoomType.USER) { // Don't broadcast to private room
+          this.roomService.broadcastToRoom(
+            type,
+            identifier,
+            'user:offline',
+            {
+              userId,
+              username: email.split('@')[0],
+              timestamp: Date.now(),
+            },
+            userId // Exclude the disconnecting user
+          );
+        }
+      });
+    } catch (error) {
+      logger.error('Failed to broadcast user offline status', {
+        socketId: socket.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        service: 'connection-handler',
+      });
+    }
   }
 
   // Log disconnection metrics
   private logDisconnectionMetrics(socket: SocketWithAuth, reason: string): void {
+    if (!socket.user) {
+      return;
+    }
+    
     const { userId } = socket.user;
     
     // Calculate connection duration
-    const connectionTime = Date.now() - (socket.handshake.time || Date.now());
+    const connectionTime = Date.now() - (Number(socket.handshake.time) || Date.now());
     
     logger.info('Connection metrics', {
       userId,
@@ -285,6 +299,9 @@ export class ConnectionHandlers {
 
   // Attempt connection recovery
   private attemptConnectionRecovery(socket: SocketWithAuth, error: Error): void {
+    if (!socket.user) {
+      return;
+    }
     const { userId } = socket.user;
     
     // Basic recovery strategy

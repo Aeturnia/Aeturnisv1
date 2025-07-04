@@ -108,8 +108,14 @@ export class ConnectionHandlers {
       service: 'connection-handler',
     });
 
-    // Clean up user state
-    this.cleanupUserConnection(socket);
+    // Clean up user state (fire and forget)
+    this.cleanupUserConnection(socket).catch(error => {
+      logger.error('Error during user connection cleanup', {
+        userId,
+        error: error.message,
+        service: 'connection-handler'
+      });
+    });
     
     // Broadcast user offline status
     this.broadcastUserOfflineStatus(socket);
@@ -137,7 +143,7 @@ export class ConnectionHandlers {
   }
 
   // Clean up user connection state
-  private cleanupUserConnection(socket: SocketWithAuth): void {
+  private async cleanupUserConnection(socket: SocketWithAuth): Promise<void> {
     if (!socket.user) {
       return;
     }
@@ -146,7 +152,7 @@ export class ConnectionHandlers {
       const user = requireAuth(socket);
       
       // Leave all rooms
-      this.roomService.leaveAllRooms(socket);
+      await this.roomService.cleanupUserRooms(user.userId);
       
       // Clear any user-specific timers or intervals
       // TODO: Implement cleanup for user-specific resources
