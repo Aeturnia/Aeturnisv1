@@ -15,15 +15,16 @@ export const authenticate = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
     
     if (!token) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Access token required',
       });
+      return;
     }
 
     const payload = await authService.verifyToken(token);
@@ -36,7 +37,7 @@ export const authenticate = async (
 
     next();
   } catch (error) {
-    return res.status(401).json({
+    res.status(401).json({
       success: false,
       error: error instanceof Error ? error.message : 'Invalid token',
     });
@@ -44,21 +45,23 @@ export const authenticate = async (
 };
 
 export const authorize = (roles: string[]) => {
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
+  return (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Authentication required',
       });
+      return;
     }
 
     const hasRole = roles.some(role => req.user!.roles.includes(role));
     
     if (!hasRole) {
-      return res.status(403).json({
+      res.status(403).json({
         success: false,
         error: 'Insufficient permissions',
       });
+      return;
     }
 
     next();

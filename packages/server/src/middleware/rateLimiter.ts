@@ -1,6 +1,6 @@
 import rateLimit from 'express-rate-limit';
-import { RedisStore } from 'rate-limit-redis';
-import { redis } from '../cache/redis';
+// import { RedisStore } from 'rate-limit-redis'; // Disabled with Redis
+// import { redis } from '../cache/redis'; // Disabled with Redis
 
 export const rateLimiter = (options: {
   windowMs: number;
@@ -10,9 +10,10 @@ export const rateLimiter = (options: {
   legacyHeaders?: boolean;
 }) => {
   return rateLimit({
-    store: new RedisStore({
-      sendCommand: (...args: string[]) => redis.sendCommand(args),
-    }),
+    // Using memory store instead of Redis for now
+    // store: new RedisStore({
+    //   sendCommand: (...args: string[]) => redis.sendCommand(args),
+    // }),
     windowMs: options.windowMs,
     max: options.max,
     message: {

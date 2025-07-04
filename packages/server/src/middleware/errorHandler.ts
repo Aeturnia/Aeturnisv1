@@ -3,9 +3,9 @@ import { ValidationError, UnauthorizedError, ConflictError, NotFoundError, Forbi
 
 export const errorHandler = (
   error: Error,
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) => {
   console.error('🚨 Error:', error);
 

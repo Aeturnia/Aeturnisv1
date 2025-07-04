@@ -2,11 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { config } from 'dotenv';
-// Authentication system - will be enabled once dependencies are working
-// import authRoutes from './routes/auth.routes';
-// import { errorHandler } from './middleware/errorHandler';
-// import './database'; // Initialize database connection
-// import './cache/redis'; // Initialize Redis connection
+// Authentication system
+import authRoutes from './routes/auth.routes';
+import { errorHandler } from './middleware/errorHandler';
+import './database'; // Initialize database connection
+// import './cache/redis'; // Initialize Redis connection - disabled until Redis setup
 
 // Load environment variables
 config();
@@ -71,8 +71,8 @@ const createServer = () => {
     });
   });
 
-  // API routes (authentication will be enabled once working)
-  // app.use('/api/auth', authRoutes);
+  // API routes - Authentication enabled
+  app.use('/api/auth', authRoutes);
 
   // 404 handler
   app.use('*', (req, res) => {
@@ -83,8 +83,8 @@ const createServer = () => {
     });
   });
 
-  // Error handling middleware (will be enabled with auth)
-  // app.use(errorHandler);
+  // Error handling middleware
+  app.use(errorHandler);
 
   return app;
 };

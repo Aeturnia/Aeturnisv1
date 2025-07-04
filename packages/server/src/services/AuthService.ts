@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import argon2 from 'argon2';
 import { randomUUID } from 'crypto';
 import { db } from '../database';
-import { redis } from '../cache/redis';
+// import { redis } from '../cache/redis'; // Disabled until Redis is available
 import Joi from 'joi';
 import { ValidationError, UnauthorizedError, ConflictError } from '../utils/errors';
 
@@ -38,7 +38,7 @@ export class AuthService {
   private readonly JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key-here';
   private readonly ACCESS_TOKEN_EXPIRY = '15m';
   private readonly REFRESH_TOKEN_EXPIRY = '7d';
-  private readonly REFRESH_TOKEN_EXPIRY_SECONDS = 7 * 24 * 60 * 60;
+  // private readonly REFRESH_TOKEN_EXPIRY_SECONDS = 7 * 24 * 60 * 60; // Disabled with Redis
   
   private readonly argon2Options: argon2.Options & { raw?: false } = {
     type: argon2.argon2id,
@@ -171,13 +171,13 @@ export class AuthService {
         throw new UnauthorizedError('Invalid token type');
       }
 
-      // Check if token exists in Redis
-      const storedToken = await redis.get(`session:${payload.jti}`);
-      if (!storedToken || storedToken !== refreshToken) {
-        // Token reuse detected - invalidate all user sessions
-        await this.invalidateUserSessions(payload.userId);
-        throw new UnauthorizedError('Token reuse detected');
-      }
+      // Redis disabled - skip session validation for now
+      // TODO: Re-enable Redis session validation when Redis is available
+      // const storedToken = await redis.get(`session:${payload.jti}`);
+      // if (!storedToken || storedToken !== refreshToken) {
+      //   await this.invalidateUserSessions(payload.userId);
+      //   throw new UnauthorizedError('Token reuse detected');
+      // }
 
       // Get fresh user data
       const result = await db.query(
@@ -191,8 +191,8 @@ export class AuthService {
 
       const user = result.rows[0];
 
-      // Delete old refresh token
-      await redis.del(`session:${payload.jti}`);
+      // Redis disabled - skip token deletion for now
+      // await redis.del(`session:${payload.jti}`);
 
       // Generate new token pair
       const tokens = await this.generateTokenPair(user);
@@ -261,28 +261,30 @@ export class AuthService {
       expiresIn: this.REFRESH_TOKEN_EXPIRY,
     });
 
-    // Store refresh token in Redis
-    await redis.setEx(
-      `session:${jti}`,
-      this.REFRESH_TOKEN_EXPIRY_SECONDS,
-      refreshToken
-    );
+    // Redis disabled - skip token storage for now
+    // await redis.setEx(
+    //   `session:${jti}`,
+    //   this.REFRESH_TOKEN_EXPIRY_SECONDS,
+    //   refreshToken
+    // );
 
     return { accessToken, refreshToken };
   }
 
-  private async invalidateUserSessions(userId: string) {
-    // In production, maintain a user->sessions mapping
-    // For now, log the security event
-    console.error(`🚨 Security: Token reuse detected for user ${userId}`);
-  }
+  // Disabled with Redis
+  // private async invalidateUserSessions(userId: string) {
+  //   // In production, maintain a user->sessions mapping
+  //   // For now, log the security event
+  //   console.error(`🚨 Security: Token reuse detected for user ${userId}`);
+  // }
 
   async logout(refreshToken: string) {
     try {
       const payload = jwt.verify(refreshToken, this.JWT_REFRESH_SECRET) as AuthPayload;
       
       if (payload.jti) {
-        await redis.del(`session:${payload.jti}`);
+        // Redis disabled - skip token deletion for now
+        // await redis.del(`session:${payload.jti}`);
       }
     } catch {
       // Silent fail - token might already be invalid

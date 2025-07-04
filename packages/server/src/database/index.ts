@@ -6,11 +6,8 @@ config();
 
 // Create PostgreSQL connection pool
 export const db = new Pool({
-  host: process.env.PGHOST || 'localhost',
-  port: parseInt(process.env.PGPORT || '5432'),
-  database: process.env.PGDATABASE || 'aeturnis',
-  user: process.env.PGUSER || 'postgres',
-  password: process.env.PGPASSWORD || 'postgres',
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }, // Required for Replit managed PostgreSQL
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,

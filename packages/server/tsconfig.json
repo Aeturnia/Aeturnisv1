@@ -22,5 +22,5 @@
     "outDir": "./dist"
   },
   "include": ["src/**/*"],
-  "exclude": ["**/*.test.ts", "**/*.spec.ts", "src/routes/auth.routes.ts", "src/middleware/auth.ts", "src/middleware/errorHandler.ts", "src/services/AuthService.ts", "src/database/**/*", "src/cache/**/*"]
+  "exclude": ["**/*.test.ts", "**/*.spec.ts", "src/database/**/*", "src/cache/**/*"]
 }
