@@ -55,13 +55,22 @@ describe('Socket.IO Integration Flow', () => {
 
     it('should handle ping-pong communication', async () => {
       // Wait a bit to ensure connection handlers are fully set up
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      const pongPromise = waitForEvent(client.socket, 'test-pong');
+      // Set up the listener first
+      let pongReceived = false;
+      client.socket.once('test-pong', () => {
+        pongReceived = true;
+        console.log('Client: Received test-pong');
+      });
       
+      console.log('Client: Emitting test-ping');
       client.socket.emit('test-ping');
       
-      await expect(pongPromise).resolves.toBeDefined();
+      // Wait up to 500ms for the response
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      expect(pongReceived).toBe(true);
     });
 
     it('should handle connection events', async () => {

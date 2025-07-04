@@ -1,24 +1,58 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
+import { createServer } from 'http';
+import { createApp } from '../app';
+import type { Server } from 'http';
+import type { Application } from 'express';
 
 // Helper to wait between tests to avoid rate limiting
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // API Endpoint Integration Tests
 describe('Authentication API Endpoints', () => {
-  const baseUrl = 'http://localhost:5000';
-  
+  let app: Application;
+  let server: Server;
+  let baseUrl: string;
   let testUser: { email: string; username: string; password: string };
 
+  beforeAll(async () => {
+    // Create Express app
+    app = createApp();
+    
+    // Create HTTP server
+    server = createServer(app);
+    
+    // Start server on random port
+    await new Promise<void>((resolve) => {
+      server.listen(0, () => {
+        const address = server.address();
+        const port = typeof address === 'object' && address ? address.port : 0;
+        baseUrl = `http://localhost:${port}`;
+        console.log(`Test server started on ${baseUrl}`);
+        resolve();
+      });
+    });
+  });
+
+  afterAll(async () => {
+    // Close server
+    await new Promise<void>((resolve) => {
+      server.close(() => {
+        console.log('Test server closed');
+        resolve();
+      });
+    });
+  });
+
   beforeEach(async () => {
-    // Wait 1 second between tests to avoid rate limiting
-    await delay(1000);
+    // Wait 100ms between tests to avoid rate limiting in test environment
+    await delay(100);
     
     // Create unique test user for each test
-    const timestamp = Date.now() + Math.random();
+    const randomId = Math.floor(Math.random() * 100000);
     testUser = {
-      email: `test-${timestamp}@example.com`,
-      username: `testuser-${timestamp}`,
-      password: 'SecurePass123!',
+      email: `test${randomId}@example.com`,
+      username: `user${randomId}`, // Short alphanumeric username (max 20 chars)
+      password: 'SecurePass123!', // Has uppercase, lowercase, number, and special char
     };
   });
 
@@ -30,6 +64,12 @@ describe('Authentication API Endpoints', () => {
       },
       body: JSON.stringify(testUser),
     });
+
+    // Log response for debugging
+    if (response.status !== 201) {
+      const errorData = await response.json();
+      console.error('Registration failed:', response.status, errorData);
+    }
 
     expect(response.status).toBe(201);
     const data = await response.json();
@@ -44,6 +84,26 @@ describe('Authentication API Endpoints', () => {
   });
 
   it('should login successfully', async () => {
+    // First register the user
+    const registerResponse = await fetch(`${baseUrl}/api/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(testUser),
+    });
+
+    // Ensure registration succeeded
+    if (registerResponse.status !== 201) {
+      const errorData = await registerResponse.json();
+      console.error('Registration before login failed:', registerResponse.status, errorData);
+    }
+    expect(registerResponse.status).toBe(201);
+
+    // Wait a bit to ensure database writes are complete
+    await delay(100);
+
+    // Now login
     const response = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: {
@@ -54,6 +114,12 @@ describe('Authentication API Endpoints', () => {
         password: testUser.password,
       }),
     });
+
+    // Log response for debugging
+    if (response.status !== 200) {
+      const errorData = await response.json();
+      console.error('Login failed:', response.status, errorData);
+    }
 
     expect(response.status).toBe(200);
     const data = await response.json();
