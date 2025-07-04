@@ -32,3 +32,8 @@ yarn-error.log*
 # Temporary files
 *.tmp
 *.temp
+
+# Documentation and Reports
+audit/
+docs/
+Implementation Reports/
