@@ -49,11 +49,11 @@ describe('ChatHandler', () => {
 
       chatHandler.handleConnection(mockSocket as any);
 
-      expect(mockSocket.on).toHaveBeenCalledWith('chat:message', expect.any(Function));
-      expect(mockSocket.on).toHaveBeenCalledWith('chat:typing', expect.any(Function));
-      expect(mockSocket.on).toHaveBeenCalledWith('chat:whisper', expect.any(Function));
-      expect(mockSocket.on).toHaveBeenCalledWith('chat:emote', expect.any(Function));
-      expect(mockSocket.on).toHaveBeenCalledWith('disconnect', expect.any(Function));
+      expect(mockSocket.getHandlers('chat:message').length).toBeGreaterThan(0);
+      expect(mockSocket.getHandlers('chat:typing').length).toBeGreaterThan(0);
+      expect(mockSocket.getHandlers('chat:whisper').length).toBeGreaterThan(0);
+      expect(mockSocket.getHandlers('chat:emote').length).toBeGreaterThan(0);
+      expect(mockSocket.getHandlers('disconnect').length).toBeGreaterThan(0);
     });
   });
 
@@ -69,9 +69,13 @@ describe('ChatHandler', () => {
 
       chatHandler.handleConnection(mockSocket as any);
       
-      // Trigger the message event directly
-      // In vitest, we can trigger the event handler directly
-      mockSocket.emit('chat:message', messageData);
+      // Get the registered handler and trigger it
+      const handlers = mockSocket.getHandlers('chat:message');
+      expect(handlers.length).toBeGreaterThan(0);
+      
+      if (handlers[0]) {
+        await handlers[0](messageData);
+      }
 
       expect(mockRealtimeService.emitToZone).toHaveBeenCalledWith(
         'tavern-district', // Default zone
@@ -99,12 +103,11 @@ describe('ChatHandler', () => {
 
       chatHandler.handleConnection(mockSocket as any);
       
-      const messageHandler = mockSocket.on.mock.calls.find(
-        call => call[0] === 'chat:message'
-      )?.[1];
+      const handlers = mockSocket.getHandlers('chat:message');
+      expect(handlers.length).toBeGreaterThan(0);
       
-      if (messageHandler) {
-        await messageHandler(messageData);
+      if (handlers[0]) {
+        await handlers[0](messageData);
       }
 
       expect(mockSocket.emit).toHaveBeenCalledWith('chat:error', {
@@ -123,12 +126,11 @@ describe('ChatHandler', () => {
 
       chatHandler.handleConnection(mockSocket as any);
       
-      const messageHandler = mockSocket.on.mock.calls.find(
-        call => call[0] === 'chat:message'
-      )?.[1];
+      const handlers = mockSocket.getHandlers('chat:message');
+      expect(handlers.length).toBeGreaterThan(0);
       
-      if (messageHandler) {
-        await messageHandler(messageData);
+      if (handlers[0]) {
+        await handlers[0](messageData);
       }
 
       expect(mockSocket.emit).toHaveBeenCalledWith('chat:error', {
@@ -145,12 +147,11 @@ describe('ChatHandler', () => {
 
       chatHandler.handleConnection(mockSocket as any);
       
-      const messageHandler = mockSocket.on.mock.calls.find(
-        call => call[0] === 'chat:message'
-      )?.[1];
+      const handlers = mockSocket.getHandlers('chat:message');
+      expect(handlers.length).toBeGreaterThan(0);
       
-      if (messageHandler) {
-        await messageHandler(messageData);
+      if (handlers[0]) {
+        await handlers[0](messageData);
       }
 
       expect(mockSocket.emit).toHaveBeenCalledWith('error', {
@@ -172,12 +173,11 @@ describe('ChatHandler', () => {
 
       chatHandler.handleConnection(mockSocket as any);
       
-      const whisperHandler = mockSocket.on.mock.calls.find(
-        call => call[0] === 'chat:whisper'
-      )?.[1];
+      const handlers = mockSocket.getHandlers('chat:whisper');
+      expect(handlers.length).toBeGreaterThan(0);
       
-      if (whisperHandler) {
-        await whisperHandler(whisperData);
+      if (handlers[0]) {
+        await handlers[0](whisperData);
       }
 
       expect(mockRealtimeService.emitToUser).toHaveBeenCalledWith(
@@ -202,12 +202,11 @@ describe('ChatHandler', () => {
 
       chatHandler.handleConnection(mockSocket as any);
       
-      const whisperHandler = mockSocket.on.mock.calls.find(
-        call => call[0] === 'chat:whisper'
-      )?.[1];
+      const handlers = mockSocket.getHandlers('chat:whisper');
+      expect(handlers.length).toBeGreaterThan(0);
       
-      if (whisperHandler) {
-        await whisperHandler(whisperData);
+      if (handlers[0]) {
+        await handlers[0](whisperData);
       }
 
       expect(mockSocket.emit).toHaveBeenCalledWith('chat:error', {
@@ -228,12 +227,11 @@ describe('ChatHandler', () => {
 
       chatHandler.handleConnection(mockSocket as any);
       
-      const typingHandler = mockSocket.on.mock.calls.find(
-        call => call[0] === 'chat:typing'
-      )?.[1];
+      const handlers = mockSocket.getHandlers('chat:typing');
+      expect(handlers.length).toBeGreaterThan(0);
       
-      if (typingHandler) {
-        await typingHandler(typingData);
+      if (handlers[0]) {
+        await handlers[0](typingData);
       }
 
       expect(mockRealtimeService.emitToZone).toHaveBeenCalledWith(
@@ -262,12 +260,11 @@ describe('ChatHandler', () => {
 
       chatHandler.handleConnection(mockSocket as any);
       
-      const typingHandler = mockSocket.on.mock.calls.find(
-        call => call[0] === 'chat:typing'
-      )?.[1];
+      const handlers = mockSocket.getHandlers('chat:typing');
+      expect(handlers.length).toBeGreaterThan(0);
       
-      if (typingHandler) {
-        await typingHandler(typingData);
+      if (handlers[0]) {
+        await handlers[0](typingData);
       }
 
       // Should handle without errors
@@ -286,12 +283,11 @@ describe('ChatHandler', () => {
 
       chatHandler.handleConnection(mockSocket as any);
       
-      const emoteHandler = mockSocket.on.mock.calls.find(
-        call => call[0] === 'chat:emote'
-      )?.[1];
+      const handlers = mockSocket.getHandlers('chat:emote');
+      expect(handlers.length).toBeGreaterThan(0);
       
-      if (emoteHandler) {
-        await emoteHandler(emoteData);
+      if (handlers[0]) {
+        await handlers[0](emoteData);
       }
 
       expect(mockRealtimeService.emitToZone).toHaveBeenCalledWith(
@@ -315,12 +311,11 @@ describe('ChatHandler', () => {
 
       chatHandler.handleConnection(mockSocket as any);
       
-      const emoteHandler = mockSocket.on.mock.calls.find(
-        call => call[0] === 'chat:emote'
-      )?.[1];
+      const handlers = mockSocket.getHandlers('chat:emote');
+      expect(handlers.length).toBeGreaterThan(0);
       
-      if (emoteHandler) {
-        await emoteHandler(emoteData);
+      if (handlers[0]) {
+        await handlers[0](emoteData);
       }
 
       expect(mockRealtimeService.emitToZone).toHaveBeenCalledWith(
@@ -365,18 +360,17 @@ describe('ChatHandler', () => {
 
       chatHandler.handleConnection(mockSocket as any);
       
-      const messageHandler = mockSocket.on.mock.calls.find(
-        call => call[0] === 'chat:message'
-      )?.[1];
+      const handlers = mockSocket.getHandlers('chat:message');
+      expect(handlers.length).toBeGreaterThan(0);
       
       // Send first message (should succeed)
-      if (messageHandler) {
-        await messageHandler(messageData);
+      if (handlers[0]) {
+        await handlers[0](messageData);
       }
 
       // Immediately send second message (should be rate limited)
-      if (messageHandler) {
-        await messageHandler(messageData);
+      if (handlers[0]) {
+        await handlers[0](messageData);
       }
 
       // Check if rate limit was triggered (this is implementation-dependent)
@@ -396,12 +390,11 @@ describe('ChatHandler', () => {
 
       chatHandler.handleConnection(mockSocket as any);
       
-      const messageHandler = mockSocket.on.mock.calls.find(
-        call => call[0] === 'chat:message'
-      )?.[1];
+      const handlers = mockSocket.getHandlers('chat:message');
+      expect(handlers.length).toBeGreaterThan(0);
       
-      if (messageHandler) {
-        await messageHandler(messageData);
+      if (handlers[0]) {
+        await handlers[0](messageData);
       }
 
       expect(mockSocket.emit).toHaveBeenCalledWith('chat:error', {

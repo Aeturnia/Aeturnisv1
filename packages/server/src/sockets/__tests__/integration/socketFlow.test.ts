@@ -14,7 +14,7 @@ describe('Socket.IO Integration Flow', () => {
   let serverPort: number;
   let mockAuthService: any;
 
-  beforeAll((done) => {
+  beforeAll(async () => {
     // Create test server
     httpServer = createServer();
     ioServer = new Server(httpServer, {
@@ -35,9 +35,11 @@ describe('Socket.IO Integration Flow', () => {
     };
 
     // Start server
-    httpServer.listen(() => {
-      serverPort = httpServer.address().port;
-      done();
+    await new Promise<void>((resolve) => {
+      httpServer.listen(() => {
+        serverPort = httpServer.address().port;
+        resolve();
+      });
     });
   });
 
@@ -52,26 +54,24 @@ describe('Socket.IO Integration Flow', () => {
     }
   });
 
-  it('should establish socket connection successfully', (done) => {
-    clientSocket = ioClient(`http://localhost:${serverPort}`, {
-      auth: { token: 'mock-jwt-token' }
-    });
+  it('should establish socket connection successfully', async () => {
+    await new Promise<void>((resolve, reject) => {
+      clientSocket = ioClient(`http://localhost:${serverPort}`, {
+        auth: { token: 'mock-jwt-token' }
+      });
 
-    clientSocket.on('connect', () => {
-      expect(clientSocket.connected).toBe(true);
-      done();
-    });
+      clientSocket.on('connect', () => {
+        expect(clientSocket.connected).toBe(true);
+        resolve();
+      });
 
-    clientSocket.on('connect_error', (error) => {
-      done(error);
+      clientSocket.on('connect_error', (error) => {
+        reject(error);
+      });
     });
   });
 
-  it('should handle authentication flow', (done) => {
-    clientSocket = ioClient(`http://localhost:${serverPort}`, {
-      auth: { token: 'mock-jwt-token' }
-    });
-
+  it('should handle authentication flow', async () => {
     // Set up authentication middleware mock
     ioServer.use(async (socket, next) => {
       try {
@@ -93,37 +93,43 @@ describe('Socket.IO Integration Flow', () => {
       }
     });
 
-    clientSocket.on('connect', () => {
-      expect(clientSocket.connected).toBe(true);
-      done();
-    });
+    await new Promise<void>((resolve) => {
+      clientSocket = ioClient(`http://localhost:${serverPort}`, {
+        auth: { token: 'mock-jwt-token' }
+      });
 
-    clientSocket.on('connect_error', (error) => {
-      console.error('Connection error:', error.message);
-      done();
+      clientSocket.on('connect', () => {
+        expect(clientSocket.connected).toBe(true);
+        resolve();
+      });
+
+      clientSocket.on('connect_error', (error) => {
+        console.error('Connection error:', error.message);
+        resolve();
+      });
     });
   });
 
-  it('should reject connection with invalid token', (done) => {
+  it('should reject connection with invalid token', async () => {
     mockAuthService.verifyToken.mockRejectedValueOnce(new Error('Invalid token'));
 
-    clientSocket = ioClient(`http://localhost:${serverPort}`, {
-      auth: { token: 'invalid-token' }
-    });
+    await new Promise<void>((resolve, reject) => {
+      clientSocket = ioClient(`http://localhost:${serverPort}`, {
+        auth: { token: 'invalid-token' }
+      });
 
-    clientSocket.on('connect_error', (error) => {
-      expect(error.message).toContain('Authentication failed');
-      done();
-    });
+      clientSocket.on('connect_error', (error) => {
+        expect(error.message).toContain('Authentication failed');
+        resolve();
+      });
 
-    clientSocket.on('connect', () => {
-      done(new Error('Should not connect with invalid token'));
+      clientSocket.on('connect', () => {
+        reject(new Error('Should not connect with invalid token'));
+      });
     });
   });
 
-  it('should handle chat message flow', (done) => {
-    let messageReceived = false;
-
+  it('should handle chat message flow', async () => {
     // Set up server-side handlers
     ioServer.on('connection', (socket) => {
       socket.on('chat:message', (data) => {
@@ -140,47 +146,35 @@ describe('Socket.IO Integration Flow', () => {
       });
     });
 
-    clientSocket = ioClient(`http://localhost:${serverPort}`, {
-      auth: { token: 'mock-jwt-token' }
-    });
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Message not received within timeout'));
+      }, 5000);
 
-    clientSocket.on('connect', () => {
-      // Send test message
-      clientSocket.emit('chat:message', {
-        type: 'zone',
-        message: 'Test message'
+      clientSocket = ioClient(`http://localhost:${serverPort}`, {
+        auth: { token: 'mock-jwt-token' }
+      });
+
+      clientSocket.on('connect', () => {
+        // Send test message
+        clientSocket.emit('chat:message', {
+          type: 'zone',
+          message: 'Test message'
+        });
+      });
+
+      clientSocket.on('chat:message', (data) => {
+        clearTimeout(timeout);
+        expect(data.message).toBe('Test message');
+        expect(data.type).toBe('zone');
+        expect(data.sender).toBeDefined();
+        resolve();
       });
     });
-
-    clientSocket.on('chat:message', (data) => {
-      expect(data.message).toBe('Test message');
-      expect(data.type).toBe('zone');
-      expect(data.sender).toBeDefined();
-      messageReceived = true;
-      done();
-    });
-
-    // Timeout if message not received
-    setTimeout(() => {
-      if (!messageReceived) {
-        done(new Error('Message not received within timeout'));
-      }
     }, 1000);
   });
 
-  it('should handle room joining and broadcasting', (done) => {
-    let messagesReceived = 0;
-    const expectedMessages = 2;
-
-    // Create two clients
-    const client1 = ioClient(`http://localhost:${serverPort}`, {
-      auth: { token: 'mock-jwt-token-1' }
-    });
-
-    const client2 = ioClient(`http://localhost:${serverPort}`, {
-      auth: { token: 'mock-jwt-token-2' }
-    });
-
+  it('should handle room joining and broadcasting', async () => {
     // Set up server-side room handling
     ioServer.on('connection', (socket) => {
       socket.join('test-room');
@@ -190,107 +184,120 @@ describe('Socket.IO Integration Flow', () => {
       });
     });
 
-    const handleMessage = (data: any) => {
-      expect(data.message).toBe('Broadcast test');
-      messagesReceived++;
+    await new Promise<void>((resolve, reject) => {
+      let messagesReceived = 0;
+      const expectedMessages = 2;
       
-      if (messagesReceived === expectedMessages) {
+      const timeout = setTimeout(() => {
         client1.close();
         client2.close();
-        done();
-      }
-    };
+        reject(new Error(`Only received ${messagesReceived}/${expectedMessages} messages`));
+      }, 2000);
 
-    client1.on('connect', () => {
-      client1.on('test:message', handleMessage);
-    });
-
-    client2.on('connect', () => {
-      client2.on('test:message', handleMessage);
-      
-      // Send broadcast from client1
-      client1.emit('test:broadcast', { message: 'Broadcast test' });
-    });
-
-    // Cleanup timeout
-    setTimeout(() => {
-      client1.close();
-      client2.close();
-      if (messagesReceived < expectedMessages) {
-        done(new Error(`Only received ${messagesReceived}/${expectedMessages} messages`));
-      }
-    }, 2000);
-  });
-
-  it('should handle disconnect events properly', (done) => {
-    let disconnectHandled = false;
-
-    ioServer.on('connection', (socket) => {
-      socket.on('disconnect', (reason) => {
-        expect(reason).toBeDefined();
-        disconnectHandled = true;
-        done();
-      });
-    });
-
-    clientSocket = ioClient(`http://localhost:${serverPort}`, {
-      auth: { token: 'mock-jwt-token' }
-    });
-
-    clientSocket.on('connect', () => {
-      // Immediately disconnect to test disconnect handling
-      clientSocket.close();
-    });
-
-    // Timeout if disconnect not handled
-    setTimeout(() => {
-      if (!disconnectHandled) {
-        done(new Error('Disconnect event not handled'));
-      }
-    }, 1000);
-  });
-
-  it('should handle concurrent connections', (done) => {
-    const numberOfClients = 5;
-    const clients: ClientSocket[] = [];
-    let connectionsEstablished = 0;
-
-    for (let i = 0; i < numberOfClients; i++) {
-      const client = ioClient(`http://localhost:${serverPort}`, {
-        auth: { token: `mock-jwt-token-${i}` }
+      // Create two clients
+      const client1 = ioClient(`http://localhost:${serverPort}`, {
+        auth: { token: 'mock-jwt-token-1' }
       });
 
-      client.on('connect', () => {
-        connectionsEstablished++;
+      const client2 = ioClient(`http://localhost:${serverPort}`, {
+        auth: { token: 'mock-jwt-token-2' }
+      });
+
+      const handleMessage = (data: any) => {
+        expect(data.message).toBe('Broadcast test');
+        messagesReceived++;
         
-        if (connectionsEstablished === numberOfClients) {
-          // All clients connected successfully
-          clients.forEach(c => c.close());
-          done();
+        if (messagesReceived === expectedMessages) {
+          clearTimeout(timeout);
+          client1.close();
+          client2.close();
+          resolve();
         }
+      };
+
+      client1.on('connect', () => {
+        client1.on('test:message', handleMessage);
       });
 
-      client.on('connect_error', (error) => {
-        clients.forEach(c => c.close());
-        done(error);
+      client2.on('connect', () => {
+        client2.on('test:message', handleMessage);
+        
+        // Send broadcast from client1
+        client1.emit('test:broadcast', { message: 'Broadcast test' });
       });
-
-      clients.push(client);
-    }
-
-    // Timeout for concurrent connections
-    setTimeout(() => {
-      clients.forEach(c => c.close());
-      if (connectionsEstablished < numberOfClients) {
-        done(new Error(`Only ${connectionsEstablished}/${numberOfClients} clients connected`));
-      }
-    }, 3000);
+    });
   });
 
-  it('should handle error recovery', (done) => {
-    let errorReceived = false;
-    let recoverySuccessful = false;
+  it('should handle disconnect events properly', async () => {
+    await new Promise<void>((resolve, reject) => {
+      let disconnectHandled = false;
+      
+      const timeout = setTimeout(() => {
+        if (!disconnectHandled) {
+          reject(new Error('Disconnect event not handled'));
+        }
+      }, 1000);
 
+      ioServer.on('connection', (socket) => {
+        socket.on('disconnect', (reason) => {
+          clearTimeout(timeout);
+          expect(reason).toBeDefined();
+          disconnectHandled = true;
+          resolve();
+        });
+      });
+
+      clientSocket = ioClient(`http://localhost:${serverPort}`, {
+        auth: { token: 'mock-jwt-token' }
+      });
+
+      clientSocket.on('connect', () => {
+        // Immediately disconnect to test disconnect handling
+        clientSocket.close();
+      });
+    });
+  });
+
+  it('should handle concurrent connections', async () => {
+    const numberOfClients = 5;
+    
+    await new Promise<void>((resolve, reject) => {
+      const clients: ClientSocket[] = [];
+      let connectionsEstablished = 0;
+      
+      const timeout = setTimeout(() => {
+        clients.forEach(c => c.close());
+        reject(new Error(`Only ${connectionsEstablished}/${numberOfClients} clients connected`));
+      }, 3000);
+
+      for (let i = 0; i < numberOfClients; i++) {
+        const client = ioClient(`http://localhost:${serverPort}`, {
+          auth: { token: `mock-jwt-token-${i}` }
+        });
+
+        client.on('connect', () => {
+          connectionsEstablished++;
+          
+          if (connectionsEstablished === numberOfClients) {
+            clearTimeout(timeout);
+            // All clients connected successfully
+            clients.forEach(c => c.close());
+            resolve();
+          }
+        });
+
+        client.on('connect_error', (error) => {
+          clearTimeout(timeout);
+          clients.forEach(c => c.close());
+          reject(error);
+        });
+
+        clients.push(client);
+      }
+    });
+  });
+
+  it('should handle error recovery', async () => {
     ioServer.on('connection', (socket) => {
       socket.on('test:error', () => {
         socket.emit('error', new Error('Test error'));
@@ -301,37 +308,40 @@ describe('Socket.IO Integration Flow', () => {
       });
     });
 
-    clientSocket = ioClient(`http://localhost:${serverPort}`, {
-      auth: { token: 'mock-jwt-token' }
-    });
-
-    clientSocket.on('connect', () => {
-      // Trigger an error
-      clientSocket.emit('test:error');
-    });
-
-    clientSocket.on('error', (error) => {
-      expect(error).toBeDefined();
-      errorReceived = true;
+    await new Promise<void>((resolve, reject) => {
+      let errorReceived = false;
+      let recoverySuccessful = false;
       
-      // Attempt recovery
-      clientSocket.emit('test:recovery');
-    });
+      const timeout = setTimeout(() => {
+        reject(new Error('Error recovery test failed'));
+      }, 2000);
 
-    clientSocket.on('test:recovered', (data) => {
-      expect(data.success).toBe(true);
-      recoverySuccessful = true;
-      
-      if (errorReceived && recoverySuccessful) {
-        done();
-      }
-    });
+      clientSocket = ioClient(`http://localhost:${serverPort}`, {
+        auth: { token: 'mock-jwt-token' }
+      });
 
-    // Timeout for error recovery test
-    setTimeout(() => {
-      if (!errorReceived || !recoverySuccessful) {
-        done(new Error('Error recovery test failed'));
-      }
-    }, 2000);
+      clientSocket.on('connect', () => {
+        // Trigger an error
+        clientSocket.emit('test:error');
+      });
+
+      clientSocket.on('error', (error) => {
+        expect(error).toBeDefined();
+        errorReceived = true;
+        
+        // Attempt recovery
+        clientSocket.emit('test:recovery');
+      });
+
+      clientSocket.on('test:recovered', (data) => {
+        expect(data.success).toBe(true);
+        recoverySuccessful = true;
+        
+        if (errorReceived && recoverySuccessful) {
+          clearTimeout(timeout);
+          resolve();
+        }
+      });
+    });
   });
 });

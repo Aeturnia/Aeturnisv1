@@ -7,6 +7,7 @@ export class MockSocket extends EventEmitter {
   user?: SocketUser;
   joinedRooms = new Set<string>();
   rooms = new Set<string>();
+  eventHandlers = new Map<string, Function[]>();
   
   // Mock handshake for auth testing
   handshake = {
@@ -32,8 +33,17 @@ export class MockSocket extends EventEmitter {
   });
   
   emit = vi.fn();
-  to = vi.fn((room: string | string[]) => ({ emit: vi.fn() }));
+  to = vi.fn((_room: string | string[]) => ({ emit: vi.fn() }));
   disconnect = vi.fn();
+  
+  // Override on to track event handlers
+  on(event: string, handler: Function): this {
+    if (!this.eventHandlers.has(event)) {
+      this.eventHandlers.set(event, []);
+    }
+    this.eventHandlers.get(event)!.push(handler);
+    return super.on(event, handler as any);
+  }
   
   constructor(user?: SocketUser) {
     super();
@@ -43,6 +53,11 @@ export class MockSocket extends EventEmitter {
   // Helper to authenticate the socket
   authenticate(user: SocketUser) {
     this.user = user;
+  }
+  
+  // Helper to get registered handlers for testing
+  getHandlers(event: string): Function[] {
+    return this.eventHandlers.get(event) || [];
   }
 }
 
