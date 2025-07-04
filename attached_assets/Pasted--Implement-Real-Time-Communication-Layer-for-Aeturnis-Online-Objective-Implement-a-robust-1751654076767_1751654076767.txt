@@ -1,0 +1,227 @@
+# Implement Real-Time Communication Layer for Aeturnis Online
+
+## 🎯 Objective
+Implement a robust Socket.IO infrastructure to enable real-time multiplayer features including chat, character movement, combat actions, and guild interactions. The system must support horizontal scaling via Redis and maintain secure JWT-based authentication.
+
+## 📦 Setup Instructions
+```bash
+# Switch to the correct branch
+git checkout -b realtime-layer-v1
+
+# Install required dependencies
+npm install socket.io socket.io-redis redis @types/socket.io
+```
+
+## 🏗️ Implementation Tasks
+
+### 1. Create Socket Server (`src/sockets/SocketServer.ts`)
+```typescript
+// Initialize Socket.IO server with the following configuration:
+- Attach to existing Express server
+- Configure CORS for development and production
+- Set up Redis adapter for horizontal scaling
+- Implement connection throttling and rate limiting
+- Configure reconnection settings (max retries, backoff strategy)
+```
+
+### 2. Implement JWT Authentication Middleware (`src/sockets/middleware/authMiddleware.ts`)
+```typescript
+// Create middleware that:
+- Extracts JWT from handshake auth or query params
+- Validates token using existing auth service
+- Attaches user context (userId, characterId) to socket
+- Rejects unauthorized connections with clear error messages
+- Handles token refresh during reconnection
+```
+
+### 3. Set Up Redis Adapter (`src/sockets/adapters/redisAdapter.ts`)
+```typescript
+// Configure Redis adapter:
+- Connect to Redis instance (use env vars for connection string)
+- Set up pub/sub channels for cross-server communication
+- Implement connection pooling
+- Add error handling and reconnection logic
+- Monitor adapter health and log metrics
+```
+
+### 4. Create Connection Event Handlers (`src/sockets/handlers/connectionHandlers.ts`)
+```typescript
+// Implement core connection events:
+- connection: Log user connect, join appropriate rooms, sync initial state
+- disconnect: Clean up user presence, notify relevant rooms
+- reconnect: Restore user state, rejoin rooms, resync data
+- error: Log errors with context, handle gracefully
+```
+
+### 5. Implement Room Management (`src/sockets/services/RoomService.ts`)
+```typescript
+// Create room management with these patterns:
+- user:{userId} - Private user channel
+- zone:{zoneId} - Zone-based broadcasts (e.g., "zone:tavern-district")
+- combat:{sessionId} - Combat session rooms
+- guild:{guildId} - Guild-specific channels
+- party:{partyId} - Party/group channels
+
+// Include methods for:
+- joinRoom(socket, roomType, roomId)
+- leaveRoom(socket, roomType, roomId)
+- getRoomMembers(roomType, roomId)
+- broadcastToRoom(roomType, roomId, event, data)
+```
+
+### 6. Create Event Handlers (`src/sockets/handlers/`)
+
+#### Chat Handler (`chatHandler.ts`)
+```typescript
+// Handle chat events:
+- chat:message - Zone, guild, party, whisper messages
+- chat:typing - Typing indicators
+- chat:emoji - Emoji reactions
+// Include spam prevention and profanity filtering
+```
+
+#### Character Handler (`characterHandler.ts`)
+```typescript
+// Handle character events:
+- character:move - Movement updates with position validation
+- character:action - Non-combat actions (emotes, interactions)
+- character:status - Health, mana, buff updates
+// Implement position interpolation and anti-cheat checks
+```
+
+#### Combat Handler (`combatHandler.ts`)
+```typescript
+// Handle combat events:
+- combat:action - Attack, skill use, item use
+- combat:turn - Turn-based combat updates
+- combat:result - Damage, healing, status effects
+// Ensure server-authoritative combat validation
+```
+
+### 7. Create Realtime Service (`src/services/RealtimeService.ts`)
+```typescript
+export class RealtimeService {
+  // Core methods:
+  - emitToUser(userId: string, event: string, data: any)
+  - emitToZone(zoneId: string, event: string, data: any)
+  - emitToCombat(sessionId: string, event: string, data: any)
+  - emitToGuild(guildId: string, event: string, data: any)
+  - broadcastToAll(event: string, data: any)
+  
+  // Utility methods:
+  - getUserSockets(userId: string): Socket[]
+  - isUserOnline(userId: string): boolean
+  - getZonePopulation(zoneId: string): number
+  - disconnectUser(userId: string, reason: string)
+}
+```
+
+### 8. Integrate with Express Server (`src/server.ts`)
+```typescript
+// Modify existing server.ts to:
+- Import and initialize SocketServer
+- Pass Express server instance to Socket.IO
+- Set up shared session middleware if needed
+- Configure health check endpoint for socket connections
+```
+
+### 9. Create Type Definitions (`src/types/socket.types.ts`)
+```typescript
+// Define TypeScript interfaces:
+- SocketWithAuth extends Socket with user context
+- Event payload interfaces for each event type
+- Room type enums
+- Error response formats
+```
+
+### 10. Implement Logging and Monitoring (`src/sockets/utils/logger.ts`)
+```typescript
+// Create socket-specific logging:
+- Connection/disconnection logs with user context
+- Event emission logs with room and event details
+- Error logs with stack traces
+- Performance metrics (latency, message rates)
+```
+
+## 🧪 Testing Requirements
+
+### Create Test Client (`src/tests/socketClient.test.ts`)
+```typescript
+// Implement tests for:
+- Successful JWT authentication
+- Failed authentication scenarios
+- Room join/leave operations
+- Event emission and reception
+- Reconnection with state persistence
+- Redis adapter failover
+```
+
+## 📋 Implementation Checklist
+- [ ] Socket.IO server initialized and attached to Express
+- [ ] JWT authentication middleware validates all connections
+- [ ] Redis adapter configured with proper error handling
+- [ ] Connection lifecycle events implemented
+- [ ] Room management supports all game contexts
+- [ ] Event handlers created for chat, movement, and combat
+- [ ] RealtimeService provides clean API for broadcasting
+- [ ] TypeScript types defined for all socket events
+- [ ] Logging captures all important events
+- [ ] Tests verify core functionality
+
+## 🔒 Security Considerations
+- Validate all incoming event payloads
+- Implement rate limiting per event type
+- Sanitize chat messages
+- Verify user permissions for room access
+- Prevent position spoofing in movement events
+- Ensure combat actions are server-validated
+
+## 🚀 Performance Optimizations
+- Use event namespaces to reduce unnecessary processing
+- Implement event throttling for high-frequency updates
+- Batch position updates for efficiency
+- Use binary data for combat calculations
+- Monitor and log slow event handlers
+
+## 📝 Environment Variables
+```env
+SOCKET_PORT=3001
+REDIS_URL=redis://localhost:6379
+SOCKET_CORS_ORIGIN=http://localhost:3000
+JWT_SECRET=your-secret-key
+SOCKET_PING_INTERVAL=25000
+SOCKET_PING_TIMEOUT=60000
+```
+
+## 🎮 Example Usage
+```typescript
+// Client connection example
+const socket = io('http://localhost:3001', {
+  auth: { token: 'jwt-token-here' },
+  reconnection: true,
+  reconnectionAttempts: 5
+});
+
+// Listening for events
+socket.on('chat:message', (data) => {
+  console.log(`${data.sender}: ${data.message}`);
+});
+
+// Emitting events
+socket.emit('character:move', {
+  x: 100,
+  y: 200,
+  zoneId: 'tavern-district'
+});
+```
+
+## 📊 Success Metrics
+- All CI tests pass in GitHub Actions
+- Socket connections authenticate via JWT
+- Redis adapter enables cross-server communication
+- Events route correctly to appropriate rooms
+- Reconnection restores user state properly
+- Console logs show clean event flow
+- No memory leaks after extended operation
+
+Remember to commit your changes and push to the `realtime-layer-v1` branch for CI validation!
