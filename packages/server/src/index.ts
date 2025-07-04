@@ -8,6 +8,7 @@ export const greet = (name: string): string => {
 // Basic HTTP server implementation
 const createServer = () => {
   const server = http.createServer((req, res) => {
+    console.log(`📩 ${req.method} ${req.url} from ${req.connection.remoteAddress}`);
     const parsedUrl = url.parse(req.url || '', true);
     
     // Enable CORS
@@ -57,16 +58,25 @@ const createServer = () => {
     }
   });
 
+  // Add error handling
+  server.on('error', (err) => {
+    console.error('❌ Server error:', err);
+  });
+
+  server.on('connection', (socket) => {
+    console.log('🔌 New connection from', socket.remoteAddress);
+  });
+
   return server;
 };
 
 // Start server
 if (require.main === module) {
-  const PORT = process.env.PORT || 3000;
+  const PORT = process.env.PORT || 5000;
   const server = createServer();
   
-  server.listen(PORT, () => {
-    console.log(`🚀 Aeturnis Online server running on http://localhost:${PORT}`);
+  server.listen(Number(PORT), '0.0.0.0', () => {
+    console.log(`🚀 Aeturnis Online server running on http://0.0.0.0:${PORT}`);
     console.log(`📊 Health check: http://localhost:${PORT}/health`);
     console.log(`🔍 API status: http://localhost:${PORT}/api/status`);
   });
