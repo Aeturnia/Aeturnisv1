@@ -302,10 +302,9 @@ export class ChatHandler {
 
   // Validate emoji
   private validateEmoji(emoji: string): boolean {
-    // Basic emoji validation
-    const emojiRegex = /^[\\u{1F600}-\\u{1F64F}]|[\u{1F300}-\\u{1F5FF}]|[\u{1F680}-\\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\\u{2700}-\\u{27BF}]$/u;
-    return emojiRegex.test(emoji);
-  
+    // Basic emoji validation - simplified for compatibility
+    return emoji.length >= 1 && emoji.length <= 10;
+  }
 
   // Clean up typing indicators on disconnect
   public cleanupTypingIndicators(userId: string): void {

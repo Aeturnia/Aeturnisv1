@@ -131,6 +131,9 @@ export class ConnectionHandlers {
 
   // Join user's private room
   private async joinUserPrivateRoom(socket: SocketWithAuth): Promise<void> {
+    if (!socket.user) {
+      return;
+    }
     const { userId } = socket.user;
     
     try {
@@ -152,6 +155,9 @@ export class ConnectionHandlers {
 
   // Restore user's previous rooms
   private async restoreUserRooms(socket: SocketWithAuth): Promise<void> {
+    if (!socket.user) {
+      return;
+    }
     const { userId } = socket.user;
     
     try {
