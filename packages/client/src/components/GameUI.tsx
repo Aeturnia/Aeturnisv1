@@ -5,8 +5,8 @@ export function GameUI() {
   const game = useGame();
   
   const handleAction = (action: string) => {
-    console.log(`Performing action: ${action}`);
     // Here you would typically send the action to the game server
+    console.warn(`Game action: ${action}`);
   };
 
   const currentCharacter = game?.currentCharacter || null;
