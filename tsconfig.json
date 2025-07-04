@@ -11,16 +11,9 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
     "rootDir": "./src",
     "outDir": "./dist"
   },
   "include": ["src/**/*"],
-  "exclude": ["**/*.test.ts", "**/*.spec.ts", "src/routes/auth.routes.ts", "src/middleware/auth.ts", "src/middleware/errorHandler.ts", "src/services/AuthService.ts", "src/database/**/*", "src/cache/**/*"]
+  "exclude": ["node_modules", "dist", "packages"]
 }

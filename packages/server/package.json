@@ -4,7 +4,7 @@
   "private": true,
   "main": "dist/index.js",
   "scripts": {
-    "dev": "ts-node src/index.ts",
+    "dev": "node dist/index.js",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

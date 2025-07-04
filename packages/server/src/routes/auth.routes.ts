@@ -17,7 +17,7 @@ const loginLimiter = rateLimiter({
 });
 
 // Registration endpoint
-router.post('/register', asyncHandler(async (req, res) => {
+router.post('/register', asyncHandler(async (req: Request, res: Response) => {
   const result = await authService.register(req.body);
   
   res.status(201).json({
@@ -27,7 +27,7 @@ router.post('/register', asyncHandler(async (req, res) => {
 }));
 
 // Login endpoint with rate limiting
-router.post('/login', loginLimiter, asyncHandler(async (req, res) => {
+router.post('/login', loginLimiter, asyncHandler(async (req: Request, res: Response) => {
   const result = await authService.login(req.body);
   
   res.json({
@@ -37,7 +37,7 @@ router.post('/login', loginLimiter, asyncHandler(async (req, res) => {
 }));
 
 // Refresh token endpoint
-router.post('/refresh', asyncHandler(async (req, res) => {
+router.post('/refresh', asyncHandler(async (req: Request, res: Response) => {
   const { refreshToken } = req.body;
   
   if (!refreshToken) {

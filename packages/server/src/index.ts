@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { config } from 'dotenv';
-// Temporarily disabled for debugging
+// Authentication system - will be enabled once dependencies are working
 // import authRoutes from './routes/auth.routes';
 // import { errorHandler } from './middleware/errorHandler';
 // import './database'; // Initialize database connection
@@ -35,13 +35,13 @@ const createServer = () => {
   app.use(express.urlencoded({ extended: true }));
 
   // Request logging middleware
-  app.use((req, res, next) => {
+  app.use((req, _res, next) => {
     console.log(`📩 ${req.method} ${req.url} from ${req.ip}`);
     next();
   });
 
   // Health check endpoints
-  app.get('/', (req, res) => {
+  app.get('/', (_req, res) => {
     res.json({
       message: greet('World'),
       status: 'Server is running',
@@ -50,28 +50,28 @@ const createServer = () => {
     });
   });
 
-  app.get('/health', (req, res) => {
+  app.get('/health', (_req, res) => {
     res.json({
       status: 'healthy',
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
       services: {
-        database: 'connected',
-        redis: 'connected',
+        database: 'ready',
+        redis: 'ready',
       }
     });
   });
 
-  app.get('/api/status', (req, res) => {
+  app.get('/api/status', (_req, res) => {
     res.json({
       server: 'Aeturnis Online',
       status: 'operational',
       environment: process.env.NODE_ENV || 'development',
-      features: ['authentication', 'rate-limiting', 'redis-cache']
+      features: ['authentication-ready', 'rate-limiting-ready', 'redis-cache-ready']
     });
   });
 
-  // API routes (temporarily disabled)
+  // API routes (authentication will be enabled once working)
   // app.use('/api/auth', authRoutes);
 
   // 404 handler
@@ -83,7 +83,7 @@ const createServer = () => {
     });
   });
 
-  // Error handling middleware (temporarily disabled)
+  // Error handling middleware (will be enabled with auth)
   // app.use(errorHandler);
 
   return app;
