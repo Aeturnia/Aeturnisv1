@@ -18,22 +18,19 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: 20
-        cache: yarn
+        cache: npm
 
     - name: 📦 Install dependencies
-      run: yarn install --frozen-lockfile
+      run: npm ci
 
     - name: 🔍 Type checking
-      run: yarn typecheck
+      run: npm run typecheck
 
     - name: 🧹 Lint code
-      run: yarn lint
+      run: npm run lint
 
     - name: 🧪 Run tests with coverage
-      run: |
-        cd packages/shared && npm run test:coverage
-        cd packages/server && npm run test:coverage
-        cd packages/client && npm run test:coverage
+      run: npm run test:coverage
       env:
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
