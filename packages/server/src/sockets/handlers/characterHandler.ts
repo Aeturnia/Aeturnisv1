@@ -5,7 +5,6 @@ import { RoomService } from '../services/RoomService';
 import { isAuthenticated } from '../middleware/authMiddleware';
 
 export class CharacterHandler {
-  private io: Server;
   private roomService: RoomService;
   private movementCooldowns: Map<string, number>;
   private actionCooldowns: Map<string, number>;
@@ -13,8 +12,7 @@ export class CharacterHandler {
   private readonly ACTION_COOLDOWN = 1000; // 1 second between actions
   private readonly MAX_MOVEMENT_SPEED = 10; // Maximum movement units per update
 
-  constructor(io: Server, roomService: RoomService) {
-    this.io = io;
+  constructor(_io: Server, roomService: RoomService) {
     this.roomService = roomService;
     this.movementCooldowns = new Map();
     this.actionCooldowns = new Map();
@@ -200,6 +198,11 @@ export class CharacterHandler {
 
   // Handle emote action
   private handleEmoteAction(socket: SocketWithAuth, payload: CharacterActionPayload): void {
+    if (!socket.user) {
+      socket.emit('error', { code: 'AUTH_REQUIRED', message: 'Authentication required' });
+      return;
+    }
+    
     const { userId } = socket.user;
     
     // Get current zone (placeholder implementation)
@@ -221,6 +224,11 @@ export class CharacterHandler {
 
   // Handle interact action
   private handleInteractAction(socket: SocketWithAuth, payload: CharacterActionPayload): void {
+    if (!socket.user) {
+      socket.emit('error', { code: 'AUTH_REQUIRED', message: 'Authentication required' });
+      return;
+    }
+    
     const { userId } = socket.user;
     
     // Validate interaction target
@@ -251,6 +259,11 @@ export class CharacterHandler {
 
   // Handle cast action
   private handleCastAction(socket: SocketWithAuth, payload: CharacterActionPayload): void {
+    if (!socket.user) {
+      socket.emit('error', { code: 'AUTH_REQUIRED', message: 'Authentication required' });
+      return;
+    }
+    
     const { userId } = socket.user;
     
     // Validate skill casting
@@ -281,6 +294,11 @@ export class CharacterHandler {
 
   // Handle use item action
   private handleUseItemAction(socket: SocketWithAuth, payload: CharacterActionPayload): void {
+    if (!socket.user) {
+      socket.emit('error', { code: 'AUTH_REQUIRED', message: 'Authentication required' });
+      return;
+    }
+    
     const { userId } = socket.user;
     
     // Validate item usage
@@ -311,11 +329,16 @@ export class CharacterHandler {
 
   // Handle zone changes
   private async handleZoneChange(socket: SocketWithAuth, payload: CharacterMovePayload): Promise<void> {
+    if (!socket.user) {
+      socket.emit('error', { code: 'AUTH_REQUIRED', message: 'Authentication required' });
+      return;
+    }
+    
     // TODO: Implement actual zone change logic
     // For now, just ensure user is in the correct zone room
     
     const members = this.roomService.getRoomMembers(RoomType.ZONE, payload.zoneId);
-    const isInZone = members.some(member => member.userId === socket.user.userId);
+    const isInZone = members.some(member => member.userId === socket.user!.userId);
     
     if (!isInZone) {
       await this.roomService.joinRoom(socket, RoomType.ZONE, payload.zoneId);
@@ -323,7 +346,7 @@ export class CharacterHandler {
   }
 
   // Broadcast status update to relevant users
-  private broadcastStatusUpdate(socket: SocketWithAuth, statusUpdate: CharacterStatusPayload & { userId: string }): void {
+  private broadcastStatusUpdate(_socket: SocketWithAuth, statusUpdate: CharacterStatusPayload & { userId: string }): void {
     // Broadcast to party members
     const partyId = 'default-party'; // TODO: Get user's actual party
     this.roomService.broadcastToRoom(RoomType.PARTY, partyId, 'character:status', statusUpdate);
@@ -407,7 +430,7 @@ export class CharacterHandler {
   }
 
   // Validate status changes against server state
-  private validateStatusChanges(socket: SocketWithAuth, payload: CharacterStatusPayload): boolean {
+  private validateStatusChanges(_socket: SocketWithAuth, _payload: CharacterStatusPayload): boolean {
     // TODO: Implement server-side validation against stored character state
     // This would prevent clients from sending arbitrary status updates
     return true;

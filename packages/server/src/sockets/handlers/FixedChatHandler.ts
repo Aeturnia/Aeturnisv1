@@ -385,17 +385,17 @@ export class ChatHandler {
   }
 
   // Helper methods (TODO: Implement with actual data sources)
-  private async getCurrentZone(userId: string): Promise<string | null> {
+  private async getCurrentZone(_userId: string): Promise<string | null> {
     // TODO: Get user's current zone from database
     return 'tavern-district'; // Default zone
   }
 
-  private async getUserGuild(userId: string): Promise<string | null> {
+  private async getUserGuild(_userId: string): Promise<string | null> {
     // TODO: Get user's guild from database
     return null;
   }
 
-  private async getUserParty(userId: string): Promise<string | null> {
+  private async getUserParty(_userId: string): Promise<string | null> {
     // TODO: Get user's party from database
     return null;
   }

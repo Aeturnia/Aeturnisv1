@@ -360,11 +360,13 @@ export class ConnectionHandlers {
       }
     });
 
-    logger.debug('Socket event handlers set up', {
-      userId: socket.user.userId,
-      socketId: socket.id,
-      service: 'connection-handler',
-    });
+    if (socket.user) {
+      logger.debug('Socket event handlers set up', {
+        userId: socket.user.userId,
+        socketId: socket.id,
+        service: 'connection-handler',
+      });
+    }
   }
 }
 

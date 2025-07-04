@@ -5,7 +5,6 @@ import { RoomService } from '../services/RoomService';
 import { isAuthenticated } from '../middleware/authMiddleware';
 
 export class ChatHandler {
-  private io: Server;
   private roomService: RoomService;
   private typingUsers: Map<string, { userId: string; roomId: string; timeout: NodeJS.Timeout }>;
   private messageCooldowns: Map<string, number>;
@@ -13,8 +12,7 @@ export class ChatHandler {
   private readonly MESSAGE_COOLDOWN = 1000; // 1 second between messages
   private readonly MAX_MESSAGE_LENGTH = 500;
 
-  constructor(io: Server, roomService: RoomService) {
-    this.io = io;
+  constructor(_io: Server, roomService: RoomService) {
     this.roomService = roomService;
     this.typingUsers = new Map();
     this.messageCooldowns = new Map();
@@ -165,12 +163,20 @@ export class ChatHandler {
 
   // Handle zone message
   private handleZoneMessage(socket: SocketWithAuth, payload: ChatMessagePayload): void {
+    if (!socket.user) {
+      socket.emit('system:notification', {
+        type: 'error',
+        message: 'Authentication required',
+      });
+      return;
+    }
+
     // Get user's current zone (default to tavern-district)
     const zoneId = 'tavern-district'; // TODO: Get from user's current location
     
     // Check if user is in the zone room
     const members = this.roomService.getRoomMembers(RoomType.ZONE, zoneId);
-    const isInZone = members.some(member => member.userId === socket.user.userId);
+    const isInZone = members.some(member => member.userId === socket.user!.userId);
     
     if (!isInZone) {
       socket.emit('system:notification', {
@@ -185,7 +191,7 @@ export class ChatHandler {
   }
 
   // Handle guild message
-  private handleGuildMessage(socket: SocketWithAuth, payload: ChatMessagePayload): void {
+  private handleGuildMessage(_socket: SocketWithAuth, payload: ChatMessagePayload): void {
     // TODO: Get user's guild ID
     const guildId = 'default-guild'; // Placeholder
     
@@ -197,7 +203,7 @@ export class ChatHandler {
   }
 
   // Handle party message
-  private handlePartyMessage(socket: SocketWithAuth, payload: ChatMessagePayload): void {
+  private handlePartyMessage(_socket: SocketWithAuth, payload: ChatMessagePayload): void {
     // TODO: Get user's party ID
     const partyId = 'default-party'; // Placeholder
     
@@ -252,7 +258,7 @@ export class ChatHandler {
   }
 
   // Broadcast typing indicator
-  private broadcastTypingIndicator(socket: SocketWithAuth, payload: TypingIndicatorPayload): void {
+  private broadcastTypingIndicator(_socket: SocketWithAuth, payload: TypingIndicatorPayload): void {
     switch (payload.type) {
       case 'zone':
         const zoneId = 'tavern-district'; // TODO: Get from user's current location

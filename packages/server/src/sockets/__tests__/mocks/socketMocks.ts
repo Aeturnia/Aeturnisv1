@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { vi } from 'vitest';
-import { SocketUser, SocketWithAuth } from '../../../types/socket.types';
+import { SocketUser } from '../../../types/socket.types';
 
 export class MockSocket extends EventEmitter {
   id = 'mock-socket-id';

@@ -23,7 +23,7 @@ export class ConnectionHandlers {
       return;
     }
 
-    const { userId, email, characterId } = socket.user;
+    const { userId, email, characterId: _characterId } = socket.user;
 
     logger.info('User connected via socket', {
       userId,
@@ -270,7 +270,8 @@ export class ConnectionHandlers {
       const userRooms = this.roomService.getUserRooms(userId);
       
       userRooms.forEach(roomId => {
-        socket.to(roomId).emit('system:notification', {
+        const roomIdentifier = typeof roomId === 'string' ? roomId : roomId.identifier;
+        socket.to(roomIdentifier).emit('system:notification', {
           type: 'info',
           message: `${email.split('@')[0]} went offline`,
         });
@@ -300,7 +301,8 @@ export class ConnectionHandlers {
       const userRooms = this.roomService.getUserRooms(userId);
       
       userRooms.forEach(roomId => {
-        socket.to(roomId).emit('system:notification', {
+        const roomIdentifier = typeof roomId === 'string' ? roomId : roomId.identifier;
+        socket.to(roomIdentifier).emit('system:notification', {
           type: 'info',
           message: `${email.split('@')[0]} came online`,
         });
