@@ -1,0 +1,596 @@
+# Replit Agent: Self-Audit for Step 1.4 - Express API Infrastructure
+
+## 🎯 Objective
+Perform a comprehensive self-audit of the Express API Infrastructure implementation to ensure all requirements are met, security is properly configured, and the system is production-ready.
+
+## 📋 Audit Checklist
+
+### 1. Server Startup Verification
+
+#### 1.1 Basic Server Start
+```bash
+# Start the server
+yarn dev
+
+# Expected console output:
+# ✅ Database connection established
+# ✅ Redis connection established  
+# 🚀 Server running on port 3000
+# Environment: development
+# API Documentation: http://localhost:3000/api-docs
+```
+
+#### 1.2 Environment Variable Validation
+```bash
+# Test with missing required env vars
+unset JWT_SECRET
+yarn dev
+
+# Should see error:
+# ❌ Missing required environment variable: JWT_SECRET
+# Process should exit with code 1
+```
+
+#### 1.3 Graceful Shutdown Test
+```bash
+# Start server
+yarn dev
+
+# In another terminal, send SIGTERM
+kill -TERM $(lsof -ti:3000)
+
+# Expected logs:
+# SIGTERM received: closing HTTP server
+# HTTP server closed
+# Database connections closed
+# Redis connection closed
+```
+
+### 2. Middleware Stack Validation
+
+#### 2.1 Middleware Order Test
+```typescript
+// Create test to verify middleware execution order
+// test/middleware-order.test.ts
+import request from 'supertest';
+import app from '../src/app';
+
+describe('Middleware Order', () => {
+  it('should execute middleware in correct order', async () => {
+    const response = await request(app)
+      .get('/health')
+      .expect(200);
+
+    // Check headers set by middleware
+    expect(response.headers['x-request-id']).toBeDefined(); // requestLogger
+    expect(response.headers['x-response-time']).toBeDefined(); // performanceTracker
+    expect(response.headers['x-content-type-options']).toBe('nosniff'); // helmet
+  });
+});
+```
+
+#### 2.2 Body Parser Limits
+```bash
+# Test JSON body limit (should accept up to 10MB)
+curl -X POST http://localhost:3000/api/v1/test \
+  -H "Content-Type: application/json" \
+  -d @large-payload.json # Create 9MB file
+
+# Test exceeding limit (should reject >10MB)
+curl -X POST http://localhost:3000/api/v1/test \
+  -H "Content-Type: application/json" \
+  -d @huge-payload.json # Create 11MB file
+# Expected: 413 Payload Too Large
+```
+
+### 3. Security Configuration
+
+#### 3.1 Helmet Headers Verification
+```bash
+# Check security headers
+curl -I http://localhost:3000/health
+
+# Expected headers:
+# ✓ X-DNS-Prefetch-Control: off
+# ✓ X-Frame-Options: SAMEORIGIN
+# ✓ X-Content-Type-Options: nosniff
+# ✓ X-XSS-Protection: 0
+# ✓ Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+# ✓ Content-Security-Policy: [CSP directives]
+# ✗ X-Powered-By: [Should NOT be present]
+```
+
+#### 3.2 CORS Configuration Test
+```bash
+# Test allowed origin
+curl -X OPTIONS http://localhost:3000/api/v1/ \
+  -H "Origin: http://localhost:5173" \
+  -H "Access-Control-Request-Method: GET" \
+  -I
+
+# Expected:
+# ✓ Access-Control-Allow-Origin: http://localhost:5173
+# ✓ Access-Control-Allow-Credentials: true
+# ✓ HTTP/1.1 200 OK
+
+# Test disallowed origin
+curl -X OPTIONS http://localhost:3000/api/v1/ \
+  -H "Origin: http://evil.com" \
+  -H "Access-Control-Request-Method: GET" \
+  -I
+
+# Expected:
+# ✗ No Access-Control-Allow-Origin header
+# ✓ HTTP/1.1 500 (CORS error)
+```
+
+#### 3.3 Rate Limiting Verification
+```bash
+# Test global rate limit (100 req/min)
+for i in {1..105}; do
+  echo -n "$i: "
+  curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3000/api/v1/
+done
+
+# Expected:
+# 1-100: 200
+# 101-105: 429 (Rate limit exceeded)
+
+# Test auth rate limit (5 req/min)
+for i in {1..7}; do
+  echo -n "$i: "
+  curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:3000/api/v1/auth/login \
+    -H "Content-Type: application/json" \
+    -d '{"email":"test@test.com","password":"wrong"}'
+done
+
+# Expected:
+# 1-5: 401 (or appropriate auth error)
+# 6-7: 429 (Rate limit exceeded)
+```
+
+### 4. Error Handling Verification
+
+#### 4.1 Structured Error Responses
+```bash
+# Test 404 error
+curl http://localhost:3000/nonexistent | jq
+
+# Expected JSON structure:
+{
+  "success": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Route GET /nonexistent not found"
+  },
+  "requestId": "uuid-format"
+}
+
+# Test validation error
+curl -X POST http://localhost:3000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"invalid"}' | jq
+
+# Expected structure with validation details
+```
+
+#### 4.2 Unhandled Error Testing
+```typescript
+// Add test route that throws
+app.get('/test/crash', () => {
+  throw new Error('Unhandled error test');
+});
+
+// Test the route
+curl http://localhost:3000/test/crash | jq
+
+# Expected:
+# - 500 status code
+# - Structured error response
+# - Error logged to file
+# - Stack trace ONLY in development mode
+```
+
+#### 4.3 Async Error Handling
+```typescript
+// Add async route that rejects
+app.get('/test/async-crash', async () => {
+  await Promise.reject(new Error('Async error test'));
+});
+
+// Test should handle without crashing server
+curl http://localhost:3000/test/async-crash
+```
+
+### 5. Logging System Validation
+
+#### 5.1 Log File Creation
+```bash
+# Check log directory
+ls -la logs/
+
+# Expected files:
+# ✓ combined.log
+# ✓ error.log
+
+# Verify rotation works (if files > 5MB)
+```
+
+#### 5.2 Structured Log Format
+```bash
+# Check log content
+tail -f logs/combined.log | jq
+
+# Expected format:
+{
+  "timestamp": "2024-01-15 10:30:00",
+  "level": "info",
+  "message": "Incoming request",
+  "service": "aeturnis-api",
+  "requestId": "uuid",
+  "method": "GET",
+  "url": "/health",
+  "ip": "::1"
+}
+```
+
+#### 5.3 Error Logging
+```bash
+# Trigger an error
+curl http://localhost:3000/test/error
+
+# Check error log
+tail -f logs/error.log | jq
+
+# Should contain:
+# - Full error details
+# - Stack trace
+# - Request context
+```
+
+### 6. Performance Monitoring
+
+#### 6.1 Response Time Headers
+```bash
+# Make request and check headers
+curl -I http://localhost:3000/health | grep X-Response-Time
+
+# Expected:
+# X-Response-Time: [number]ms
+```
+
+#### 6.2 Slow Request Detection
+```typescript
+// Add slow route for testing
+app.get('/test/slow', async (req, res) => {
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  res.json({ slow: true });
+});
+
+// Test and check console
+curl http://localhost:3000/test/slow
+
+# Expected console warning:
+# Slow request detected: GET /test/slow took 1500.xx ms
+```
+
+#### 6.3 Compression Verification
+```bash
+# Test compression
+curl -H "Accept-Encoding: gzip" \
+     -I http://localhost:3000/api/v1/ | grep -i encoding
+
+# Expected:
+# Content-Encoding: gzip
+
+# Test compression bypass
+curl -H "X-No-Compression: true" \
+     -I http://localhost:3000/api/v1/ | grep -i encoding
+
+# Should NOT have Content-Encoding header
+```
+
+### 7. API Endpoints Testing
+
+#### 7.1 Health Check Endpoint
+```bash
+curl http://localhost:3000/health | jq
+
+# Verify response structure:
+{
+  "status": "ok",
+  "timestamp": "ISO-8601 date",
+  "uptime": [number],
+  "environment": "development"
+}
+```
+
+#### 7.2 API Version Endpoint
+```bash
+curl http://localhost:3000/api/v1/ | jq
+
+# Expected:
+{
+  "success": true,
+  "version": "v1",
+  "endpoints": {
+    "auth": "/api/v1/auth",
+    "protected": "/api/v1/protected"
+  }
+}
+```
+
+#### 7.3 Protected Route Test
+```bash
+# Without auth (should fail)
+curl http://localhost:3000/api/v1/protected
+
+# Expected: 401 Unauthorized
+
+# With valid token (if auth implemented)
+curl http://localhost:3000/api/v1/protected \
+  -H "Authorization: Bearer [valid-token]"
+```
+
+### 8. Request ID Tracking
+
+#### 8.1 Request ID Generation
+```bash
+# Make request without X-Request-ID
+curl -I http://localhost:3000/health | grep -i x-request-id
+
+# Should generate UUID
+
+# Make request with X-Request-ID
+curl -I http://localhost:3000/health \
+  -H "X-Request-ID: custom-id-123" | grep -i x-request-id
+
+# Should echo: X-Request-ID: custom-id-123
+```
+
+#### 8.2 Request ID in Logs
+```bash
+# Make request and check logs
+REQUEST_ID=$(curl -s -I http://localhost:3000/health | grep -i x-request-id | cut -d' ' -f2)
+grep "$REQUEST_ID" logs/combined.log
+
+# Should find both request and response log entries
+```
+
+### 9. Code Quality Checks
+
+#### 9.1 TypeScript Compilation
+```bash
+yarn build
+
+# Should compile without errors
+# Check dist/ directory structure
+```
+
+#### 9.2 Linting
+```bash
+yarn lint
+
+# Expected:
+# ✓ 0 errors
+# ✓ 0 warnings
+```
+
+#### 9.3 Test Coverage
+```bash
+yarn test:coverage
+
+# Target coverage:
+# ✓ Statements: > 80%
+# ✓ Branches: > 80%
+# ✓ Functions: > 80%
+# ✓ Lines: > 80%
+```
+
+### 10. Production Readiness
+
+#### 10.1 Production Mode Test
+```bash
+NODE_ENV=production yarn start:prod
+
+# Verify:
+# - No stack traces in error responses
+# - Proper logging level
+# - Performance optimizations active
+```
+
+#### 10.2 Memory Usage
+```bash
+# Monitor memory usage
+node --expose-gc src/index.ts &
+PID=$!
+
+# Check memory periodically
+ps -p $PID -o pid,vsz,rss,comm
+
+# Should be stable, no significant growth
+```
+
+## 📊 Implementation Report Template
+
+```markdown
+# Express API Infrastructure Implementation Report
+
+**Date:** [Current Date]
+**Branch:** express-api-infra
+**Implementer:** Replit Agent
+
+## Executive Summary
+Implementation of Express.js API infrastructure completed with [X]% compliance to requirements.
+
+## Implementation Status
+
+### ✅ Completed Features
+- [x] Express server setup with modular architecture
+- [x] Security middleware (Helmet, CORS, rate limiting)
+- [x] Global error handling with structured responses
+- [x] Request logging and performance tracking
+- [x] API versioning (/api/v1)
+- [x] Health check endpoint
+- [x] Graceful shutdown handling
+- [x] Environment variable validation
+
+### ⚠️ Partial Implementations
+- [ ] [List any partially completed features]
+
+### ❌ Not Implemented
+- [ ] [List any missing features]
+
+## Audit Results
+
+### Security Audit
+| Check | Status | Notes |
+|-------|--------|-------|
+| Helmet headers | ✅ | All security headers present |
+| CORS configuration | ✅ | Whitelist working correctly |
+| Rate limiting | ✅ | Both global and auth limits active |
+| X-Powered-By disabled | ✅ | Header not present |
+
+### Performance Metrics
+- Average response time: [X]ms
+- Slow request threshold: 1000ms
+- Compression enabled: ✅
+- Request ID tracking: ✅
+
+### Error Handling
+- Structured JSON responses: ✅
+- Request ID in errors: ✅
+- Stack traces hidden in production: ✅
+- Async error handling: ✅
+
+### Logging System
+- Winston logger configured: ✅
+- Log rotation enabled: ✅
+- Structured JSON format: ✅
+- Separate error logs: ✅
+
+## Test Results
+```
+Test Suites: X passed, X total
+Tests: X passed, X total
+Coverage: X%
+```
+
+## Issues Discovered
+1. [Issue description and fix applied]
+2. [Issue description and fix applied]
+
+## Performance Benchmarks
+```
+Health Check: [X]ms average
+API v1 Info: [X]ms average
+404 Handler: [X]ms average
+Rate Limited Response: [X]ms average
+```
+
+## Recommendations
+1. [Improvement suggestion]
+2. [Optimization opportunity]
+3. [Security enhancement]
+
+## Dependencies Added
+- express: ^4.18.0
+- helmet: ^7.0.0
+- cors: ^2.8.5
+- compression: ^1.7.4
+- express-rate-limit: ^6.7.0
+- winston: ^3.8.0
+- [other dependencies]
+
+## File Structure Verification
+```
+src/
+├── index.ts ✅
+├── app.ts ✅
+├── middleware/
+│   ├── errorHandler.ts ✅
+│   ├── notFoundHandler.ts ✅
+│   ├── performanceTracker.ts ✅
+│   ├── rateLimiter.ts ✅
+│   └── requestLogger.ts ✅
+├── routes/
+│   └── v1/
+│       └── index.ts ✅
+├── utils/
+│   ├── errors.ts ✅
+│   └── logger.ts ✅
+└── controllers/ ✅
+```
+
+## Sign-off
+- [x] All critical requirements met
+- [x] Security hardening complete
+- [x] Performance optimizations applied
+- [x] Tests passing with >80% coverage
+- [x] Production-ready configuration
+
+**Approval Status:** ✅ Ready for merge
+
+**Next Steps:** Proceed to Step 1.5 - Real-time Layer Implementation
+```
+
+## 🚀 Execution Instructions
+
+1. **Run automated audit script**:
+```bash
+#!/bin/bash
+# scripts/audit-express-api.sh
+
+echo "🔍 Starting Express API Infrastructure Audit..."
+
+# Start server in background
+yarn dev &
+SERVER_PID=$!
+sleep 5
+
+# Run all audit checks
+echo "✓ Running security header checks..."
+curl -I http://localhost:3000/health
+
+echo "✓ Testing rate limiting..."
+for i in {1..105}; do curl -s http://localhost:3000/api/v1/ > /dev/null; done
+
+echo "✓ Running test suite..."
+yarn test
+
+echo "✓ Checking TypeScript compilation..."
+yarn build
+
+echo "✓ Running lint checks..."
+yarn lint
+
+# Cleanup
+kill $SERVER_PID
+
+echo "✅ Audit complete! Generate report."
+```
+
+2. **Manual verification of critical features**
+
+3. **Generate and review implementation report**
+
+4. **Address any issues found**
+
+5. **Commit report to repository**
+
+## ✅ Final Sign-off Checklist
+
+- [ ] All 60+ audit checks pass
+- [ ] No security vulnerabilities found
+- [ ] Performance benchmarks meet targets
+- [ ] Error handling works correctly
+- [ ] Logs are properly structured
+- [ ] Rate limiting is effective
+- [ ] All tests pass with >80% coverage
+- [ ] TypeScript compilation succeeds
+- [ ] No ESLint errors
+- [ ] Implementation report completed and accurate
+
+---
+
+**Note:** This audit should be performed immediately after implementing the Express API infrastructure and before proceeding to the next step. Any failures should be addressed before marking the implementation as complete.
