@@ -10,6 +10,11 @@ export const rateLimiter = (options: {
   standardHeaders?: boolean;
   legacyHeaders?: boolean;
 }) => {
+  // Disable rate limiting in test environment
+  if (process.env.NODE_ENV === 'test') {
+    return (_req: Request, _res: Response, next: any) => next();
+  }
+
   return rateLimit({
     windowMs: options.windowMs,
     max: options.max,

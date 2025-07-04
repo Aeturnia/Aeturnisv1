@@ -1,14 +1,26 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
+
+// Helper to wait between tests to avoid rate limiting
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // API Endpoint Integration Tests
 describe('Authentication API Endpoints', () => {
   const baseUrl = 'http://localhost:5000';
   
-  const testUser = {
-    email: 'test@example.com',
-    username: 'testuser',
-    password: 'SecurePass123!',
-  };
+  let testUser: { email: string; username: string; password: string };
+
+  beforeEach(async () => {
+    // Wait 1 second between tests to avoid rate limiting
+    await delay(1000);
+    
+    // Create unique test user for each test
+    const timestamp = Date.now() + Math.random();
+    testUser = {
+      email: `test-${timestamp}@example.com`,
+      username: `testuser-${timestamp}`,
+      password: 'SecurePass123!',
+    };
+  });
 
   it('should register a new user successfully', async () => {
     const response = await fetch(`${baseUrl}/api/auth/register`, {

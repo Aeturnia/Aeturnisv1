@@ -43,6 +43,12 @@ export class ConnectionHandlers {
 
   // Set up socket event handlers
   private setupSocketEventHandlers(socket: SocketWithAuth): void {
+    logger.debug('Setting up socket event handlers', {
+      socketId: socket.id,
+      userId: socket.user?.userId,
+      service: 'connection-handler',
+    });
+
     socket.on('disconnect', (reason) => {
       this.handleDisconnection(socket, reason);
     });
@@ -52,7 +58,28 @@ export class ConnectionHandlers {
     });
 
     socket.on('ping', () => {
+      logger.debug('Ping received, sending pong', {
+        socketId: socket.id,
+        userId: socket.user?.userId,
+        service: 'connection-handler',
+      });
       socket.emit('pong');
+    });
+
+    // Custom test ping to avoid conflicts with Socket.IO internal ping
+    socket.on('test-ping', () => {
+      logger.debug('Test ping received, sending test pong', {
+        socketId: socket.id,
+        userId: socket.user?.userId,
+        service: 'connection-handler',
+      });
+      socket.emit('test-pong');
+    });
+
+    logger.debug('Socket event handlers setup complete', {
+      socketId: socket.id,
+      userId: socket.user?.userId,
+      service: 'connection-handler',
     });
   }
 

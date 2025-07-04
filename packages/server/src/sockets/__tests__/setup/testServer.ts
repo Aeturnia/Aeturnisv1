@@ -2,6 +2,8 @@ import { createServer, Server as HTTPServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { AddressInfo } from 'net';
 import { AuthService } from '../../../services/AuthService';
+import { ConnectionHandlers } from '../../handlers/FixedConnectionHandlers';
+import { RoomService } from '../../services/RoomService';
 
 export interface TestServerConfig {
   port?: number;
@@ -13,6 +15,8 @@ export class TestSocketServer {
   private io: SocketIOServer;
   private port: number = 0;
   private authService: AuthService;
+  private roomService: RoomService;
+  private connectionHandlers: ConnectionHandlers;
 
   constructor(config: TestServerConfig = {}) {
     this.httpServer = createServer();
@@ -27,12 +31,19 @@ export class TestSocketServer {
       transports: ['websocket', 'polling']
     });
 
+    // Initialize services
+    this.roomService = new RoomService(this.io);
+    this.connectionHandlers = new ConnectionHandlers(this.io, this.roomService);
+
     // Mock authentication if requested
     if (config.mockAuth) {
       this.setupMockAuth();
     } else {
       this.setupRealAuth();
     }
+
+    // Setup connection handlers
+    this.setupConnectionHandlers();
   }
 
   private setupMockAuth() {
@@ -84,6 +95,13 @@ export class TestSocketServer {
       } else {
         next(new Error('No token provided'));
       }
+    });
+  }
+
+  private setupConnectionHandlers() {
+    // Setup Socket.IO connection handlers
+    this.io.on('connection', (socket) => {
+      this.connectionHandlers.handleConnection(socket as any);
     });
   }
 

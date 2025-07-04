@@ -21,17 +21,12 @@ export class MockSocket extends EventEmitter {
   constructor(user?: SocketUser) {
     super();
     
-    // Initialize user
-    this.user = user || {
-      userId: 'test-user-id',
-      email: 'test@example.com',
-      username: 'testuser',
-      roles: ['user']
-    };
+    // Initialize user - don't default to authenticated unless explicitly provided
+    this.user = user;
 
     // Initialize handshake
     this.handshake = {
-      auth: { token: 'test-token' },
+      auth: { token: user ? 'test-token' : undefined },
       address: '127.0.0.1',
       time: '2025-07-04T19:00:00.000Z',
       headers: {},
@@ -69,17 +64,19 @@ export class MockSocket extends EventEmitter {
     };
 
     this.disconnect = vi.fn();
+
+    // Create spy for the on method
+    this.on = vi.fn((event: string, handler: Function) => {
+      if (!this.eventHandlers.has(event)) {
+        this.eventHandlers.set(event, []);
+      }
+      this.eventHandlers.get(event)!.push(handler);
+      super.on(event, handler as any);
+      return this;
+    });
   }
 
-  // Override on method to track handlers
-  public on(event: string, handler: Function): this {
-    if (!this.eventHandlers.has(event)) {
-      this.eventHandlers.set(event, []);
-    }
-    this.eventHandlers.get(event)!.push(handler);
-    super.on(event, handler as any);
-    return this;
-  }
+
 
   // Helper to simulate receiving events
   public simulateEvent(event: string, ...args: any[]) {

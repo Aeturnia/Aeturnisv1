@@ -29,7 +29,11 @@ describe('ConnectionHandlers', () => {
     mockRoomService = {
       joinRoom: vi.fn().mockResolvedValue(true),
       leaveRoom: vi.fn().mockResolvedValue(true),
-      getUserRooms: vi.fn().mockReturnValue(['room1', 'room2']),
+      getUserRooms: vi.fn().mockReturnValue([
+        { type: 'zone', identifier: 'room1' },
+        { type: 'zone', identifier: 'room2' }
+      ]),
+      cleanupUserRooms: vi.fn().mockResolvedValue(undefined),
     };
 
     // Mock Socket.IO server
@@ -58,10 +62,13 @@ describe('ConnectionHandlers', () => {
     });
 
     it('should disconnect unauthenticated socket', () => {
-      // Socket without user authentication
-      connectionHandlers.handleConnection(mockSocket as any);
+      // Create unauthenticated socket
+      const unauthenticatedSocket = new MockSocket();
+      unauthenticatedSocket.user = undefined;
 
-      expect(mockSocket.disconnect).toHaveBeenCalledWith(true);
+      connectionHandlers.handleConnection(unauthenticatedSocket as any);
+
+      expect(unauthenticatedSocket.disconnect).toHaveBeenCalledWith(true);
     });
 
     it('should join user to personal room on connection', async () => {
@@ -92,8 +99,11 @@ describe('ConnectionHandlers', () => {
     });
 
     it('should handle unauthenticated socket disconnection', () => {
-      // Socket without user
-      connectionHandlers.handleDisconnection(mockSocket as any, 'transport close');
+      // Create unauthenticated socket
+      const unauthenticatedSocket = new MockSocket();
+      unauthenticatedSocket.user = undefined;
+
+      connectionHandlers.handleDisconnection(unauthenticatedSocket as any, 'transport close');
 
       // Should not call room service for unauthenticated socket
       expect(mockRoomService.getUserRooms).not.toHaveBeenCalled();
@@ -202,12 +212,13 @@ describe('ConnectionHandlers', () => {
     });
 
     it('should handle user authentication errors', () => {
-      // Mock socket with malformed user data
-      mockSocket.user = undefined;
+      // Create unauthenticated socket
+      const unauthenticatedSocket = new MockSocket();
+      unauthenticatedSocket.user = undefined;
 
-      connectionHandlers.handleConnection(mockSocket as any);
+      connectionHandlers.handleConnection(unauthenticatedSocket as any);
 
-      expect(mockSocket.disconnect).toHaveBeenCalledWith(true);
+      expect(unauthenticatedSocket.disconnect).toHaveBeenCalledWith(true);
     });
   });
 });
