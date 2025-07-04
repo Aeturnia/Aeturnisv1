@@ -34,6 +34,8 @@ jobs:
         cd packages/shared && npm run test:coverage
         cd packages/server && npm run test:coverage
         cd packages/client && npm run test:coverage
+      env:
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
     - name: 📤 Upload Coverage to Codecov
       uses: codecov/codecov-action@v4
