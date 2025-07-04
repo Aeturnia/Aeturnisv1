@@ -13,7 +13,7 @@ export const users = pgTable('users', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   lastLogin: timestamp('last_login', { withTimezone: true }),
-  metadata: jsonb('metadata').default({}).$type<Record<string, any>>(),
+  metadata: jsonb('metadata').default({}).$type<Record<string, unknown>>(),
 }, (table) => {
   return {
     emailIdx: index('idx_users_email').on(table.email),
@@ -47,7 +47,7 @@ export const auditLog = pgTable('audit_log', {
   eventType: varchar('event_type', { length: 50 }).notNull(),
   resourceType: varchar('resource_type', { length: 50 }),
   resourceId: varchar('resource_id', { length: 255 }),
-  payload: jsonb('payload').default({}).$type<Record<string, any>>(),
+  payload: jsonb('payload').default({}).$type<Record<string, unknown>>(),
   ipAddress: varchar('ip_address', { length: 45 }),
   userAgent: text('user_agent'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
