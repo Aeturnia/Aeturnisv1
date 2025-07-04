@@ -29,13 +29,19 @@ jobs:
     - name: 🧹 Lint code
       run: npm run lint
 
-    - name: 🧪 Run tests
+    - name: 🧪 Run tests with coverage
       run: |
-        cd packages/shared && npm test
-        cd packages/server && npm test
-        cd packages/client && npm test
+        cd packages/shared && npm run test:coverage
+        cd packages/server && npm run test:coverage
+        cd packages/client && npm run test:coverage
       env:
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
-    # Note: Coverage collection temporarily disabled due to dependency conflicts
-    # Can be re-enabled when @vitest/coverage-v8 compatibility is resolved
+    - name: 📤 Upload Coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./packages/shared/coverage/lcov.info,./packages/server/coverage/lcov.info,./packages/client/coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
