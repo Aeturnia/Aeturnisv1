@@ -1,13 +1,35 @@
 import { Socket } from 'socket.io';
 
+// User interface for socket authentication
+export interface SocketUser {
+  userId: string;
+  email: string;
+  username: string;
+  characterId?: string;
+  roles: string[];
+}
+
 // Extended socket interface with authentication context
 export interface SocketWithAuth extends Socket {
-  user?: {
-    userId: string;
-    email: string;
-    characterId?: string;
-    roles: string[];
-  };
+  user?: SocketUser;
+  joinedRooms?: Set<string>;
+}
+
+// Type guard for authenticated sockets
+export function isAuthenticated(socket: SocketWithAuth): socket is SocketWithAuth & { user: SocketUser } {
+  return socket.user !== undefined;
+}
+
+// Helper to safely get user or throw error
+export function requireAuth(socket: SocketWithAuth): SocketUser {
+  if (!socket.user) {
+    socket.emit('error', { 
+      code: 'AUTH_REQUIRED', 
+      message: 'Authentication required' 
+    });
+    throw new Error('Authentication required');
+  }
+  return socket.user;
 }
 
 // Room type enums

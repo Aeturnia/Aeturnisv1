@@ -1,15 +1,13 @@
 import { Server } from 'socket.io';
-import { SocketWithAuth, RoomType } from '../../types/socket.types';
+import { SocketWithAuth, RoomType, requireAuth } from '../../types/socket.types';
 import { logger } from '../../utils/logger';
 import { RoomService } from '../services/RoomService';
 import { isAuthenticated } from '../middleware/authMiddleware';
 
 export class ConnectionHandlers {
-  private io: Server;
   private roomService: RoomService;
 
-  constructor(io: Server, roomService: RoomService) {
-    this.io = io;
+  constructor(_io: Server, roomService: RoomService) {
     this.roomService = roomService;
   }
 
@@ -182,18 +180,19 @@ export class ConnectionHandlers {
 
   // Restore user state after reconnection
   private async restoreUserState(socket: SocketWithAuth): Promise<void> {
-    const { userId } = socket.user;
-    
     try {
+      const user = requireAuth(socket);
+      const { userId } = user;
+      
       // Restore user's rooms
       await this.restoreUserRooms(socket);
       
       // Restore user's character context if available
-      if (socket.user.characterId) {
+      if (user.characterId) {
         // TODO: Restore character-specific state
         logger.debug('Character context restored', {
           userId,
-          characterId: socket.user.characterId,
+          characterId: user.characterId,
           service: 'connection-handler',
         });
       }
@@ -205,7 +204,6 @@ export class ConnectionHandlers {
       });
     } catch (error) {
       logger.error('Failed to restore user state', {
-        userId,
         socketId: socket.id,
         error: error instanceof Error ? error.message : 'Unknown error',
         service: 'connection-handler',
@@ -215,9 +213,10 @@ export class ConnectionHandlers {
 
   // Sync user data with client
   private async syncUserData(socket: SocketWithAuth): Promise<void> {
-    const { userId } = socket.user;
-    
     try {
+      const user = requireAuth(socket);
+      const { userId } = user;
+      
       // Send user's current state
       socket.emit('system:notification', {
         type: 'info',
@@ -234,7 +233,6 @@ export class ConnectionHandlers {
       });
     } catch (error) {
       logger.error('Failed to sync user data', {
-        userId,
         socketId: socket.id,
         error: error instanceof Error ? error.message : 'Unknown error',
         service: 'connection-handler',
@@ -244,7 +242,9 @@ export class ConnectionHandlers {
 
   // Broadcast user offline status
   private broadcastUserOfflineStatus(socket: SocketWithAuth): void {
-    const { userId, email } = socket.user;
+    try {
+      const user = requireAuth(socket);
+      const { userId, email } = user;
     
     // Get user's rooms and broadcast offline status
     const userRooms = this.roomService.getUserRooms(userId);

@@ -73,6 +73,7 @@ export class SocketAuthMiddleware {
         socket.user = {
           userId: payload.userId,
           email: payload.email,
+          username: payload.email.split('@')[0], // Default username from email
           roles: payload.roles,
         };
 
@@ -130,6 +131,7 @@ export class SocketAuthMiddleware {
       socket.user = {
         userId: payload.userId,
         email: payload.email,
+        username: payload.email.split('@')[0], // Default username from email
         roles: payload.roles,
       };
 
