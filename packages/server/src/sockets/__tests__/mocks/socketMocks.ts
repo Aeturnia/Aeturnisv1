@@ -1,62 +1,101 @@
 import { EventEmitter } from 'events';
-import { vi } from 'vitest';
+import { vi, MockedFunction } from 'vitest';
 import { SocketUser } from '../../../types/socket.types';
 
 export class MockSocket extends EventEmitter {
-  id = 'mock-socket-id';
-  user?: SocketUser;
-  joinedRooms = new Set<string>();
-  rooms = new Set<string>();
-  eventHandlers = new Map<string, Function[]>();
-  
-  // Mock handshake for auth testing
-  handshake = {
-    auth: {} as any,
-    address: '127.0.0.1',
-    time: '2025-07-04T19:00:00.000Z',
-    headers: {},
-    query: {},
-    url: '/',
-    xdomain: false,
-    secure: false,
-    issued: Date.now()
-  };
-  
-  join = vi.fn((room: string) => {
-    this.rooms.add(room);
-    return Promise.resolve();
-  });
-  
-  leave = vi.fn((room: string) => {
-    this.rooms.delete(room);
-    return Promise.resolve();
-  });
-  
-  emit = vi.fn();
-  to = vi.fn((_room: string | string[]) => ({ emit: vi.fn() }));
-  disconnect = vi.fn();
-  
-  // Override on to track event handlers
-  on(event: string, handler: Function): this {
+  public id: string = 'mock-socket-id';
+  public rooms: Set<string> = new Set([this.id]);
+  public handshake: any;
+  public user?: SocketUser;
+  public joinedRooms: Set<string> = new Set();
+  public eventHandlers = new Map<string, Function[]>();
+
+  // Vitest spy functions
+  public join: MockedFunction<(room: string) => void>;
+  public leave: MockedFunction<(room: string) => void>;
+  public emit: MockedFunction<(event: string, ...args: any[]) => boolean>;
+  public to: MockedFunction<(room: string) => any>;
+  public broadcast: any;
+  public disconnect: MockedFunction<() => void>;
+
+  constructor(user?: SocketUser) {
+    super();
+    
+    // Initialize user
+    this.user = user || {
+      userId: 'test-user-id',
+      email: 'test@example.com',
+      username: 'testuser',
+      roles: ['user']
+    };
+
+    // Initialize handshake
+    this.handshake = {
+      auth: { token: 'test-token' },
+      address: '127.0.0.1',
+      time: '2025-07-04T19:00:00.000Z',
+      headers: {},
+      query: {},
+      url: '/',
+      xdomain: false,
+      secure: false,
+      issued: Date.now()
+    };
+
+    // Create spy functions
+    this.join = vi.fn((room: string) => {
+      this.rooms.add(room);
+      this.joinedRooms.add(room);
+    });
+
+    this.leave = vi.fn((room: string) => {
+      this.rooms.delete(room);
+      this.joinedRooms.delete(room);
+    });
+
+    this.emit = vi.fn((event: string, ...args: any[]) => {
+      // Also emit locally for testing
+      super.emit(event, ...args);
+      return true;
+    });
+
+    const broadcastEmit = vi.fn();
+    this.to = vi.fn((_room: string) => ({
+      emit: broadcastEmit
+    }));
+
+    this.broadcast = {
+      emit: broadcastEmit
+    };
+
+    this.disconnect = vi.fn();
+  }
+
+  // Override on method to track handlers
+  public on(event: string, handler: Function): this {
     if (!this.eventHandlers.has(event)) {
       this.eventHandlers.set(event, []);
     }
     this.eventHandlers.get(event)!.push(handler);
-    return super.on(event, handler as any);
+    super.on(event, handler as any);
+    return this;
   }
-  
-  constructor(user?: SocketUser) {
-    super();
-    this.user = user;
+
+  // Helper to simulate receiving events
+  public simulateEvent(event: string, ...args: any[]) {
+    const listeners = this.listeners(event);
+    listeners.forEach(listener => {
+      listener(...args);
+    });
   }
-  
+
   // Helper to authenticate the socket
-  authenticate(user: SocketUser) {
+  public authenticate(user: SocketUser) {
     this.user = user;
   }
-  
-  // Helper to get registered handlers for testing
-  getHandlers(event: string): Function[] {
+
+  // Helper to get registered handlers
+  public getHandlers(event: string): Function[] {
     return this.eventHandlers.get(event) || [];
   }
 }
