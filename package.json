@@ -27,5 +27,13 @@
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
+  },
+  "dependencies": {
+    "@types/pg": "^8.15.4",
+    "dotenv": "^17.0.1",
+    "drizzle-kit": "^0.31.4",
+    "drizzle-orm": "^0.44.2",
+    "pg": "^8.16.3",
+    "tsx": "^4.20.3"
   }
 }
