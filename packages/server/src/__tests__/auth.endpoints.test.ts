@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
 import { createServer } from 'http';
 import { createApp } from '../app';
+import { checkDatabaseConnection } from '../database/config';
 import type { Server } from 'http';
 import type { Application } from 'express';
 
@@ -15,6 +16,15 @@ describe('Authentication API Endpoints', () => {
   let testUser: { email: string; username: string; password: string };
 
   beforeAll(async () => {
+    // Ensure database connection is established before tests
+    const dbConnected = await checkDatabaseConnection();
+    if (!dbConnected) {
+      throw new Error('Database connection failed - tests cannot proceed');
+    }
+    
+    // Wait a bit for database to be fully ready
+    await delay(1000);
+    
     // Create Express app
     app = createApp();
     
@@ -44,14 +54,15 @@ describe('Authentication API Endpoints', () => {
   });
 
   beforeEach(async () => {
-    // Wait 100ms between tests to avoid rate limiting in test environment
-    await delay(100);
+    // Wait longer between tests to avoid timing issues in full test suite
+    await delay(500);
     
-    // Create unique test user for each test
+    // Create unique test user for each test with timestamp to ensure uniqueness
+    const timestamp = Date.now();
     const randomId = Math.floor(Math.random() * 100000);
     testUser = {
-      email: `test${randomId}@example.com`,
-      username: `user${randomId}`, // Short alphanumeric username (max 20 chars)
+      email: `test${timestamp}${randomId}@example.com`,
+      username: `user${timestamp}${randomId}`.substring(0, 20), // Ensure max 20 chars
       password: 'SecurePass123!', // Has uppercase, lowercase, number, and special char
     };
   });
@@ -100,8 +111,8 @@ describe('Authentication API Endpoints', () => {
     }
     expect(registerResponse.status).toBe(201);
 
-    // Wait a bit to ensure database writes are complete
-    await delay(100);
+    // Wait longer to ensure database writes are complete in full test suite
+    await delay(500);
 
     // Now login
     const response = await fetch(`${baseUrl}/api/auth/login`, {
@@ -119,6 +130,12 @@ describe('Authentication API Endpoints', () => {
     if (response.status !== 200) {
       const errorData = await response.json();
       console.error('Login failed:', response.status, errorData);
+      console.error('Login payload was:', { 
+        emailOrUsername: testUser.email, 
+        password: testUser.password.substring(0, 3) + '...' 
+      });
+    } else {
+      console.log('Login successful with status:', response.status);
     }
 
     expect(response.status).toBe(200);

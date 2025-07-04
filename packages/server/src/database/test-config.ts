@@ -6,12 +6,14 @@ import * as schema from './schema';
 // Load environment variables
 dotenv.config();
 
-// Test database connection pool with shorter timeouts
+// Test database connection pool with reasonable timeouts
 export const testPool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 5,
-  idleTimeoutMillis: 5000,
-  connectionTimeoutMillis: 1000,
+  max: 10,
+  idleTimeoutMillis: 10000,
+  connectionTimeoutMillis: 10000,
+  statement_timeout: 10000,
+  query_timeout: 10000,
 });
 
 // Drizzle instance with schema for tests
