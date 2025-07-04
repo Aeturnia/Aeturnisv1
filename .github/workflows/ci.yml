@@ -30,10 +30,7 @@ jobs:
       run: npm run lint
 
     - name: 🧪 Run tests with coverage
-      run: |
-        cd packages/shared && npm run test:coverage
-        cd packages/server && npm run test:coverage
-        cd packages/client && npm run test:coverage
+      run: npm run test:coverage
       env:
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
