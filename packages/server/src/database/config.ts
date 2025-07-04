@@ -1,6 +1,7 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as dotenv from 'dotenv';
+import * as schema from './schema';
 
 // Load environment variables
 dotenv.config();
@@ -13,16 +14,18 @@ export const pool = new Pool({
   connectionTimeoutMillis: 2000,
 });
 
-// Drizzle instance
-export const db = drizzle(pool);
+// Drizzle instance with schema
+export const db = drizzle(pool, { schema });
 
 // Connection health check
 export async function checkDatabaseConnection(): Promise<boolean> {
   try {
     await pool.query('SELECT 1');
+    // eslint-disable-next-line no-console
     console.log('✅ Database connection established');
     return true;
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('❌ Database connection failed:', error);
     return false;
   }
@@ -31,5 +34,6 @@ export async function checkDatabaseConnection(): Promise<boolean> {
 // Graceful shutdown
 export async function closeDatabaseConnection(): Promise<void> {
   await pool.end();
+  // eslint-disable-next-line no-console
   console.log('Database connection pool closed');
 }

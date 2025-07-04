@@ -15,15 +15,18 @@ export const db = new Pool({
 
 // Test connection
 db.on('connect', () => {
+  // eslint-disable-next-line no-console
   console.log('🗄️  Connected to PostgreSQL database');
 });
 
 db.on('error', (err: Error) => {
+  // eslint-disable-next-line no-console
   console.error('🚨 Database connection error:', err);
 });
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
+  // eslint-disable-next-line no-console
   console.log('🔌 Closing database connections...');
   await db.end();
   process.exit(0);

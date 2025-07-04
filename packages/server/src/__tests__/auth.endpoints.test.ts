@@ -23,12 +23,12 @@ describe('Authentication API Endpoints', () => {
     const data = await response.json();
     
     expect(data).toHaveProperty('success', true);
-    expect(data).toHaveProperty('user');
-    expect(data).toHaveProperty('accessToken');
-    expect(data).toHaveProperty('refreshToken');
-    expect(data.user.email).toBe(testUser.email);
-    expect(data.user.username).toBe(testUser.username);
-    expect(data.user).not.toHaveProperty('password_hash');
+    expect(data.data).toHaveProperty('user');
+    expect(data.data).toHaveProperty('accessToken');
+    expect(data.data).toHaveProperty('refreshToken');
+    expect(data.data.user.email).toBe(testUser.email);
+    expect(data.data.user.username).toBe(testUser.username);
+    expect(data.data.user).not.toHaveProperty('password_hash');
   });
 
   it('should login successfully', async () => {
@@ -47,9 +47,9 @@ describe('Authentication API Endpoints', () => {
     const data = await response.json();
     
     expect(data).toHaveProperty('success', true);
-    expect(data).toHaveProperty('user');
-    expect(data).toHaveProperty('accessToken');
-    expect(data).toHaveProperty('refreshToken');
+    expect(data.data).toHaveProperty('user');
+    expect(data.data).toHaveProperty('accessToken');
+    expect(data.data).toHaveProperty('refreshToken');
   });
 
   it('should handle validation errors', async () => {

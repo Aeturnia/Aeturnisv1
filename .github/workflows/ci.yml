@@ -34,10 +34,11 @@ jobs:
       env:
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
-    - name: 📤 Upload Coverage to Codecov
-      uses: codecov/codecov-action@v4
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+        slug: Aeturnia/Aeturnisv1
         files: ./packages/shared/coverage/lcov.info,./packages/server/coverage/lcov.info,./packages/client/coverage/lcov.info
         flags: unittests
         name: codecov-umbrella
