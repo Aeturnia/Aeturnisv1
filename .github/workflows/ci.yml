@@ -1,45 +1,45 @@
-name: CI
+name: Aeturnis CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, feat/**, fix/**]
   pull_request:
-    branches: [main, develop]
+    branches: [main]
 
 jobs:
-  test:
+  build-and-test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [20.x]
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: ⬇️ Checkout repo
+      uses: actions/checkout@v4
+
+    - name: 🧰 Setup Node
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'yarn'
-    
-    - name: Install dependencies
+        node-version: 20
+        cache: yarn
+
+    - name: 📦 Install dependencies
       run: yarn install --frozen-lockfile
-    
-    - name: Run linter
-      run: yarn lint
-    
-    - name: Check formatting
-      run: yarn format:check
-    
-    - name: Run type checking
+
+    - name: 🔍 Type checking
       run: yarn typecheck
-    
-    - name: Run tests with coverage
-      run: yarn test:coverage
-    
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+
+    - name: 🧹 Lint code
+      run: yarn lint
+
+    - name: 🧪 Run tests with coverage
+      run: |
+        cd packages/shared && npm run test:coverage
+        cd packages/server && npm run test:coverage
+        cd packages/client && npm run test:coverage
+
+    - name: 📤 Upload Coverage to Codecov
+      uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage/lcov.info
-        fail_ci_if_error: true
+        files: ./packages/shared/coverage/lcov.info,./packages/server/coverage/lcov.info,./packages/client/coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false

@@ -2,8 +2,8 @@
 
 A production-ready TypeScript monorepo using Yarn workspaces with comprehensive tooling for code quality, testing, and CI/CD.
 
-[![CI](https://github.com/Aeturnia/AeturniaDevelopment/workflows/CI/badge.svg)](https://github.com/Aeturnia/AeturniaDevelopment/actions)
-[![codecov](https://codecov.io/gh/Aeturnia/AeturniaDevelopment/branch/main/graph/badge.svg)](https://codecov.io/gh/Aeturnia/AeturniaDevelopment)
+![CI Status](https://github.com/Aeturnia/AeturnisV1/actions/workflows/ci.yml/badge.svg)
+[![codecov](https://codecov.io/gh/Aeturnia/AeturnisV1/branch/main/graph/badge.svg)](https://codecov.io/gh/Aeturnia/AeturnisV1)
 [![TypeScript](https://badgen.net/badge/icon/typescript?icon=typescript&label)](https://typescriptlang.org)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
