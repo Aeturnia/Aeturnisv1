@@ -1,0 +1,460 @@
+# 🧠 Claude Prompt – Step 1.6: Cache & Session v1
+
+## 💡 Implementation Overview
+Implement a production-grade Redis-backed caching and session management system for Aeturnis Online. This foundational service will handle all short-term storage needs, player session management, and prepare the infrastructure for future rate-limiting. The implementation must be mobile-optimized with minimal latency and graceful fallback behavior.
+
+## 🧱 File Targets
+```
+/src
+ ├── services/
+ │   ├── CacheService.ts         # Core Redis abstraction layer
+ │   └── SessionManager.ts       # Session lifecycle management
+ ├── types/
+ │   ├── cache.types.ts         # Cache-related interfaces
+ │   └── session.types.ts       # Session interfaces & enums
+ └── config/
+     └── redis.config.ts        # Redis connection settings
+/__tests__
+ ├── services/
+ │   ├── CacheService.test.ts   # Cache unit tests
+ │   └── SessionManager.test.ts # Session management tests
+```
+
+## 📝 Implementation Details
+
+### CacheService.ts
+```typescript
+import { Redis } from 'ioredis';
+import { CacheConfig, CacheEntry } from '../types/cache.types';
+
+export class CacheService {
+  private redis: Redis;
+  private namespace: string = 'aeturnis';
+  
+  constructor(config: CacheConfig) {
+    this.redis = new Redis({
+      host: config.host,
+      port: config.port,
+      password: config.password,
+      retryStrategy: (times) => Math.min(times * 50, 2000),
+      lazyConnect: true,
+      enableOfflineQueue: false
+    });
+  }
+
+  async get<T>(key: string): Promise<T | null> {
+    try {
+      const fullKey = `${this.namespace}:${key}`;
+      const value = await this.redis.get(fullKey);
+      return value ? JSON.parse(value) : null;
+    } catch (error) {
+      console.error(`Cache GET error for key ${key}:`, error);
+      return null;
+    }
+  }
+
+  async set(key: string, value: any, ttlSeconds?: number): Promise<void> {
+    try {
+      const fullKey = `${this.namespace}:${key}`;
+      const serialized = JSON.stringify(value);
+      
+      if (ttlSeconds) {
+        await this.redis.setex(fullKey, ttlSeconds, serialized);
+      } else {
+        await this.redis.set(fullKey, serialized);
+      }
+    } catch (error) {
+      console.error(`Cache SET error for key ${key}:`, error);
+      throw new Error('Cache write failed');
+    }
+  }
+
+  async delete(key: string): Promise<void> {
+    try {
+      const fullKey = `${this.namespace}:${key}`;
+      await this.redis.del(fullKey);
+    } catch (error) {
+      console.error(`Cache DELETE error for key ${key}:`, error);
+    }
+  }
+
+  async ttl(key: string): Promise<number> {
+    try {
+      const fullKey = `${this.namespace}:${key}`;
+      return await this.redis.ttl(fullKey);
+    } catch (error) {
+      console.error(`Cache TTL error for key ${key}:`, error);
+      return -1;
+    }
+  }
+
+  async exists(key: string): Promise<boolean> {
+    try {
+      const fullKey = `${this.namespace}:${key}`;
+      return (await this.redis.exists(fullKey)) === 1;
+    } catch (error) {
+      console.error(`Cache EXISTS error for key ${key}:`, error);
+      return false;
+    }
+  }
+
+  async disconnect(): Promise<void> {
+    await this.redis.quit();
+  }
+}
+```
+
+### SessionManager.ts
+```typescript
+import { CacheService } from './CacheService';
+import { Session, SessionMetadata } from '../types/session.types';
+import { v4 as uuidv4 } from 'uuid';
+
+export class SessionManager {
+  private cache: CacheService;
+  private sessionTTL: number = 30 * 24 * 60 * 60; // 30 days in seconds
+  
+  constructor(cacheService: CacheService) {
+    this.cache = cacheService;
+  }
+
+  async createSession(userId: string, metadata: SessionMetadata): Promise<string> {
+    const sessionId = uuidv4();
+    const session: Session = {
+      sessionId,
+      userId,
+      createdAt: new Date().toISOString(),
+      lastActive: new Date().toISOString(),
+      metadata,
+      expiresAt: new Date(Date.now() + this.sessionTTL * 1000).toISOString()
+    };
+
+    const sessionKey = `session:${sessionId}`;
+    const userSessionKey = `user:${userId}:sessions`;
+    
+    // Store session
+    await this.cache.set(sessionKey, session, this.sessionTTL);
+    
+    // Track user's active sessions
+    const userSessions = await this.cache.get<string[]>(userSessionKey) || [];
+    userSessions.push(sessionId);
+    await this.cache.set(userSessionKey, userSessions, this.sessionTTL);
+    
+    return sessionId;
+  }
+
+  async getSession(sessionId: string): Promise<Session | null> {
+    const sessionKey = `session:${sessionId}`;
+    const session = await this.cache.get<Session>(sessionKey);
+    
+    if (session) {
+      // Check if session is expired
+      if (new Date(session.expiresAt) < new Date()) {
+        await this.destroySession(sessionId);
+        return null;
+      }
+    }
+    
+    return session;
+  }
+
+  async updateSession(sessionId: string, data: Partial<Session>): Promise<void> {
+    const session = await this.getSession(sessionId);
+    if (!session) {
+      throw new Error('Session not found');
+    }
+
+    const updatedSession = {
+      ...session,
+      ...data,
+      lastActive: new Date().toISOString()
+    };
+
+    const sessionKey = `session:${sessionId}`;
+    await this.cache.set(sessionKey, updatedSession, this.sessionTTL);
+  }
+
+  async extendSession(sessionId: string): Promise<void> {
+    const session = await this.getSession(sessionId);
+    if (!session) {
+      throw new Error('Session not found');
+    }
+
+    const newExpiresAt = new Date(Date.now() + this.sessionTTL * 1000).toISOString();
+    await this.updateSession(sessionId, {
+      lastActive: new Date().toISOString(),
+      expiresAt: newExpiresAt
+    });
+  }
+
+  async destroySession(sessionId: string): Promise<void> {
+    const session = await this.getSession(sessionId);
+    if (!session) {
+      return; // Already gone
+    }
+
+    const sessionKey = `session:${sessionId}`;
+    const userSessionKey = `user:${session.userId}:sessions`;
+    
+    // Remove session
+    await this.cache.delete(sessionKey);
+    
+    // Remove from user's session list
+    const userSessions = await this.cache.get<string[]>(userSessionKey) || [];
+    const filteredSessions = userSessions.filter(id => id !== sessionId);
+    
+    if (filteredSessions.length > 0) {
+      await this.cache.set(userSessionKey, filteredSessions, this.sessionTTL);
+    } else {
+      await this.cache.delete(userSessionKey);
+    }
+  }
+
+  async getUserSessions(userId: string): Promise<Session[]> {
+    const userSessionKey = `user:${userId}:sessions`;
+    const sessionIds = await this.cache.get<string[]>(userSessionKey) || [];
+    
+    const sessions: Session[] = [];
+    for (const sessionId of sessionIds) {
+      const session = await this.getSession(sessionId);
+      if (session) {
+        sessions.push(session);
+      }
+    }
+    
+    return sessions;
+  }
+}
+```
+
+### Type Definitions
+
+#### cache.types.ts
+```typescript
+export interface CacheConfig {
+  host: string;
+  port: number;
+  password?: string;
+  namespace?: string;
+}
+
+export interface CacheEntry<T = any> {
+  value: T;
+  ttl?: number;
+  createdAt: string;
+}
+```
+
+#### session.types.ts
+```typescript
+export interface Session {
+  sessionId: string;
+  userId: string;
+  createdAt: string;
+  lastActive: string;
+  metadata: SessionMetadata;
+  expiresAt: string;
+}
+
+export interface SessionMetadata {
+  ip?: string;
+  userAgent?: string;
+  deviceId?: string;
+  platform?: 'ios' | 'android' | 'web';
+  gameVersion?: string;
+  [key: string]: any;
+}
+```
+
+## 🧪 Validation Rules
+1. **TTL Enforcement**: All cache entries must respect TTL settings
+2. **Session Expiry**: Sessions automatically expire after 30 days of inactivity
+3. **Key Namespacing**: All Redis keys use format `aeturnis:type:identifier`
+4. **JSON Serialization**: All values stored as JSON strings
+5. **Concurrent Session Limit**: Track but don't limit concurrent sessions per user
+6. **Data Integrity**: Session updates must be atomic
+
+## 🔁 Event & Real-Time Logic
+- No WebSocket events required for this implementation
+- Future integration points:
+  - `session:created` event for analytics
+  - `session:expired` event for cleanup tasks
+  - `cache:evicted` event for monitoring
+
+## 🧪 Example Test Case(s)
+
+### CacheService.test.ts
+```typescript
+import { CacheService } from '../../src/services/CacheService';
+import Redis from 'ioredis-mock';
+
+jest.mock('ioredis', () => require('ioredis-mock'));
+
+describe('CacheService', () => {
+  let cacheService: CacheService;
+
+  beforeEach(() => {
+    cacheService = new CacheService({
+      host: 'localhost',
+      port: 6379
+    });
+  });
+
+  afterEach(async () => {
+    await cacheService.disconnect();
+  });
+
+  test('should set and get cache values', async () => {
+    const testData = { name: 'TestPlayer', level: 10 };
+    await cacheService.set('player:123', testData);
+    
+    const retrieved = await cacheService.get('player:123');
+    expect(retrieved).toEqual(testData);
+  });
+
+  test('should respect TTL settings', async () => {
+    await cacheService.set('temp:key', 'value', 2);
+    
+    const ttl = await cacheService.ttl('temp:key');
+    expect(ttl).toBeGreaterThan(0);
+    expect(ttl).toBeLessThanOrEqual(2);
+  });
+
+  test('should return null for non-existent keys', async () => {
+    const result = await cacheService.get('non:existent');
+    expect(result).toBeNull();
+  });
+
+  test('should handle Redis connection errors gracefully', async () => {
+    // Simulate connection error
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+    
+    // Force error by disconnecting first
+    await cacheService.disconnect();
+    
+    const result = await cacheService.get('any:key');
+    expect(result).toBeNull();
+    expect(consoleSpy).toHaveBeenCalled();
+    
+    consoleSpy.mockRestore();
+  });
+});
+```
+
+### SessionManager.test.ts
+```typescript
+import { SessionManager } from '../../src/services/SessionManager';
+import { CacheService } from '../../src/services/CacheService';
+
+describe('SessionManager', () => {
+  let sessionManager: SessionManager;
+  let cacheService: CacheService;
+
+  beforeEach(() => {
+    cacheService = new CacheService({
+      host: 'localhost',
+      port: 6379
+    });
+    sessionManager = new SessionManager(cacheService);
+  });
+
+  test('should create and retrieve session', async () => {
+    const userId = 'user123';
+    const metadata = {
+      platform: 'ios' as const,
+      deviceId: 'device123'
+    };
+
+    const sessionId = await sessionManager.createSession(userId, metadata);
+    expect(sessionId).toBeTruthy();
+
+    const session = await sessionManager.getSession(sessionId);
+    expect(session).toBeTruthy();
+    expect(session?.userId).toBe(userId);
+    expect(session?.metadata).toEqual(metadata);
+  });
+
+  test('should track multiple sessions per user', async () => {
+    const userId = 'user456';
+    
+    const session1 = await sessionManager.createSession(userId, {});
+    const session2 = await sessionManager.createSession(userId, {});
+    
+    const userSessions = await sessionManager.getUserSessions(userId);
+    expect(userSessions).toHaveLength(2);
+    expect(userSessions.map(s => s.sessionId)).toContain(session1);
+    expect(userSessions.map(s => s.sessionId)).toContain(session2);
+  });
+
+  test('should extend session expiry', async () => {
+    const sessionId = await sessionManager.createSession('user789', {});
+    const originalSession = await sessionManager.getSession(sessionId);
+    
+    // Wait a moment
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    await sessionManager.extendSession(sessionId);
+    const extendedSession = await sessionManager.getSession(sessionId);
+    
+    expect(new Date(extendedSession!.expiresAt).getTime())
+      .toBeGreaterThan(new Date(originalSession!.expiresAt).getTime());
+  });
+
+  test('should destroy session and cleanup references', async () => {
+    const userId = 'user999';
+    const sessionId = await sessionManager.createSession(userId, {});
+    
+    await sessionManager.destroySession(sessionId);
+    
+    const session = await sessionManager.getSession(sessionId);
+    expect(session).toBeNull();
+    
+    const userSessions = await sessionManager.getUserSessions(userId);
+    expect(userSessions).toHaveLength(0);
+  });
+});
+```
+
+## 🚧 Edge Cases
+1. **Redis Connection Failure**: Graceful degradation with null returns and error logging
+2. **Expired Session Access**: Auto-cleanup when accessing expired sessions
+3. **Concurrent Session Updates**: Last-write-wins strategy (atomic operations)
+4. **Memory Pressure**: Redis eviction policy should be set to `allkeys-lru`
+5. **Session Hijacking**: Store IP/device metadata for future validation
+6. **Clock Skew**: Use server time only, never trust client timestamps
+
+## 🚀 Deployment Considerations
+1. **Redis Configuration**:
+   ```yaml
+   maxmemory: 512mb
+   maxmemory-policy: allkeys-lru
+   save: ""  # Disable persistence for cache
+   ```
+
+2. **Connection Pooling**: Use single Redis client instance per service
+3. **Monitoring**: Track cache hit/miss ratios and session creation rates
+4. **Scaling**: Redis Cluster support via key hashing (future)
+5. **Security**: Redis AUTH required in production
+6. **Latency Target**: < 5ms for cache operations in same datacenter
+
+## 📊 Performance Benchmarks
+Include these metrics in your implementation validation:
+- Cache GET: < 2ms average
+- Cache SET: < 3ms average
+- Session creation: < 10ms
+- Session validation: < 5ms
+
+---
+
+### 🔐 Self‑Audit Commands
+```bash
+npm run lint:ts --max-warnings=0
+npm test services/CacheService --coverage
+npm test services/SessionManager --coverage
+```
+Paste: 
+- TS errors: 0
+- CacheService Coverage: ≥80%
+- SessionManager Coverage: ≥80%
+- Redis latency test results
+- TTL verification output
