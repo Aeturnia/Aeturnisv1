@@ -72,6 +72,7 @@ export function GameEngine() {
         maxHealth: 100,
         mana: 50,
         maxMana: 50,
+        gold: 12500,
         strength: 15,
         dexterity: 12,
         intelligence: 10,

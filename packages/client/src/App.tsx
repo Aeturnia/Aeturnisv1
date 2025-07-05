@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GameProvider, useGame } from './stores/gameStore';
 import { GameEngine } from './components/GameEngine';
 import { GameUI } from './components/GameUI';
+import { CurrencyDisplay } from './components/CurrencyDisplay';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -34,13 +35,10 @@ function GameContent() {
               </div>
               <div className="divider"></div>
               <div className="info-section">
-                <h4>Resources</h4>
+                <h4>Stats</h4>
                 <p><strong>Health:</strong> {currentCharacter.health}/{currentCharacter.maxHealth}</p>
                 <p><strong>Mana:</strong> {currentCharacter.mana}/{currentCharacter.maxMana}</p>
-              </div>
-              <div className="divider"></div>
-              <div className="info-section">
-                <h4>Stats</h4>
+                <p><strong>Gold:</strong> <CurrencyDisplay amount={currentCharacter.gold || 0} /></p>
                 <p><strong>STR:</strong> {currentCharacter.strength || 10}</p>
                 <p><strong>DEX:</strong> {currentCharacter.dexterity || 10}</p>
                 <p><strong>INT:</strong> {currentCharacter.intelligence || 10}</p>
