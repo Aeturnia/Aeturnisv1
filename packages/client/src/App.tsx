@@ -27,12 +27,14 @@ function GameContent() {
           <h3>Character Info</h3>
           {currentCharacter ? (
             <div>
-              <p>Name: {currentCharacter.name}</p>
-              <p>Level: {currentCharacter.level}</p>
-              <p>Race: {currentCharacter.race}</p>
+              <p><strong>Name:</strong> {currentCharacter.name}</p>
+              <p><strong>Level:</strong> {currentCharacter.level}</p>
+              <p><strong>Race:</strong> {currentCharacter.race}</p>
+              <p><strong>Health:</strong> {currentCharacter.health}/{currentCharacter.maxHealth}</p>
+              <p><strong>Mana:</strong> {currentCharacter.mana}/{currentCharacter.maxMana}</p>
             </div>
           ) : (
-            <p>No character selected</p>
+            <p style={{ textAlign: 'center', color: '#aaa' }}>No character selected</p>
           )}
         </div>
       </main>

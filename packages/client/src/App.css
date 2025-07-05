@@ -45,23 +45,34 @@ header h1 {
   position: absolute;
   top: 20px;
   left: 20px;
-  background: rgba(0, 0, 0, 0.8);
-  padding: 1rem;
-  border-radius: 8px;
+  background: rgba(20, 25, 40, 0.95);
+  padding: 1.5rem;
+  border-radius: 12px;
   border: 2px solid #00d2ff;
-  min-width: 200px;
+  min-width: 220px;
   z-index: 100;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .game-info h3 {
   margin: 0 0 1rem 0;
   color: #00d2ff;
   text-align: center;
+  font-size: 1.2rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .game-info p {
-  margin: 0.5rem 0;
-  font-size: 0.9rem;
+  margin: 0.7rem 0;
+  font-size: 1rem;
+  color: #e0e0e0;
+  line-height: 1.4;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.game-info p strong {
+  color: #ffffff;
+  font-weight: 600;
 }
 
 footer {
