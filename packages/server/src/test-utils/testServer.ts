@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, no-console */
 import { createServer } from 'http';
 import { createApp } from '../app';
 import { checkDatabaseConnection } from '../database/config';

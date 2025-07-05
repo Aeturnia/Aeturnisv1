@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { vi } from 'vitest';
 
 // Enhanced database mocking utilities for reliable testing
@@ -21,7 +22,7 @@ export const createMockDatabaseQueries = () => {
     }),
 
     // Mock user lookup for login
-    findUser: vi.fn().mockImplementation((emailOrUsername) => {
+    findUser: vi.fn().mockImplementation(() => {
       // Simulate existing user for login tests
       return Promise.resolve({
         rows: [{
@@ -91,7 +92,7 @@ export const dbTestUtils = {
   },
 
   // Enhanced cleanup utilities
-  waitForDbOperation: async (timeout = 2000) => {
+  waitForDbOperation: async () => {
     // Simulate waiting for database operation to complete
     await new Promise(resolve => setTimeout(resolve, 100));
   },

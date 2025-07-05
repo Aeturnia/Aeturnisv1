@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { vi } from 'vitest';
-import jwt from 'jsonwebtoken';
-import argon2 from 'argon2';
+// Note: jwt and argon2 imports removed as they're not used in mock implementations
 
 // Enhanced authentication mocking for reliable testing
 export const createMockAuthServices = () => {
@@ -133,7 +133,8 @@ export const mockHttpResponse = {
 
 // Enhanced rate limiting mock
 export const mockRateLimiter = (shouldLimit = false) => {
-  return vi.fn().mockImplementation((req: any, res: any, next: any) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return vi.fn().mockImplementation((_req: any, res: any, next: any) => {
     if (shouldLimit) {
       return res.status(429).json({
         success: false,

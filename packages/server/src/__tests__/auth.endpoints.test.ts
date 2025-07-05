@@ -1,13 +1,9 @@
 import { describe, it, expect, beforeEach, beforeAll, afterAll, vi } from 'vitest';
 import { TestServerManager, testHttpUtils } from '../test-utils/testServer';
-import type { Server } from 'http';
-import type { Application } from 'express';
 
 // API Endpoint Integration Tests
 describe('Authentication API Endpoints', () => {
   let testServerManager: TestServerManager;
-  let app: Application;
-  let server: Server;
   let baseUrl: string;
   let testUser: { email: string; username: string; password: string };
 
@@ -15,8 +11,6 @@ describe('Authentication API Endpoints', () => {
     testServerManager = new TestServerManager();
     const serverInfo = await testServerManager.startTestServer();
     
-    app = serverInfo.app;
-    server = serverInfo.server;
     baseUrl = serverInfo.baseUrl;
     
     // Wait for server to be fully ready
@@ -53,6 +47,7 @@ describe('Authentication API Endpoints', () => {
     // Log response for debugging
     if (response.status !== 201) {
       const errorData = await response.json();
+      // eslint-disable-next-line no-console
       console.error('Registration failed:', response.status, errorData);
     }
 
@@ -81,6 +76,7 @@ describe('Authentication API Endpoints', () => {
     // Ensure registration succeeded
     if (registerResponse.status !== 201) {
       const errorData = await registerResponse.json();
+      // eslint-disable-next-line no-console
       console.error('Registration before login failed:', registerResponse.status, errorData);
     }
     expect(registerResponse.status).toBe(201);
@@ -103,12 +99,15 @@ describe('Authentication API Endpoints', () => {
     // Log response for debugging
     if (response.status !== 200) {
       const errorData = await response.json();
+      // eslint-disable-next-line no-console
       console.error('Login failed:', response.status, errorData);
+      // eslint-disable-next-line no-console
       console.error('Login payload was:', { 
         emailOrUsername: testUser.email, 
         password: testUser.password.substring(0, 3) + '...' 
       });
     } else {
+      // eslint-disable-next-line no-console
       console.log('Login successful with status:', response.status);
     }
 
