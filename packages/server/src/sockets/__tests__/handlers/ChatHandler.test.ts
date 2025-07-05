@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ChatHandler } from '../../handlers/FixedChatHandler';
 import { MockSocket, createMockUser } from '../mocks/socketMocks';
-import { RealtimeService } from '../../../services/RealtimeService';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 // Mock dependencies
 vi.mock('../../../services/RealtimeService');

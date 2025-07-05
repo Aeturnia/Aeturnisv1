@@ -107,7 +107,7 @@ export class SocketAuthMiddleware {
 
   private createAuthError(code: string, message: string, details?: string): Error {
     const error = new Error(message);
-    (error as any).data = {
+    (error as unknown as { data: unknown }).data = {
       error: {
         code,
         message,

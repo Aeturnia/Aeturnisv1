@@ -387,16 +387,19 @@ export class ChatHandler {
   // Helper methods (TODO: Implement with actual data sources)
   private async getCurrentZone(_userId: string): Promise<string | null> {
     // TODO: Get user's current zone from database
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return 'tavern-district'; // Default zone
   }
 
   private async getUserGuild(_userId: string): Promise<string | null> {
     // TODO: Get user's guild from database
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return null;
   }
 
   private async getUserParty(_userId: string): Promise<string | null> {
     // TODO: Get user's party from database
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return null;
   }
 }

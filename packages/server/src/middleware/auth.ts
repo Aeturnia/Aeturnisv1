@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/AuthService';
+import { sessionManager } from '../services/index';
 
 const authService = new AuthService();
 
@@ -9,6 +10,7 @@ export interface AuthRequest extends Request {
     email: string;
     roles: string[];
   };
+  sessionId?: string;
 }
 
 export const authenticate = async (
@@ -34,6 +36,17 @@ export const authenticate = async (
       email: payload.email,
       roles: payload.roles,
     };
+
+    // Optional: Check for session ID in custom header
+    const sessionId = req.headers['x-session-id'] as string;
+    if (sessionId) {
+      const session = await sessionManager.getSession(sessionId);
+      if (session && session.userId === payload.userId) {
+        req.sessionId = sessionId;
+        // Extend session on valid access
+        await sessionManager.extendSession(sessionId);
+      }
+    }
 
     next();
   } catch (error) {
