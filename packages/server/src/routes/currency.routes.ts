@@ -52,7 +52,7 @@ router.post('/transfer',
       const result = await currencyService.transferGold(
         fromCharacterId,
         toCharacterId,
-        BigInt(amount),
+        amount,
         description
       );
 
@@ -78,7 +78,7 @@ router.post('/transfer',
         return res.status(400).json({ error: 'Insufficient funds' });
       }
       
-      res.status(500).json({ error: 'Transfer failed' });
+      return res.status(500).json({ error: 'Transfer failed' });
     }
   }
 );
@@ -129,7 +129,7 @@ router.get('/characters/:characterId/transactions',
         characterId: req.params.characterId,
         service: 'currency-routes' 
       });
-      res.status(500).json({ error: 'Failed to retrieve transaction history' });
+      return res.status(500).json({ error: 'Failed to retrieve transaction history' });
     }
   }
 );
@@ -162,7 +162,7 @@ router.get('/characters/:characterId/stats',
         characterId: req.params.characterId,
         service: 'currency-routes' 
       });
-      res.status(500).json({ error: 'Failed to retrieve transaction statistics' });
+      return res.status(500).json({ error: 'Failed to retrieve transaction statistics' });
     }
   }
 );
@@ -185,7 +185,7 @@ router.post('/admin/reward',
       const { characterId, amount, source, metadata } = req.body;
       const transaction = await currencyService.rewardGold(
         characterId,
-        BigInt(amount),
+        amount,
         source,
         metadata
       );
@@ -207,7 +207,7 @@ router.post('/admin/reward',
         body: req.body,
         service: 'currency-routes' 
       });
-      res.status(500).json({ error: 'Failed to reward gold' });
+      return res.status(500).json({ error: 'Failed to reward gold' });
     }
   }
 );

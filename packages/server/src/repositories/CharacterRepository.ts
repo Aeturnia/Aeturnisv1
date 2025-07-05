@@ -1,5 +1,5 @@
 import { eq, and, desc } from 'drizzle-orm';
-import { characters } from '../database/schema';
+import { characters } from '../database/schema/index';
 import { Character, CreateCharacterDTO, CharacterListItem } from '../types/character.types';
 import { StatsService } from '../services/StatsService';
 import { db } from '../database/config';

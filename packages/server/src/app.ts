@@ -3,7 +3,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
-import path from 'path';
 import { config } from 'dotenv';
 
 // Middleware
@@ -73,24 +72,7 @@ export const createApp = () => {
   app.use(requestLogger);
   app.use(performanceTracker);
 
-  // Serve static frontend files FIRST (before rate limiting and other middleware)
-  const clientDistPath = path.resolve(__dirname, '../../client/dist');
-  app.use(express.static(clientDistPath, {
-    maxAge: '1d',
-    setHeaders: (res, filePath) => {
-      if (filePath.endsWith('.js')) {
-        res.setHeader('Content-Type', 'application/javascript');
-      } else if (filePath.endsWith('.css')) {
-        res.setHeader('Content-Type', 'text/css');
-      } else if (filePath.endsWith('.html')) {
-        res.setHeader('Content-Type', 'text/html');
-        // Ensure CSP headers allow Replit iframe embedding
-        res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-      } else if (filePath.endsWith('.json') || filePath.endsWith('.webmanifest')) {
-        res.setHeader('Content-Type', 'application/json');
-      }
-    }
-  }));
+  // Backend API server - no static file serving needed
 
   // Apply general rate limiting
   app.use(generalLimiter);
@@ -103,6 +85,32 @@ export const createApp = () => {
       timestamp: new Date().toISOString(),
       version: process.env.npm_package_version || '1.0.0',
       environment: process.env.NODE_ENV || 'development',
+    });
+  });
+
+  // Root route for backend API status
+  app.get('/', (_req, res) => {
+    res.json({
+      message: 'Aeturnis Online Backend API Server',
+      version: '2.2.0',
+      status: 'operational',
+      architecture: 'backend-only',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+      endpoints: {
+        health: '/health',
+        api_status: '/api/status',
+        authentication: '/api/v1/auth',
+        characters: '/api/v1/characters',
+        currency: '/api/v1/currency',
+        banking: '/api/v1/bank',
+        sessions: '/api/v1/sessions'
+      },
+      services: {
+        database: 'connected',
+        redis: 'disabled',
+        socket_io: 'port_3001'
+      }
     });
   });
 
@@ -151,10 +159,7 @@ export const createApp = () => {
     });
   });
 
-  // Fallback route to serve React app for client-side routing
-  app.get('*', (_req, res) => {
-    res.sendFile(path.join(clientDistPath, 'index.html'));
-  });
+  // Backend API server - no fallback route needed
 
   // 404 handler for non-GET requests
   app.use('*', (req, res) => {
