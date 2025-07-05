@@ -1,0 +1,535 @@
+# 🔧 Replit Agent Prompt: Fix Socket.IO TypeScript Issues & Add Test Suite
+
+## 💡 Implementation Overview
+Fix critical TypeScript compilation errors in the Socket.IO real-time layer and implement a comprehensive test suite to ensure production readiness. This addresses the blocking issues identified in the audit: null checking for `socket.user`, unused variables, and missing test coverage.
+
+## 🧱 File Targets
+
+### Files to Modify:
+```
+packages/server/src/sockets/
+├── middleware/socketAuth.ts (enhance type guards)
+├── handlers/
+│   ├── ChatHandler.ts (fix null checks)
+│   ├── CharacterHandler.ts (fix null checks)
+│   ├── CombatHandler.ts (fix null checks & unused vars)
+│   └── ConnectionHandler.ts (fix null checks)
+└── types/socket.types.ts (improve type definitions)
+```
+
+### New Test Files:
+```
+packages/server/src/sockets/__tests__/
+├── socketAuth.test.ts
+├── handlers/
+│   ├── ChatHandler.test.ts
+│   ├── CharacterHandler.test.ts
+│   └── CombatHandler.test.ts
+├── integration/
+│   └── socketFlow.test.ts
+└── mocks/
+    └── socketMocks.ts
+```
+
+## 🔐 TypeScript Fixes
+
+### 1. Enhanced Socket Type Definition
+```typescript
+// packages/server/src/sockets/types/socket.types.ts
+import { Socket as IOSocket } from 'socket.io';
+
+export interface AuthenticatedSocket extends IOSocket {
+  user?: SocketUser; // Keep optional for middleware phase
+  characterId?: string;
+  joinedRooms: Set<string>;
+}
+
+// Type guard for authenticated sockets
+export function isAuthenticated(socket: AuthenticatedSocket): socket is AuthenticatedSocket & { user: SocketUser } {
+  return socket.user !== undefined;
+}
+
+// Helper to safely get user
+export function requireAuth(socket: AuthenticatedSocket): SocketUser {
+  if (!socket.user) {
+    socket.emit('error', { 
+      code: 'AUTH_REQUIRED', 
+      message: 'Authentication required' 
+    });
+    throw new Error('Authentication required');
+  }
+  return socket.user;
+}
+```
+
+### 2. Fix ChatHandler TypeScript Issues
+```typescript
+// packages/server/src/sockets/handlers/ChatHandler.ts
+import { AuthenticatedSocket, requireAuth } from '../types/socket.types';
+
+export class ChatHandler {
+  constructor(
+    private io: Server,
+    private chatService: ChatService,
+    private realtimeService: RealtimeService
+  ) {}
+
+  handleConnection(socket: AuthenticatedSocket) {
+    socket.on('chat:send', this.handleSendMessage.bind(this, socket));
+    socket.on('chat:whisper', this.handleWhisper.bind(this, socket));
+    socket.on('chat:emote', this.handleEmote.bind(this, socket));
+  }
+
+  private async handleSendMessage(socket: AuthenticatedSocket, data: ChatMessageData) {
+    try {
+      const user = requireAuth(socket); // This throws if not authenticated
+      
+      // Validate input
+      const validation = this.validateChatMessage(data);
+      if (!validation.isValid) {
+        socket.emit('chat:error', { message: validation.error });
+        return;
+      }
+
+      // Check rate limit
+      const rateLimitKey = `chat:${user.userId}`;
+      const canSend = await this.realtimeService.checkRateLimit(rateLimitKey, 1000);
+      if (!canSend) {
+        socket.emit('chat:error', { message: 'Sending messages too quickly' });
+        return;
+      }
+
+      // Process message
+      const message = await this.chatService.sendMessage({
+        characterId: socket.characterId!,
+        channel: data.channel,
+        content: data.content,
+        userId: user.userId
+      });
+
+      // Broadcast based on channel
+      await this.broadcastMessage(socket, message);
+    } catch (error) {
+      console.error('Chat message error:', error);
+      socket.emit('chat:error', { 
+        message: error instanceof Error ? error.message : 'Failed to send message' 
+      });
+    }
+  }
+
+  // Remove unused parameter warning by using underscore prefix
+  private async handleWhisper(socket: AuthenticatedSocket, data: WhisperData) {
+    try {
+      const user = requireAuth(socket);
+      
+      // Implementation continues...
+    } catch (error) {
+      socket.emit('chat:error', { message: 'Whisper failed' });
+    }
+  }
+}
+```
+
+### 3. Fix Character/Combat Handler Pattern
+```typescript
+// packages/server/src/sockets/handlers/CharacterHandler.ts
+export class CharacterHandler {
+  handleConnection(socket: AuthenticatedSocket) {
+    socket.on('character:select', async (data) => {
+      try {
+        const user = requireAuth(socket);
+        await this.handleCharacterSelect(socket, user, data);
+      } catch (error) {
+        // Error already emitted by requireAuth
+      }
+    });
+  }
+
+  private async handleCharacterSelect(
+    socket: AuthenticatedSocket, 
+    user: SocketUser, 
+    data: CharacterSelectData
+  ) {
+    // Now we have guaranteed user exists
+    const character = await this.characterService.getCharacter(
+      data.characterId,
+      user.userId
+    );
+    
+    // Continue implementation...
+  }
+}
+```
+
+## 🧪 Test Suite Implementation
+
+### 1. Socket Mock Utilities
+```typescript
+// packages/server/src/sockets/__tests__/mocks/socketMocks.ts
+import { EventEmitter } from 'events';
+import { AuthenticatedSocket, SocketUser } from '../../types/socket.types';
+
+export class MockSocket extends EventEmitter implements Partial<AuthenticatedSocket> {
+  id = 'mock-socket-id';
+  user?: SocketUser;
+  characterId?: string;
+  joinedRooms = new Set<string>();
+  rooms = new Set<string>();
+  
+  join = jest.fn((room: string) => {
+    this.rooms.add(room);
+    return this;
+  });
+  
+  leave = jest.fn((room: string) => {
+    this.rooms.delete(room);
+    return this;
+  });
+  
+  emit = jest.fn();
+  to = jest.fn(() => ({ emit: jest.fn() }));
+  
+  constructor(user?: SocketUser) {
+    super();
+    this.user = user;
+  }
+}
+
+export const createMockUser = (overrides?: Partial<SocketUser>): SocketUser => ({
+  userId: 'test-user-id',
+  email: 'test@example.com',
+  username: 'testuser',
+  roles: ['user'],
+  ...overrides
+});
+```
+
+### 2. Authentication Middleware Tests
+```typescript
+// packages/server/src/sockets/__tests__/socketAuth.test.ts
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { socketAuth } from '../middleware/socketAuth';
+import { MockSocket } from './mocks/socketMocks';
+import { AuthService } from '../../services/AuthService';
+
+jest.mock('../../services/AuthService');
+
+describe('Socket Authentication Middleware', () => {
+  let mockAuthService: jest.Mocked<AuthService>;
+  let mockSocket: MockSocket;
+  let next: jest.Mock;
+
+  beforeEach(() => {
+    mockAuthService = new AuthService() as jest.Mocked<AuthService>;
+    mockSocket = new MockSocket();
+    next = jest.fn();
+    jest.clearAllMocks();
+  });
+
+  it('should authenticate valid token from handshake', async () => {
+    const validToken = 'valid-jwt-token';
+    const mockUser = {
+      userId: 'user-123',
+      email: 'test@example.com',
+      roles: ['user']
+    };
+
+    mockSocket.handshake = { auth: { token: validToken } } as any;
+    mockAuthService.verifyToken.mockResolvedValue(mockUser as any);
+
+    await socketAuth(mockSocket as any, next);
+
+    expect(mockAuthService.verifyToken).toHaveBeenCalledWith(validToken);
+    expect(mockSocket.user).toEqual({
+      userId: mockUser.userId,
+      email: mockUser.email,
+      username: expect.any(String),
+      roles: mockUser.roles
+    });
+    expect(next).toHaveBeenCalledWith();
+  });
+
+  it('should reject invalid token', async () => {
+    mockSocket.handshake = { auth: { token: 'invalid-token' } } as any;
+    mockAuthService.verifyToken.mockRejectedValue(new Error('Invalid token'));
+
+    await socketAuth(mockSocket as any, next);
+
+    expect(next).toHaveBeenCalledWith(new Error('Authentication failed'));
+    expect(mockSocket.user).toBeUndefined();
+  });
+
+  it('should handle missing token', async () => {
+    mockSocket.handshake = { auth: {} } as any;
+
+    await socketAuth(mockSocket as any, next);
+
+    expect(next).toHaveBeenCalledWith(new Error('No token provided'));
+  });
+});
+```
+
+### 3. Chat Handler Tests
+```typescript
+// packages/server/src/sockets/__tests__/handlers/ChatHandler.test.ts
+import { ChatHandler } from '../../handlers/ChatHandler';
+import { MockSocket, createMockUser } from '../mocks/socketMocks';
+import { ChatService } from '../../../services/ChatService';
+import { RealtimeService } from '../../../services/RealtimeService';
+
+describe('ChatHandler', () => {
+  let chatHandler: ChatHandler;
+  let mockSocket: MockSocket;
+  let mockChatService: jest.Mocked<ChatService>;
+  let mockRealtimeService: jest.Mocked<RealtimeService>;
+  let mockIo: any;
+
+  beforeEach(() => {
+    mockChatService = {
+      sendMessage: jest.fn(),
+      validateMessage: jest.fn()
+    } as any;
+    
+    mockRealtimeService = {
+      checkRateLimit: jest.fn(),
+      broadcastToZone: jest.fn()
+    } as any;
+
+    mockIo = { to: jest.fn(() => ({ emit: jest.fn() })) };
+    
+    chatHandler = new ChatHandler(mockIo, mockChatService, mockRealtimeService);
+    mockSocket = new MockSocket(createMockUser());
+    mockSocket.characterId = 'char-123';
+  });
+
+  describe('handleSendMessage', () => {
+    it('should send valid message', async () => {
+      const messageData = {
+        channel: 'zone:brightwater',
+        content: 'Hello world!'
+      };
+
+      mockRealtimeService.checkRateLimit.mockResolvedValue(true);
+      mockChatService.sendMessage.mockResolvedValue({
+        id: 'msg-123',
+        content: messageData.content,
+        channel: messageData.channel,
+        characterName: 'TestChar',
+        timestamp: new Date()
+      });
+
+      chatHandler.handleConnection(mockSocket as any);
+      mockSocket.emit('chat:send', messageData);
+
+      // Wait for async operations
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      expect(mockChatService.sendMessage).toHaveBeenCalledWith({
+        characterId: 'char-123',
+        channel: messageData.channel,
+        content: messageData.content,
+        userId: 'test-user-id'
+      });
+    });
+
+    it('should handle unauthenticated user', async () => {
+      mockSocket.user = undefined;
+      
+      chatHandler.handleConnection(mockSocket as any);
+      mockSocket.emit('chat:send', { channel: 'global', content: 'test' });
+
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      expect(mockSocket.emit).toHaveBeenCalledWith('error', {
+        code: 'AUTH_REQUIRED',
+        message: 'Authentication required'
+      });
+      expect(mockChatService.sendMessage).not.toHaveBeenCalled();
+    });
+
+    it('should enforce rate limiting', async () => {
+      mockRealtimeService.checkRateLimit.mockResolvedValue(false);
+
+      chatHandler.handleConnection(mockSocket as any);
+      mockSocket.emit('chat:send', { channel: 'global', content: 'spam' });
+
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      expect(mockSocket.emit).toHaveBeenCalledWith('chat:error', {
+        message: 'Sending messages too quickly'
+      });
+    });
+  });
+});
+```
+
+### 4. Integration Test
+```typescript
+// packages/server/src/sockets/__tests__/integration/socketFlow.test.ts
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import { io as ioClient, Socket as ClientSocket } from 'socket.io-client';
+import { createSocketServer } from '../../createSocketServer';
+import { AuthService } from '../../../services/AuthService';
+
+describe('Socket.IO Integration Flow', () => {
+  let httpServer: any;
+  let ioServer: Server;
+  let clientSocket: ClientSocket;
+  let serverPort: number;
+
+  beforeAll((done) => {
+    httpServer = createServer();
+    ioServer = createSocketServer(httpServer);
+    
+    httpServer.listen(() => {
+      serverPort = httpServer.address().port;
+      done();
+    });
+  });
+
+  afterAll(() => {
+    ioServer.close();
+    httpServer.close();
+  });
+
+  afterEach(() => {
+    if (clientSocket) {
+      clientSocket.close();
+    }
+  });
+
+  it('should complete authentication flow', (done) => {
+    const authService = new AuthService();
+    const mockToken = authService.generateAccessToken({
+      id: 'user-123',
+      email: 'test@example.com',
+      roles: ['user']
+    });
+
+    clientSocket = ioClient(`http://localhost:${serverPort}`, {
+      auth: { token: mockToken }
+    });
+
+    clientSocket.on('connect', () => {
+      expect(clientSocket.connected).toBe(true);
+      done();
+    });
+
+    clientSocket.on('connect_error', (error) => {
+      done(error);
+    });
+  });
+
+  it('should reject invalid authentication', (done) => {
+    clientSocket = ioClient(`http://localhost:${serverPort}`, {
+      auth: { token: 'invalid-token' }
+    });
+
+    clientSocket.on('connect_error', (error) => {
+      expect(error.message).toContain('Authentication failed');
+      done();
+    });
+  });
+});
+```
+
+## 🔁 Event & Real-Time Logic
+
+### Rate Limiting Pattern
+```typescript
+// Consistent rate limiting across all handlers
+const RATE_LIMITS = {
+  chat: 1000,      // 1 message per second
+  movement: 500,   // 2 moves per second  
+  combat: 200,     // 5 actions per second
+  whisper: 2000    // 1 whisper per 2 seconds
+};
+
+// In each handler:
+const canAct = await this.realtimeService.checkRateLimit(
+  `${action}:${user.userId}`,
+  RATE_LIMITS[action]
+);
+```
+
+## 🚧 Edge Cases
+
+1. **Disconnection during character selection**
+   - Clear characterId from socket
+   - Remove from zone rooms
+   - Notify other players
+
+2. **Multiple socket connections per user**
+   - Track all sockets in user room
+   - Sync state across connections
+
+3. **Rate limit bypass attempts**
+   - Server-side cooldown tracking
+   - IP-based secondary limits
+
+## 🧪 Validation Rules
+
+### Message Validation
+```typescript
+interface MessageValidation {
+  maxLength: 500,
+  minLength: 1,
+  allowedChannels: ['global', 'zone', 'guild', 'party'],
+  profanityFilter: true,
+  trimWhitespace: true
+}
+```
+
+### Character Selection Validation
+- User must own character
+- Character must not be in combat
+- Character must not be logged in elsewhere
+
+## 🚀 Deployment Considerations
+
+### Environment Variables
+```env
+# Socket.IO Configuration
+SOCKET_CORS_ORIGIN=https://game.aeturnis.com
+SOCKET_PING_TIMEOUT=60000
+SOCKET_PING_INTERVAL=25000
+SOCKET_MAX_HTTP_BUFFER_SIZE=1e6
+```
+
+### Redis Configuration
+```typescript
+// Ensure Redis adapter is configured for production
+const pubClient = redis.duplicate();
+const subClient = redis.duplicate();
+io.adapter(createAdapter(pubClient, subClient));
+```
+
+## 🔐 Self-Audit Footer
+
+---
+
+### 🔐 Self‑Audit Commands
+```bash
+# Fix TypeScript errors
+npm run typecheck
+
+# Run new test suite
+npm test src/sockets/__tests__ --coverage
+
+# Verify no unused variables
+npm run lint:ts --max-warnings=0
+
+# Integration test
+npm test src/sockets/__tests__/integration --runInBand
+```
+Paste: TS errors (should be 0) / Coverage % (target: 80%)
+
+### Expected Output After Fixes:
+```
+TypeScript: 0 errors
+ESLint: 0 errors, 0 warnings  
+Test Suites: 5 passed, 5 total
+Tests: 28 passed, 28 total
+Coverage: 85.3%
+```

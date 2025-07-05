@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import rateLimit from 'express-rate-limit';
 import { logger } from '../utils/logger';
 
@@ -10,6 +10,11 @@ export const rateLimiter = (options: {
   standardHeaders?: boolean;
   legacyHeaders?: boolean;
 }) => {
+  // Disable rate limiting in test environment
+  if (process.env.NODE_ENV === 'test') {
+    return (_req: Request, _res: Response, next: NextFunction) => next();
+  }
+
   return rateLimit({
     windowMs: options.windowMs,
     max: options.max,

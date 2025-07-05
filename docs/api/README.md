@@ -2,56 +2,43 @@
 
 ## Overview
 
-Aeturnis Online provides a production-ready RESTful API with comprehensive security, authentication, and monitoring features. The API is built with Express.js and includes structured logging, rate limiting, and comprehensive error handling.
+The Aeturnis Online API provides RESTful endpoints for game operations and real-time WebSocket communication via Socket.IO. All API endpoints require proper authentication except for public endpoints like health checks.
 
-## Base URLs
+## Base URL
 
-- **Development**: `http://localhost:5000`
-- **Production**: `https://your-domain.com`
-- **API v1**: `/api/v1`
-- **Legacy API**: `/api` (for backward compatibility)
-
-## Environment Status
-
-The API automatically detects the environment and adjusts behavior accordingly:
-- **Development**: Detailed error messages, CORS for localhost
-- **Production**: Sanitized errors, restricted CORS, enhanced security
+```
+Development: http://localhost:5000
+Production: https://api.aeturnis.online
+```
 
 ## Authentication
 
-All authenticated endpoints require a JWT token in the Authorization header:
+The API uses JWT (JSON Web Token) authentication. Include the token in the Authorization header:
 
 ```http
-Authorization: Bearer <jwt_token>
+Authorization: Bearer <your-jwt-token>
 ```
 
-### Token Lifecycle
-- **Access Token**: 15-minute expiration
-- **Refresh Token**: 7-day expiration with rotation
-- **Security**: Argon2id password hashing
+## REST API Endpoints
 
-## API Endpoints
-
-### System Status
+### Health & Status
 
 #### Health Check
 ```http
 GET /health
 ```
-Returns system health information including uptime, memory usage, and service status.
 
 **Response:**
 ```json
 {
   "status": "healthy",
   "uptime": 123.456,
-  "timestamp": "2025-07-04T06:00:00.000Z",
+  "timestamp": "2025-07-04T23:00:00.000Z",
   "memory": {
-    "rss": 73039872,
-    "heapTotal": 16642048,
-    "heapUsed": 15390136,
-    "external": 3390787,
-    "arrayBuffers": 65992
+    "rss": 123456789,
+    "heapTotal": 123456789,
+    "heapUsed": 123456789,
+    "external": 123456789
   },
   "services": {
     "database": "connected",
@@ -64,7 +51,6 @@ Returns system health information including uptime, memory usage, and service st
 ```http
 GET /api/status
 ```
-Returns API information and available features.
 
 **Response:**
 ```json
@@ -74,7 +60,7 @@ Returns API information and available features.
   "environment": "development",
   "features": [
     "authentication",
-    "rate-limiting", 
+    "rate-limiting",
     "structured-logging",
     "security-headers",
     "compression",
@@ -88,69 +74,89 @@ Returns API information and available features.
 }
 ```
 
-### Authentication
+### Authentication Endpoints
 
-All authentication endpoints are rate-limited to 5 requests per 15 minutes.
-
-#### Register User
+#### Register New User
 ```http
 POST /api/v1/auth/register
-```
+Content-Type: application/json
 
-**Request Body:**
-```json
 {
-  "email": "user@example.com",
-  "username": "username",
-  "password": "securepassword"
+  "email": "player@example.com",
+  "username": "PlayerName",
+  "password": "SecurePass123!"
 }
 ```
 
-**Response:**
+**Validation Rules:**
+- Email: Valid email format required
+- Username: 3-20 characters, alphanumeric only
+- Password: Minimum 8 characters, must contain uppercase, lowercase, number, and special character
+
+**Success Response (201):**
 ```json
 {
   "success": true,
   "data": {
     "user": {
-      "id": "uuid",
-      "email": "user@example.com",
-      "username": "username"
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "email": "player@example.com",
+      "username": "PlayerName",
+      "roles": ["player"],
+      "created_at": "2025-07-04T23:00:00.000Z"
     },
-    "tokens": {
-      "accessToken": "jwt-token",
-      "refreshToken": "refresh-token"
-    }
+    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
   }
 }
 ```
 
-#### Login User
-```http
-POST /api/v1/auth/login
-```
-
-**Request Body:**
+**Error Response (400):**
 ```json
 {
-  "emailOrUsername": "user@example.com",
-  "password": "securepassword"
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "\"email\" must be a valid email"
+  }
 }
 ```
 
-**Response:**
+#### Login
+```http
+POST /api/v1/auth/login
+Content-Type: application/json
+
+{
+  "emailOrUsername": "player@example.com",
+  "password": "SecurePass123!"
+}
+```
+
+**Success Response (200):**
 ```json
 {
   "success": true,
   "data": {
     "user": {
-      "id": "uuid",
-      "email": "user@example.com",
-      "username": "username"
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "email": "player@example.com",
+      "username": "PlayerName",
+      "roles": ["player"]
     },
-    "tokens": {
-      "accessToken": "jwt-token",
-      "refreshToken": "refresh-token"
-    }
+    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
+  }
+}
+```
+
+**Error Response (401):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Invalid credentials"
   }
 }
 ```
@@ -158,24 +164,21 @@ POST /api/v1/auth/login
 #### Refresh Token
 ```http
 POST /api/v1/auth/refresh
-```
+Content-Type: application/json
 
-**Request Body:**
-```json
 {
-  "refreshToken": "refresh-token"
+  "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
 }
 ```
 
-#### Logout User
-```http
-POST /api/v1/auth/logout
-```
-
-**Request Body:**
+**Success Response (200):**
 ```json
 {
-  "refreshToken": "refresh-token"
+  "success": true,
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
+  }
 }
 ```
 
@@ -185,139 +188,189 @@ GET /api/v1/auth/profile
 Authorization: Bearer <access-token>
 ```
 
-#### Verify Token
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "email": "player@example.com",
+    "username": "PlayerName",
+    "roles": ["player"],
+    "created_at": "2025-07-04T23:00:00.000Z",
+    "updated_at": "2025-07-04T23:00:00.000Z"
+  }
+}
+```
+
+## Rate Limiting
+
+### General API Endpoints
+- **Limit**: 100 requests per 15 minutes per IP
+- **Headers**: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
+
+### Authentication Endpoints
+- **Login**: 5 attempts per minute per IP
+- **Register**: 10 attempts per 15 minutes per IP
+
+**Rate Limit Error (429):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "RATE_LIMIT_EXCEEDED",
+    "message": "Too many requests from this IP"
+  }
+}
+```
+
+## Error Codes
+
+| HTTP Status | Error Code | Description |
+|-------------|------------|-------------|
+| 400 | VALIDATION_ERROR | Invalid request data |
+| 401 | UNAUTHORIZED | Authentication failed |
+| 403 | FORBIDDEN | Insufficient permissions |
+| 404 | NOT_FOUND | Resource not found |
+| 409 | CONFLICT | Resource already exists |
+| 429 | RATE_LIMIT_EXCEEDED | Too many requests |
+| 500 | INTERNAL_ERROR | Server error |
+
+## Request/Response Format
+
+### Request Headers
 ```http
-GET /api/v1/auth/verify
-Authorization: Bearer <access-token>
+Content-Type: application/json
+Authorization: Bearer <jwt-token>
+X-Request-ID: <optional-request-id>
 ```
 
-### Legacy Authentication Endpoints
-
-For backward compatibility, all authentication endpoints are also available at:
+### Standard Success Response
+```json
+{
+  "success": true,
+  "data": { ... }
+}
 ```
-/api/auth/*
-```
 
-## Error Responses
-
-All API errors follow a consistent structure with request correlation:
-
+### Standard Error Response
 ```json
 {
   "success": false,
   "error": {
     "code": "ERROR_CODE",
-    "message": "Human-readable error message"
+    "message": "Human readable error message",
+    "details": { ... } // Optional additional information
   },
-  "requestId": "uuid-v4-format"
+  "requestId": "uuid-v4"
 }
 ```
 
-### Common Error Codes
+## WebSocket Connection
 
-| Code | Status | Description |
-|------|--------|-------------|
-| `VALIDATION_ERROR` | 400 | Input validation failed |
-| `UNAUTHORIZED` | 401 | Authentication required |
-| `FORBIDDEN` | 403 | Access denied |
-| `NOT_FOUND` | 404 | Resource not found |
-| `CONFLICT` | 409 | Resource conflict |
-| `RATE_LIMIT_EXCEEDED` | 429 | Too many requests |
-| `INTERNAL_ERROR` | 500 | Server error |
+See [Socket.IO Events Documentation](../socketio/events.md) for real-time communication.
 
-## Rate Limiting
+### Quick Start
+```javascript
+const socket = io('http://localhost:5000', {
+  auth: {
+    token: accessToken // JWT from login
+  }
+});
 
-The API implements multi-tier rate limiting:
-
-### General Endpoints
-- **Limit**: 100 requests per 15 minutes
-- **Headers**: Standard rate limit headers included
-- **Response**: 429 status with retry information
-
-### Authentication Endpoints  
-- **Limit**: 5 requests per 15 minutes
-- **Scope**: Per IP address
-- **Reset**: Sliding window
-
-### Rate Limit Headers
-```http
-RateLimit-Policy: 100;w=900
-RateLimit-Limit: 100
-RateLimit-Remaining: 98
-RateLimit-Reset: 750
+socket.on('connect', () => {
+  console.log('Connected to game server');
+});
 ```
 
-## Security Features
+## Security Headers
 
-### Security Headers
-All responses include comprehensive security headers:
-- Content Security Policy
-- Strict Transport Security
-- X-Content-Type-Options: nosniff
-- X-Frame-Options: SAMEORIGIN
-- Cross-Origin-Opener-Policy: same-origin
+All responses include security headers:
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `X-XSS-Protection: 1; mode=block`
+- `Strict-Transport-Security: max-age=31536000`
 
-### CORS Configuration
-- **Development**: localhost variants allowed
-- **Production**: Configurable via ALLOWED_ORIGINS environment variable
-- **Credentials**: Enabled for authenticated requests
+## CORS Policy
 
-### Request Tracking
-Every request receives a unique ID for correlation:
-```http
-X-Request-ID: uuid-v4-format
+CORS is configured for:
+- Development: `http://localhost:*`
+- Production: Specific allowed origins
+
+## Performance Metrics
+
+- Average response time: < 50ms
+- Database queries: Optimized with indexes
+- Connection pooling: Max 20 connections
+- Request timeout: 30 seconds
+
+## SDK Examples
+
+### JavaScript/TypeScript
+```typescript
+class AeturnisAPI {
+  private baseURL = 'http://localhost:5000';
+  private token: string | null = null;
+  
+  async login(emailOrUsername: string, password: string) {
+    const response = await fetch(`${this.baseURL}/api/v1/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ emailOrUsername, password })
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      this.token = data.data.accessToken;
+    }
+    return data;
+  }
+  
+  async getProfile() {
+    const response = await fetch(`${this.baseURL}/api/v1/auth/profile`, {
+      headers: {
+        'Authorization': `Bearer ${this.token}`
+      }
+    });
+    
+    return response.json();
+  }
+}
 ```
 
-## Performance
+### cURL Examples
 
-### Response Time
-- **Target**: <10ms for most endpoints
-- **Actual**: <5ms average response time
-- **Monitoring**: X-Response-Time header included
-
-### Compression
-- **Gzip**: Enabled for eligible responses
-- **Threshold**: Automatic detection
-
-### Performance Headers
-```http
-X-Response-Time: 2.34ms
-Content-Encoding: gzip
+**Register:**
+```bash
+curl -X POST http://localhost:5000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","username":"testuser","password":"Test123!"}'
 ```
 
-## Monitoring and Observability
+**Login:**
+```bash
+curl -X POST http://localhost:5000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"emailOrUsername":"test@example.com","password":"Test123!"}'
+```
 
-### Structured Logging
-All requests are logged in JSON format with:
-- Request ID correlation
-- Method, URL, and user agent
-- Response status and timing
-- Error details and stack traces
+**Get Profile:**
+```bash
+curl http://localhost:5000/api/v1/auth/profile \
+  -H "Authorization: Bearer <your-jwt-token>"
+```
 
-### Health Monitoring
-- **Endpoint**: `/health`
-- **Metrics**: Uptime, memory, database status
-- **Format**: JSON with timestamp
+## Changelog
 
-## Future Endpoints
+### Version 1.0.0 (July 4, 2025)
+- Initial API release
+- JWT authentication system
+- User registration and login
+- Socket.IO real-time communication
+- Rate limiting and security headers
 
-The following endpoints are planned for future releases:
+---
 
-### Characters (Coming Soon)
-- `GET /api/v1/characters` - Get user's characters
-- `POST /api/v1/characters` - Create new character
-- `GET /api/v1/characters/:id` - Get character details
-- `PUT /api/v1/characters/:id` - Update character
-- `DELETE /api/v1/characters/:id` - Delete character
-
-### Game System (Coming Soon)
-- `GET /api/v1/game/zones` - Get available game zones
-- `POST /api/v1/game/move` - Move character
-- `GET /api/v1/game/inventory/:characterId` - Get character inventory
-
-### WebSocket Integration (Future)
-Real-time game interactions will be handled via WebSocket connections for:
-- Character movement
-- Chat system
-- Combat events
-- Game state updates
+For questions or support, please refer to the [main documentation](../../README.md) or contact the development team.
