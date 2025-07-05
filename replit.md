@@ -506,6 +506,18 @@ The expanded monorepo now includes:
 - **Example Display**: Combat now shows "Player attacks Training Goblin for 15 damage!" prominently before technical JSON
 - **Status**: Plain language combat display COMPLETE - Combat system provides clear, natural language feedback
 
+### July 05, 2025 - Win/Loss Combat Messages System Complete ✅
+- **Victory Messages**: Implemented dynamic victory messages like "🏆 VICTORY! Player has defeated Training Goblin!"
+- **Defeat Messages**: Added defeat messages such as "💀 DEFEAT! Player has been defeated by Orc Warrior!"
+- **Flee Messages**: Created flee messages with "💨 You fled from combat! Better luck next time."
+- **Combat End Detection**: Enhanced checkCombatEnd method to analyze combat state and generate appropriate outcomes
+- **Message Integration**: Win/loss messages now prominently display in combat interface above technical details
+- **Combat Status Enhancement**: Added CombatSession.endMessage field to store win/loss messages
+- **Automatic Message Display**: End messages automatically appear when combat concludes regardless of how it ends
+- **Emoji Indicators**: Visual emojis (🏆💀💨) make combat outcomes immediately recognizable
+- **Dynamic Naming**: Messages include actual player and enemy names for personalized feedback
+- **Status**: Win/loss combat messaging COMPLETE - Combat endings now provide clear, engaging feedback
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

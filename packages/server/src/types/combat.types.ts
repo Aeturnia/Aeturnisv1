@@ -25,6 +25,7 @@ export interface CombatSession {
   startTime: number;
   endTime?: number;
   winner?: string; // charId or 'draw'
+  endMessage?: string; // Win/loss/flee message
 }
 
 export interface CombatParticipant {

@@ -102,11 +102,15 @@ export class CombatService {
     const playerResult = await this.executeAction(session, actor, action);
     
     // Check for combat end after player action
-    await this.checkCombatEnd(session);
+    const endMessage = await this.checkCombatEnd(session);
     
-    // If combat ended, return just the player result
+    // If combat ended, return result with end message
     if (session.status === 'ended') {
-      return playerResult;
+      return {
+        ...playerResult,
+        message: endMessage || playerResult.message,
+        combatStatus: 'ended'
+      };
     }
 
     // Automatically process enemy turns
@@ -119,8 +123,12 @@ export class CombatService {
       enemyMessages.push(enemyResult.message);
       
       // Check for combat end after each enemy action
-      await this.checkCombatEnd(session);
+      const enemyEndMessage = await this.checkCombatEnd(session);
       if (session.status === 'ended') {
+        // If combat ended due to enemy action, include end message
+        if (enemyEndMessage) {
+          enemyMessages.push(enemyEndMessage);
+        }
         break;
       }
     }
@@ -314,9 +322,9 @@ export class CombatService {
   }
 
   /**
-   * Check if combat should end
+   * Check if combat should end and generate end message
    */
-  private async checkCombatEnd(session: CombatSession): Promise<void> {
+  private async checkCombatEnd(session: CombatSession): Promise<string | null> {
     const activeTeams = new Set(
       session.participants
         .filter(p => p.status === 'active')
@@ -324,17 +332,42 @@ export class CombatService {
     );
 
     const activePlayers = session.participants.filter(p => p.status === 'active' && p.team === 'player');
+    const activeEnemies = session.participants.filter(p => p.status === 'active' && p.team === 'enemy');
     const hasPlayerFled = session.participants.some(p => p.team === 'player' && p.status === 'fled');
+    const defeatedEnemies = session.participants.filter(p => p.status === 'defeated' && p.team === 'enemy');
+    const defeatedPlayers = session.participants.filter(p => p.status === 'defeated' && p.team === 'player');
+
+    let endMessage: string | null = null;
 
     // End combat if no active teams, or if all players fled
     if (activeTeams.size <= 1 || activePlayers.length === 0 || hasPlayerFled) {
       session.status = 'ended';
       session.endTime = Date.now();
       
-      // Determine winner
-      if (activePlayers.length > 0) {
+      // Generate appropriate end message
+      if (hasPlayerFled) {
+        endMessage = "💨 You fled from combat! Better luck next time.";
+        session.winner = undefined; // No winner when fleeing
+      } else if (activePlayers.length > 0 && activeEnemies.length === 0) {
+        // Player wins - all enemies defeated
+        const playerName = activePlayers[0].charName;
+        const enemyNames = defeatedEnemies.map(e => e.charName).join(', ');
+        endMessage = `🏆 VICTORY! ${playerName} has defeated ${enemyNames}!`;
         session.winner = activePlayers[0].charId;
+      } else if (activePlayers.length === 0 && activeEnemies.length > 0) {
+        // Player loses - all players defeated
+        const enemyNames = activeEnemies.map(e => e.charName).join(', ');
+        const playerNames = defeatedPlayers.map(p => p.charName).join(', ');
+        endMessage = `💀 DEFEAT! ${playerNames} has been defeated by ${enemyNames}!`;
+        session.winner = activeEnemies[0].charId;
+      } else {
+        // Tie or other edge case
+        endMessage = "⚔️ Combat has ended in a draw!";
+        session.winner = undefined;
       }
+
+      // Store the end message in session for retrieval
+      session.endMessage = endMessage;
 
       // Clean up participant tracking for all participants
       session.participants.forEach(p => {
@@ -344,6 +377,8 @@ export class CombatService {
       // Also remove the session itself
       this.sessions.delete(session.sessionId);
     }
+
+    return endMessage;
   }
 
   /**
