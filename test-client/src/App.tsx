@@ -367,7 +367,7 @@ function App() {
             sessionId: combatSessionId,
             action: {
               type: actionType,
-              targetId: actionType === 'attack' ? 'enemy_550e8400-e29b-41d4-a716-446655440001' : undefined
+              targetCharId: actionType === 'attack' ? selectedMonster || 'goblin_weak' : undefined
             }
           })
         });
