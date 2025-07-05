@@ -46,10 +46,10 @@ export class CombatService {
       )
     ];
 
-    // Determine turn order based on speed (mock calculation)
-    const turnOrder = participants
-      .sort((a, b) => this.calculateSpeed(b.charId) - this.calculateSpeed(a.charId))
-      .map(p => p.charId);
+    // Ensure player always goes first in turn order
+    const playerFirst = participants.filter(p => p.team === 'player');
+    const enemiesAfter = participants.filter(p => p.team === 'enemy');
+    const turnOrder = [...playerFirst, ...enemiesAfter].map(p => p.charId);
 
     const session: CombatSession = {
       sessionId,
@@ -174,6 +174,9 @@ export class CombatService {
       case CombatActionType.FLEE:
         actor.status = 'fled';
         message = `${actor.charName} flees from combat!`;
+        
+        // Clean up participant tracking immediately when fleeing
+        this.participantToSession.delete(actor.charId);
         break;
 
       case CombatActionType.USE_ITEM:
@@ -300,20 +303,26 @@ export class CombatService {
         .map(p => p.team)
     );
 
-    if (activeTeams.size <= 1) {
-      session.status = 'completed';
+    const activePlayers = session.participants.filter(p => p.status === 'active' && p.team === 'player');
+    const hasPlayerFled = session.participants.some(p => p.team === 'player' && p.status === 'fled');
+
+    // End combat if no active teams, or if all players fled
+    if (activeTeams.size <= 1 || activePlayers.length === 0 || hasPlayerFled) {
+      session.status = 'ended';
       session.endTime = Date.now();
       
       // Determine winner
-      const activePlayers = session.participants.filter(p => p.status === 'active');
       if (activePlayers.length > 0) {
         session.winner = activePlayers[0].charId;
       }
 
-      // Clean up participant tracking
+      // Clean up participant tracking for all participants
       session.participants.forEach(p => {
         this.participantToSession.delete(p.charId);
       });
+      
+      // Also remove the session itself
+      this.sessions.delete(session.sessionId);
     }
   }
 
