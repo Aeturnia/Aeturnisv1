@@ -202,7 +202,7 @@ function App() {
           </div>
           <div className="info-row">
             <span className="info-label">Socket.IO:</span>
-            <span className="info-value">{apiStatus.services?.socket_io || 'Unknown'}</span>
+            <span className="info-value">{apiStatus.services?.socketio || 'Unknown'}</span>
           </div>
           <button className="button" onClick={fetchApiStatus}>
             Refresh Status

@@ -358,7 +358,32 @@ router.post(
   })
 );
 
-// Validate character name
+// Validate character name (GET version for testing interface)
+router.get(
+  '/validate-name/:name',
+  asyncHandler(async (req, res) => {
+    const { name } = req.params;
+    
+    if (name.length < 3 || name.length > 32) {
+      return res.json({
+        success: false,
+        data: {
+          isValid: false,
+          reason: 'Name must be between 3 and 32 characters'
+        }
+      });
+    }
+    
+    const validation = await characterService.validateCharacterName(name);
+    
+    res.json({
+      success: true,
+      data: validation
+    });
+  })
+);
+
+// Validate character name (POST version)
 router.post(
   '/validate-name',
   [
