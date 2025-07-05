@@ -56,7 +56,7 @@ router.get('/:sessionId', authenticate, asyncHandler(async (req: AuthRequest, re
     });
   }
 
-  res.json({
+  return res.json({
     success: true,
     data: session
   });
@@ -75,7 +75,7 @@ router.get('/user/sessions', authenticate, asyncHandler(async (req: AuthRequest,
 
   const sessions = await sessionManager.getUserSessions(userId);
   
-  res.json({
+  return res.json({
     success: true,
     data: {
       sessions,
@@ -106,7 +106,7 @@ router.post('/:sessionId/extend', authenticate, asyncHandler(async (req: AuthReq
 
   await sessionManager.extendSession(sessionId);
   
-  res.json({
+  return res.json({
     success: true,
     message: 'Session extended successfully'
   });
@@ -134,7 +134,7 @@ router.delete('/:sessionId', authenticate, asyncHandler(async (req: AuthRequest,
 
   await sessionManager.destroySession(sessionId);
   
-  res.json({
+  return res.json({
     success: true,
     message: 'Session destroyed successfully'
   });

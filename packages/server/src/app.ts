@@ -16,7 +16,7 @@ import authRoutes from './routes/auth.routes';
 import sessionRoutes from './routes/session.routes';
 
 // Services
-import { shutdownServices } from './services/index';
+// import { shutdownServices } from './services/index';
 
 // Utilities
 import { logger, morganStream } from './utils/logger';
