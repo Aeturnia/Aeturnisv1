@@ -42,6 +42,7 @@ export const createApp = () => {
         styleSrc: ["'self'", "'unsafe-inline'"],
         scriptSrc: ["'self'"],
         imgSrc: ["'self'", "data:", "https:"],
+        frameAncestors: ["'self'", "*.replit.dev", "*.replit.com", "*.replit.app", "replit.com"],
       },
     },
   }));
