@@ -359,23 +359,37 @@ export class CombatService {
       throw new Error(`Test monster stats not found: ${charId}`);
     }
 
-    // Regular character logic
-    const resources = await this.resourceService.getResources(charId);
+    // Regular character logic - provide default resources for all users
     const defaultResources: ResourcePool = {
       hp: 100, maxHp: 100, mana: 50, maxMana: 50, stamina: 30, maxStamina: 30,
       hpRegenRate: 1, manaRegenRate: 0.5, staminaRegenRate: 2, lastRegenTime: Date.now()
     };
 
-    return {
-      charId,
-      level: 10,
-      attack: 25,
-      defense: 20,
-      speed: 15,
-      critRate: 0.1,
-      critDamage: 1.5,
-      resources: resources || defaultResources
-    };
+    try {
+      const resources = await this.resourceService.getResources(charId);
+      return {
+        charId,
+        level: 10,
+        attack: 25,
+        defense: 20,
+        speed: 15,
+        critRate: 0.1,
+        critDamage: 1.5,
+        resources: resources || defaultResources
+      };
+    } catch (error) {
+      // If resource service fails, use default resources
+      return {
+        charId,
+        level: 10,
+        attack: 25,
+        defense: 20,
+        speed: 15,
+        critRate: 0.1,
+        critDamage: 1.5,
+        resources: defaultResources
+      };
+    }
   }
 
   /**
