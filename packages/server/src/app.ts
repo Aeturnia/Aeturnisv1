@@ -75,11 +75,15 @@ export const createApp = () => {
   const clientDistPath = path.resolve(__dirname, '../../client/dist');
   app.use(express.static(clientDistPath, {
     maxAge: '1d',
-    setHeaders: (res, path) => {
-      if (path.endsWith('.js')) {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.js')) {
         res.setHeader('Content-Type', 'application/javascript');
-      } else if (path.endsWith('.css')) {
+      } else if (filePath.endsWith('.css')) {
         res.setHeader('Content-Type', 'text/css');
+      } else if (filePath.endsWith('.html')) {
+        res.setHeader('Content-Type', 'text/html');
+        // Ensure CSP headers allow Replit iframe embedding
+        res.setHeader('X-Frame-Options', 'SAMEORIGIN');
       }
     }
   }));
