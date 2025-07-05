@@ -374,13 +374,29 @@ function App() {
 
         const data = await response.json();
         
-        setLiveCombatTest({
-          loading: false,
-          response: JSON.stringify({
+        // Extract combat message for plain language display
+        const combatMessage = data?.data?.result?.message || 'No combat message available';
+        const combatStatus = data?.data?.result?.combatStatus || 'unknown';
+        
+        const formattedResponse = [
+          "=== COMBAT ACTION ===",
+          "",
+          combatMessage,
+          "",
+          `Combat Status: ${combatStatus.toUpperCase()}`,
+          "",
+          "=== TECHNICAL DETAILS ===",
+          "",
+          JSON.stringify({
             "Action": actionType.toUpperCase(),
             "Session ID": combatSessionId,
             "Action Result": data
-          }, null, 2),
+          }, null, 2)
+        ].join('\n');
+        
+        setLiveCombatTest({
+          loading: false,
+          response: formattedResponse,
           success: response.ok
         });
       }
