@@ -50,6 +50,9 @@ router.get('/resources/:charId',
 // Test endpoint (always available for development)
 router.get('/test', combatController.testCombatSystem);
 
+// Test monsters endpoint (always available for development)
+router.get('/test-monsters', combatController.getTestMonsters);
+
 // Development/QA endpoints
 if (process.env.NODE_ENV !== 'production') {
   router.post('/simulate', 

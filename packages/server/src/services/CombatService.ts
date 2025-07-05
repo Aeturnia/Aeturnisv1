@@ -11,6 +11,7 @@ import {
 } from '../types/combat.types';
 import { ResourcePool, ResourceUpdate } from '../types/resources.types';
 import { ResourceService } from './ResourceService';
+import { testMonsterService } from './TestMonsterService';
 
 export class CombatService {
   private resourceService: ResourceService;
@@ -349,6 +350,16 @@ export class CombatService {
    * Get character combat stats
    */
   async getCharacterStats(charId: string): Promise<CharacterCombatStats> {
+    // Check if this is a test monster
+    if (testMonsterService.isTestMonster(charId)) {
+      const stats = testMonsterService.getTestMonsterCombatStats(charId);
+      if (stats) {
+        return stats;
+      }
+      throw new Error(`Test monster stats not found: ${charId}`);
+    }
+
+    // Regular character logic
     const resources = await this.resourceService.getResources(charId);
     const defaultResources: ResourcePool = {
       hp: 100, maxHp: 100, mana: 50, maxMana: 50, stamina: 30, maxStamina: 30,
@@ -378,6 +389,16 @@ export class CombatService {
    * Create a combat participant
    */
   private async createParticipant(charId: string, team: 'player' | 'enemy'): Promise<CombatParticipant> {
+    // Check if this is a test monster
+    if (testMonsterService.isTestMonster(charId)) {
+      const testParticipant = testMonsterService.createCombatParticipant(charId);
+      if (testParticipant) {
+        return testParticipant;
+      }
+      throw new Error(`Test monster not found: ${charId}`);
+    }
+
+    // Regular character logic
     const stats = await this.getCharacterStats(charId);
     
     return {

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { CombatService } from '../services/CombatService';
 import { ResourceService } from '../services/ResourceService';
+import { testMonsterService } from '../services/TestMonsterService';
 import { CombatStartRequest, CombatActionRequest } from '../types/combat.types';
 
 // Extend Request type for authenticated requests
@@ -325,6 +326,43 @@ export const testCombatSystem = async (req: Request, res: Response): Promise<Res
     return res.status(500).json({
       success: false,
       message: 'Combat system test failed'
+    });
+  }
+};
+
+/**
+ * Get available test monsters
+ */
+export const getTestMonsters = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const monsters = testMonsterService.getAllTestMonsters();
+    
+    return res.json({
+      success: true,
+      message: 'Test monsters retrieved successfully',
+      data: {
+        monsters: monsters.map(monster => ({
+          id: monster.id,
+          name: monster.name,
+          level: monster.level,
+          difficulty: monster.difficulty,
+          description: monster.description,
+          stats: {
+            hp: monster.hp,
+            maxHp: monster.maxHp,
+            attack: monster.attack,
+            defense: monster.defense,
+            speed: monster.speed
+          }
+        })),
+        count: monsters.length,
+        usage: 'Use monster.id in targetIds array when starting combat'
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve test monsters'
     });
   }
 };

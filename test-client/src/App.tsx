@@ -26,6 +26,8 @@ function App() {
   const [combatTest, setCombatTest] = useState<TestState>({ loading: false, response: '', success: false });
   const [liveCombatTest, setLiveCombatTest] = useState<TestState>({ loading: false, response: '', success: false });
   const [combatSessionId, setCombatSessionId] = useState<string>('');
+  const [testMonsters, setTestMonsters] = useState<any[]>([]);
+  const [selectedMonster, setSelectedMonster] = useState<string>('');
 
   // Form states
   const [email, setEmail] = useState('test@example.com');
@@ -35,6 +37,7 @@ function App() {
 
   useEffect(() => {
     fetchApiStatus();
+    fetchTestMonsters();
   }, []);
 
   const fetchApiStatus = async () => {
@@ -44,6 +47,22 @@ function App() {
       setApiStatus(data);
     } catch (error) {
       console.error('Failed to fetch API status:', error);
+    }
+  };
+
+  const fetchTestMonsters = async () => {
+    try {
+      const response = await fetch('/api/v1/combat/test-monsters');
+      const data = await response.json();
+      if (data.success && data.data?.monsters) {
+        setTestMonsters(data.data.monsters);
+        // Set first monster as default selection
+        if (data.data.monsters.length > 0) {
+          setSelectedMonster(data.data.monsters[0].id);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch test monsters:', error);
     }
   };
 
@@ -205,11 +224,11 @@ function App() {
       if (action === 'test') {
         url = '/api/v1/combat/test';
       } else if (action === 'stats') {
-        // Use a test character ID
-        url = '/api/v1/combat/stats/550e8400-e29b-41d4-a716-446655440000';
+        // Use selected test monster ID
+        url = `/api/v1/combat/stats/${selectedMonster || 'goblin_weak'}`;
       } else if (action === 'resources') {
-        // Use a test character ID
-        url = '/api/v1/combat/resources/550e8400-e29b-41d4-a716-446655440000';
+        // Use selected test monster ID
+        url = `/api/v1/combat/resources/${selectedMonster || 'goblin_weak'}`;
       }
 
       const response = await fetch(url, {
@@ -246,7 +265,7 @@ function App() {
           'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify({
-          targetIds: ['550e8400-e29b-41d4-a716-446655440001'],
+          targetIds: [selectedMonster || 'goblin_weak'],
           battleType: 'pve'
         })
       });
@@ -619,6 +638,29 @@ function App() {
             <h3 className="test-title">Live Combat Testing</h3>
             <p>Status: {authToken ? 'Authentication Required' : 'Please login first'}</p>
             <p>Active Session: {combatSessionId || 'None'}</p>
+            
+            <div style={{ marginBottom: '10px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', color: '#ccc' }}>
+                Test Monster Selection:
+              </label>
+              <select 
+                className="input"
+                value={selectedMonster}
+                onChange={(e) => setSelectedMonster(e.target.value)}
+                style={{ marginBottom: '10px', width: '100%' }}
+              >
+                {testMonsters.map(monster => (
+                  <option key={monster.id} value={monster.id}>
+                    {monster.name} (Level {monster.level}) - {monster.difficulty}
+                  </option>
+                ))}
+              </select>
+              {selectedMonster && (
+                <p style={{ fontSize: '12px', color: '#999', marginBottom: '10px' }}>
+                  Selected: {testMonsters.find(m => m.id === selectedMonster)?.description || 'Loading monster details...'}
+                </p>
+              )}
+            </div>
             
             <div style={{ marginBottom: '10px' }}>
               <button 
