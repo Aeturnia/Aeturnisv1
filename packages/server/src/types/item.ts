@@ -1,15 +1,15 @@
 export interface Item {
-  id: string;
+  id: number;
   name: string;
-  description: string;
-  icon: string;
+  description?: string;
   type: ItemType;
   rarity: ItemRarity;
-  stackable: boolean;
-  maxStack: number;
-  soulbound: boolean;
   value: number;
-  metadata?: Record<string, any>;
+  stackable: boolean;
+  maxStack?: number;
+  level?: number;
+  stats?: ItemStats;
+  metadata?: Record<string, unknown>;
 }
 
 export enum ItemType {
@@ -18,7 +18,6 @@ export enum ItemType {
   CONSUMABLE = 'consumable',
   MATERIAL = 'material',
   QUEST = 'quest',
-  CURRENCY = 'currency',
   MISC = 'misc'
 }
 
@@ -31,7 +30,26 @@ export enum ItemRarity {
   MYTHIC = 'mythic'
 }
 
-export interface ItemStack {
-  itemId: string;
+export interface ItemStats {
+  damage?: number;
+  defense?: number;
+  strength?: number;
+  dexterity?: number;
+  intelligence?: number;
+  constitution?: number;
+  wisdom?: number;
+  charisma?: number;
+}
+
+export interface InventoryItem {
+  slot: number;
+  itemId: number;
   quantity: number;
+  item?: Item;
+}
+
+export interface ItemTransferRequest {
+  fromSlot: number;
+  toSlot: number;
+  quantity?: number;
 }

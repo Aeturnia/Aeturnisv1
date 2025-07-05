@@ -1,5 +1,5 @@
 import { eq, and, desc } from 'drizzle-orm';
-import { characters } from '../database/schema';
+import { characters } from '../database/schema/index';
 import { Character, CreateCharacterDTO, CharacterListItem } from '../types/character.types';
 import { StatsService } from '../services/StatsService';
 import { db } from '../database/config';
@@ -39,7 +39,7 @@ export class CharacterRepository {
     const derivedStats = StatsService.calculateDerivedStats(tempCharacter);
     
     const result = await db.insert(characters).values({
-      accountId,
+      accountId: accountId,
       name: data.name,
       level: 1,
       experience: 0,

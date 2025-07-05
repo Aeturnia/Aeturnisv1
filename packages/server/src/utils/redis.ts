@@ -1,74 +1,52 @@
 import Redis from 'ioredis';
 import { logger } from './logger';
 
-// Create Redis client with production-ready configuration
-export const redis = new Redis({
+// Redis configuration
+const redisConfig = {
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
-  password: process.env.REDIS_PASSWORD,
-  db: parseInt(process.env.REDIS_DB || '0'),
-  retryStrategy: (times: number) => {
-    const delay = Math.min(times * 50, 2000);
-    return delay;
-  },
-  reconnectOnError: (err: Error) => {
-    const targetError = 'READONLY';
-    if (err.message.includes(targetError)) {
-      // Only reconnect when the error contains "READONLY"
-      return true;
-    }
-    return false;
-  },
+  retryDelayOnFailover: 100,
+  enableReadyCheck: false,
+  maxRetriesPerRequest: null,
   lazyConnect: true,
-  maxRetriesPerRequest: 3,
-  enableReadyCheck: true,
-  connectTimeout: 10000,
-  autoResubscribe: true,
-  autoResendUnfulfilledCommands: true,
-});
+};
 
-// Handle Redis connection events
+// Create Redis client
+export const redis = new Redis(redisConfig);
+
+// Redis event handlers
 redis.on('connect', () => {
-  logger.info('Redis client connected');
+  logger.info('Redis connected', { service: 'redis' });
 });
 
 redis.on('ready', () => {
-  logger.info('Redis client ready');
+  logger.info('Redis ready', { service: 'redis' });
 });
 
-redis.on('error', (err) => {
-  logger.error('Redis client error:', err);
+redis.on('error', (error) => {
+  logger.error('Redis error', { 
+    error: error.message,
+    service: 'redis' 
+  });
 });
 
 redis.on('close', () => {
-  logger.info('Redis client connection closed');
+  logger.warn('Redis connection closed', { service: 'redis' });
 });
 
-redis.on('reconnecting', (delay: number) => {
-  logger.info(`Redis client reconnecting in ${delay}ms`);
+redis.on('reconnecting', () => {
+  logger.info('Redis reconnecting', { service: 'redis' });
 });
 
-// Connect to Redis
-export async function connectRedis(): Promise<void> {
-  try {
-    await redis.connect();
-    logger.info('Redis connection established');
-  } catch (error) {
-    logger.error('Failed to connect to Redis:', error);
-    throw error;
-  }
-}
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  logger.info('Closing Redis connection...', { service: 'redis' });
+  await redis.quit();
+});
 
-// Disconnect from Redis
-export async function disconnectRedis(): Promise<void> {
-  try {
-    await redis.quit();
-    logger.info('Redis connection closed gracefully');
-  } catch (error) {
-    logger.error('Error closing Redis connection:', error);
-    throw error;
-  }
-}
+process.on('SIGINT', async () => {
+  logger.info('Closing Redis connection...', { service: 'redis' });
+  await redis.quit();
+});
 
-// Export Redis type for type safety
-export type RedisClient = typeof redis;
+export default redis;
