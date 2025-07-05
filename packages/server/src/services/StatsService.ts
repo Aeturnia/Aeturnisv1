@@ -45,12 +45,12 @@ export class StatsService {
     const tierBonus = tier * 50;
     
     // Bonus stats from gear/buffs with logarithmic scaling
-    const bonusEffect = bonus > 0n 
+    const bonusEffect = bonus > BigInt(0) 
       ? Math.log10(Number(bonus) + 1) * 20 
       : 0;
     
     // Paragon points provide smaller but stackable benefits
-    const paragonEffect = paragonPoints > 0n
+    const paragonEffect = paragonPoints > BigInt(0)
       ? Math.log10(Number(paragonPoints) + 1) * 10
       : 0;
     
@@ -103,7 +103,7 @@ export class StatsService {
       baseStats.strength,
       character.strengthTier,
       character.bonusStrength,
-      paragonDist.strength || 0n,
+      paragonDist.strength || BigInt(0),
       character.prestigeLevel,
       classScaling.strength
     );
@@ -112,7 +112,7 @@ export class StatsService {
       baseStats.dexterity,
       character.dexterityTier,
       character.bonusDexterity,
-      paragonDist.dexterity || 0n,
+      paragonDist.dexterity || BigInt(0),
       character.prestigeLevel,
       classScaling.dexterity
     );
@@ -121,7 +121,7 @@ export class StatsService {
       baseStats.intelligence,
       character.intelligenceTier,
       character.bonusIntelligence,
-      paragonDist.intelligence || 0n,
+      paragonDist.intelligence || BigInt(0),
       character.prestigeLevel,
       classScaling.intelligence
     );
@@ -130,7 +130,7 @@ export class StatsService {
       baseStats.wisdom,
       character.wisdomTier,
       character.bonusWisdom,
-      paragonDist.wisdom || 0n,
+      paragonDist.wisdom || BigInt(0),
       character.prestigeLevel,
       classScaling.wisdom
     );
@@ -139,7 +139,7 @@ export class StatsService {
       baseStats.constitution,
       character.constitutionTier,
       character.bonusConstitution,
-      paragonDist.constitution || 0n,
+      paragonDist.constitution || BigInt(0),
       character.prestigeLevel,
       classScaling.constitution
     );
@@ -148,7 +148,7 @@ export class StatsService {
       baseStats.charisma,
       character.charismaTier,
       character.bonusCharisma,
-      paragonDist.charisma || 0n,
+      paragonDist.charisma || BigInt(0),
       character.prestigeLevel,
       classScaling.charisma
     );

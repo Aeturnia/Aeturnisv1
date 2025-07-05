@@ -13,7 +13,7 @@ const characterService = new CharacterService();
 router.get(
   '/',
   authenticate,
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: AuthRequest, res) => {
     const userId = req.user!.id;
     const characters = await characterService.getCharactersByAccount(userId);
     

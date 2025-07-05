@@ -276,7 +276,7 @@ export class CharacterService {
     }
 
     // Validate point distribution doesn't exceed available points
-    const totalAllocated = Object.values(distribution).reduce((sum, points) => sum + points, 0n);
+    const totalAllocated = Object.values(distribution).reduce((sum, points) => sum + points, BigInt(0));
     if (totalAllocated > character.paragonPoints) {
       throw new Error('Not enough paragon points available');
     }

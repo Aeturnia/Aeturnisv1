@@ -15,7 +15,7 @@ import { generalLimiter, authLimiter } from './middleware/rateLimiter';
 // Routes
 import authRoutes from './routes/auth.routes';
 import sessionRoutes from './routes/session.routes';
-// import characterRoutes from './routes/character.routes.simple';
+import characterRoutes from './routes/character.routes.simple';
 
 // Services
 // import { shutdownServices } from './services/index';
@@ -70,12 +70,21 @@ export const createApp = () => {
   app.use(requestLogger);
   app.use(performanceTracker);
 
+  // Serve static frontend files FIRST (before rate limiting and other middleware)
+  const clientDistPath = path.resolve(__dirname, '../../client/dist');
+  app.use(express.static(clientDistPath, {
+    maxAge: '1d',
+    setHeaders: (res, path) => {
+      if (path.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      } else if (path.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css');
+      }
+    }
+  }));
+
   // Apply general rate limiting
   app.use(generalLimiter);
-
-  // Serve static frontend files
-  const clientDistPath = path.resolve(__dirname, '../../client/dist');
-  app.use(express.static(clientDistPath));
 
   // Health check endpoints (API-specific routes first before fallback)
   app.get('/api/status', (_req, res) => {
@@ -104,7 +113,7 @@ export const createApp = () => {
   // API routes
   app.use('/api/v1/auth', authLimiter, authRoutes);
   app.use('/api/v1/sessions', generalLimiter, sessionRoutes);
-  // app.use('/api/v1/characters', generalLimiter, characterRoutes);
+  app.use('/api/v1/characters', generalLimiter, characterRoutes);
 
   // Legacy auth routes (for backward compatibility)
   app.use('/api/auth', authLimiter, authRoutes);

@@ -25,14 +25,14 @@ export class CharacterRepository {
       wisdomTier: 0,
       constitutionTier: 0,
       charismaTier: 0,
-      bonusStrength: 0n,
-      bonusDexterity: 0n,
-      bonusIntelligence: 0n,
-      bonusWisdom: 0n,
-      bonusConstitution: 0n,
-      bonusCharisma: 0n,
+      bonusStrength: BigInt(0),
+      bonusDexterity: BigInt(0),
+      bonusIntelligence: BigInt(0),
+      bonusWisdom: BigInt(0),
+      bonusConstitution: BigInt(0),
+      bonusCharisma: BigInt(0),
       prestigeLevel: 0,
-      paragonPoints: 0n,
+      paragonPoints: BigInt(0),
       paragonDistribution: {},
     } as Character;
     
@@ -42,7 +42,7 @@ export class CharacterRepository {
       accountId,
       name: data.name,
       level: 1,
-      experience: 0n,
+      experience: BigInt(0),
       race: data.race,
       class: data.class,
       gender: data.gender,
@@ -64,16 +64,16 @@ export class CharacterRepository {
       charismaTier: 0,
       
       // Initialize bonus stats to 0
-      bonusStrength: 0n,
-      bonusDexterity: 0n,
-      bonusIntelligence: 0n,
-      bonusWisdom: 0n,
-      bonusConstitution: 0n,
-      bonusCharisma: 0n,
+      bonusStrength: BigInt(0),
+      bonusDexterity: BigInt(0),
+      bonusIntelligence: BigInt(0),
+      bonusWisdom: BigInt(0),
+      bonusConstitution: BigInt(0),
+      bonusCharisma: BigInt(0),
       
       // Initialize progression systems
       prestigeLevel: 0,
-      paragonPoints: 0n,
+      paragonPoints: BigInt(0),
       paragonDistribution: {},
       
       // Set initial resource pools
