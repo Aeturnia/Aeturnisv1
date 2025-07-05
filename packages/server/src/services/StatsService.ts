@@ -102,7 +102,7 @@ export class StatsService {
     const effectiveStr = this.calculateEffectiveStat(
       baseStats.strength,
       character.strengthTier,
-      character.bonusStrength,
+      BigInt(character.bonusStrength),
       paragonDist.strength || BigInt(0),
       character.prestigeLevel,
       classScaling.strength
@@ -111,7 +111,7 @@ export class StatsService {
     const effectiveDex = this.calculateEffectiveStat(
       baseStats.dexterity,
       character.dexterityTier,
-      character.bonusDexterity,
+      BigInt(character.bonusDexterity),
       paragonDist.dexterity || BigInt(0),
       character.prestigeLevel,
       classScaling.dexterity
@@ -120,7 +120,7 @@ export class StatsService {
     const effectiveInt = this.calculateEffectiveStat(
       baseStats.intelligence,
       character.intelligenceTier,
-      character.bonusIntelligence,
+      BigInt(character.bonusIntelligence),
       paragonDist.intelligence || BigInt(0),
       character.prestigeLevel,
       classScaling.intelligence
@@ -129,7 +129,7 @@ export class StatsService {
     const effectiveWis = this.calculateEffectiveStat(
       baseStats.wisdom,
       character.wisdomTier,
-      character.bonusWisdom,
+      BigInt(character.bonusWisdom),
       paragonDist.wisdom || BigInt(0),
       character.prestigeLevel,
       classScaling.wisdom
@@ -138,7 +138,7 @@ export class StatsService {
     const effectiveCon = this.calculateEffectiveStat(
       baseStats.constitution,
       character.constitutionTier,
-      character.bonusConstitution,
+      BigInt(character.bonusConstitution),
       paragonDist.constitution || BigInt(0),
       character.prestigeLevel,
       classScaling.constitution
@@ -147,7 +147,7 @@ export class StatsService {
     const effectiveCha = this.calculateEffectiveStat(
       baseStats.charisma,
       character.charismaTier,
-      character.bonusCharisma,
+      BigInt(character.bonusCharisma),
       paragonDist.charisma || BigInt(0),
       character.prestigeLevel,
       classScaling.charisma

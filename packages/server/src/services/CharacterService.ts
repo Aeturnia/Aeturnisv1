@@ -130,18 +130,18 @@ export class CharacterService {
       return null;
     }
 
-    const newExp = character.experience + expGained;
+    const newExp = character.experience + Number(expGained);
     let newLevel = character.level;
 
     // Calculate level up - simple exponential scaling
     const expForNextLevel = this.calculateExpForLevel(character.level + 1);
-    if (newExp >= expForNextLevel) {
-      newLevel = this.calculateLevelFromExp(newExp);
+    if (newExp >= Number(expForNextLevel)) {
+      newLevel = this.calculateLevelFromExp(BigInt(newExp));
     }
 
     const updatedCharacter = await this.characterRepo.updateExperience(
       id,
-      newExp,
+      BigInt(newExp),
       newLevel !== character.level ? newLevel : undefined
     );
 
@@ -283,7 +283,7 @@ export class CharacterService {
 
     const updatedCharacter = await this.characterRepo.updateParagon(
       id,
-      character.paragonPoints - totalAllocated,
+      BigInt(character.paragonPoints - Number(totalAllocated)),
       { ...character.paragonDistribution, ...distribution }
     );
 
@@ -310,9 +310,9 @@ export class CharacterService {
 
     // Update max resource values in character record
     await this.characterRepo.update(id, {
-      maxHp: derivedStats.maxHp,
-      maxMp: derivedStats.maxMp,
-      maxStamina: derivedStats.maxStamina
+      maxHp: Number(derivedStats.maxHp),
+      maxMp: Number(derivedStats.maxMp),
+      maxStamina: Number(derivedStats.maxStamina)
     });
   }
 

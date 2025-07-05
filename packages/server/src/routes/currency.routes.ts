@@ -18,7 +18,7 @@ router.get('/characters/:characterId/balance',
 
     try {
       const balance = await currencyService.getBalance(req.params.characterId);
-      res.json({ 
+      return res.json({ 
         characterId: req.params.characterId,
         balance: balance.toString(),
         currency: 'gold' 
@@ -29,7 +29,7 @@ router.get('/characters/:characterId/balance',
         characterId: req.params.characterId,
         service: 'currency-routes' 
       });
-      res.status(500).json({ error: 'Failed to retrieve balance' });
+      return res.status(500).json({ error: 'Failed to retrieve balance' });
     }
   }
 );
