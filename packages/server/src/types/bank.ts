@@ -1,4 +1,4 @@
-import { Item } from './item';
+import { Item } from './item'; // Will be created when items system is implemented
 
 export interface BankSlot {
   slot: number;

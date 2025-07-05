@@ -18,14 +18,14 @@ router.get('/characters/:characterId/bank',
 
     try {
       const bank = await bankService.getPersonalBank(req.params.characterId);
-      return res.json(bank);
+      res.json(bank);
     } catch (error) {
       logger.error('Failed to get personal bank', { 
         error: error instanceof Error ? error.message : 'Unknown error',
         characterId: req.params.characterId,
         service: 'bank-routes' 
       });
-      return res.status(500).json({ error: 'Failed to retrieve bank' });
+      res.status(500).json({ error: 'Failed to retrieve bank' });
     }
   }
 );
@@ -42,14 +42,14 @@ router.get('/users/:userId/shared-bank',
 
     try {
       const bank = await bankService.getSharedBank(req.params.userId);
-      return res.json(bank);
+      res.json(bank);
     } catch (error) {
       logger.error('Failed to get shared bank', { 
         error: error instanceof Error ? error.message : 'Unknown error',
         userId: req.params.userId,
         service: 'bank-routes' 
       });
-      return res.status(500).json({ error: 'Failed to retrieve shared bank' });
+      res.status(500).json({ error: 'Failed to retrieve shared bank' });
     }
   }
 );
@@ -79,7 +79,7 @@ router.post('/characters/:characterId/bank/items',
         bankType
       );
 
-      return res.json({
+      res.json({
         success: true,
         message: 'Item added to bank',
         slot,
@@ -98,7 +98,7 @@ router.post('/characters/:characterId/bank/items',
         return res.status(400).json({ error: error.message });
       }
       
-      return res.status(500).json({ error: 'Failed to add item to bank' });
+      res.status(500).json({ error: 'Failed to add item to bank' });
     }
   }
 );
@@ -127,7 +127,7 @@ router.delete('/characters/:characterId/bank/items/:slot',
         bankType
       );
 
-      return res.json({
+      res.json({
         success: true,
         message: 'Item removed from bank',
         slot,
@@ -150,7 +150,7 @@ router.delete('/characters/:characterId/bank/items/:slot',
         return res.status(400).json({ error: error.message });
       }
       
-      return res.status(500).json({ error: 'Failed to remove item from bank' });
+      res.status(500).json({ error: 'Failed to remove item from bank' });
     }
   }
 );
@@ -179,7 +179,7 @@ router.post('/characters/:characterId/bank/transfer',
         req.body
       );
 
-      return res.json({
+      res.json({
         success: true,
         message: 'Item transferred successfully',
         transfer: req.body
@@ -196,7 +196,7 @@ router.post('/characters/:characterId/bank/transfer',
         return res.status(501).json({ error: error.message });
       }
       
-      return res.status(500).json({ error: 'Failed to transfer item' });
+      res.status(500).json({ error: 'Failed to transfer item' });
     }
   }
 );
@@ -218,7 +218,7 @@ router.post('/characters/:characterId/bank/expand',
         req.body.slots
       );
 
-      return res.json({
+      res.json({
         success: true,
         message: 'Bank expanded successfully',
         newTotalSlots: result.newTotalSlots,
@@ -241,7 +241,7 @@ router.post('/characters/:characterId/bank/expand',
         return res.status(400).json({ error: error.message });
       }
       
-      return res.status(500).json({ error: 'Failed to expand bank' });
+      res.status(500).json({ error: 'Failed to expand bank' });
     }
   }
 );

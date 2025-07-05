@@ -141,7 +141,8 @@ export class CharacterService {
 
     const updatedCharacter = await this.characterRepo.updateExperience(
       id,
-      Number(newExp)
+      BigInt(newExp),
+      newLevel !== character.level ? newLevel : undefined
     );
 
     if (updatedCharacter) {
@@ -212,9 +213,9 @@ export class CharacterService {
     return updatedCharacter;
   }
 
-  async updatePosition(id: string, _zone: string, x: number, y: number, z: number, rotation?: number): Promise<Character | null> {
+  async updatePosition(id: string, zone: string, x: number, y: number, z: number, rotation?: number): Promise<Character | null> {
     const position = { x, y, z, rotation };
-    const updatedCharacter = await this.characterRepo.updatePosition(id, position);
+    const updatedCharacter = await this.characterRepo.updatePosition(id, zone, position);
 
     if (updatedCharacter) {
       await this.cacheService.delete(`character:${id}`);
@@ -282,6 +283,7 @@ export class CharacterService {
 
     const updatedCharacter = await this.characterRepo.updateParagon(
       id,
+      BigInt(character.paragonPoints - Number(totalAllocated)),
       { ...character.paragonDistribution, ...distribution }
     );
 

@@ -2,8 +2,8 @@ import request from 'supertest';
 import { Express } from 'express';
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { createApp } from '../app';
-import { db } from '../database/config';
-import { users, characters } from '../database/schema/index';
+import { db } from '../database/connection';
+import { users, characters } from '../database/schema';
 import { eq } from 'drizzle-orm';
 import { AuthService } from '../services/AuthService';
 import { CharacterService } from '../services/CharacterService';
@@ -18,14 +18,13 @@ describe('Character Routes', () => {
 
   // Helper function to create valid appearance object
   const createValidAppearance = (): CharacterAppearance => ({
-    skinTone: 'fair',
-    hairStyle: 'short',
+    skinTone: 1,
+    hairStyle: 1,
     hairColor: '#8B4513',
     eyeColor: '#0000FF',
-    height: 50,
-    build: 50,
-    faceType: 'oval',
-    features: {}
+    height: 180,
+    build: 1,
+    skinColor: '#FDBCB4'
   });
 
   beforeAll(async () => {
@@ -195,7 +194,7 @@ describe('Character Routes', () => {
         race: 'INVALID_RACE',
         class: CharacterClass.WARRIOR,
         gender: CharacterGender.MALE,
-        appearance: createValidAppearance()
+        appearance: {}
       };
 
       const response = await request(app)
@@ -243,7 +242,7 @@ describe('Character Routes', () => {
         race: CharacterRace.DWARF,
         class: CharacterClass.WARRIOR,
         gender: CharacterGender.MALE,
-        appearance: createValidAppearance()
+        appearance: {}
       });
 
       const response = await request(app)
@@ -286,7 +285,7 @@ describe('Character Routes', () => {
         race: CharacterRace.HUMAN,
         class: CharacterClass.WARRIOR,
         gender: CharacterGender.MALE,
-        appearance: createValidAppearance()
+        appearance: {}
       });
 
       // Try to access with original user's token
@@ -332,7 +331,7 @@ describe('Character Routes', () => {
         race: CharacterRace.HUMAN,
         class: CharacterClass.WARRIOR,
         gender: CharacterGender.MALE,
-        appearance: createValidAppearance()
+        appearance: {}
       });
 
       const response = await request(app)

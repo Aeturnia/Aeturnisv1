@@ -52,11 +52,11 @@ router.post('/transfer',
       const result = await currencyService.transferGold(
         fromCharacterId,
         toCharacterId,
-        amount,
+        BigInt(amount),
         description
       );
 
-      return res.json({
+      res.json({
         success: true,
         transfer: {
           from: fromCharacterId,
@@ -78,7 +78,7 @@ router.post('/transfer',
         return res.status(400).json({ error: 'Insufficient funds' });
       }
       
-      return res.status(500).json({ error: 'Transfer failed' });
+      res.status(500).json({ error: 'Transfer failed' });
     }
   }
 );
@@ -105,7 +105,7 @@ router.get('/characters/:characterId/transactions',
         offset
       );
 
-      return res.json({
+      res.json({
         characterId: req.params.characterId,
         transactions: transactions.map(tx => ({
           id: tx.id,
@@ -129,7 +129,7 @@ router.get('/characters/:characterId/transactions',
         characterId: req.params.characterId,
         service: 'currency-routes' 
       });
-      return res.status(500).json({ error: 'Failed to retrieve transaction history' });
+      res.status(500).json({ error: 'Failed to retrieve transaction history' });
     }
   }
 );
@@ -147,7 +147,7 @@ router.get('/characters/:characterId/stats',
     try {
       const stats = await currencyService.getTransactionStats(req.params.characterId);
       
-      return res.json({
+      res.json({
         characterId: req.params.characterId,
         stats: {
           totalEarned: stats.totalEarned.toString(),
@@ -162,7 +162,7 @@ router.get('/characters/:characterId/stats',
         characterId: req.params.characterId,
         service: 'currency-routes' 
       });
-      return res.status(500).json({ error: 'Failed to retrieve transaction statistics' });
+      res.status(500).json({ error: 'Failed to retrieve transaction statistics' });
     }
   }
 );
@@ -185,12 +185,12 @@ router.post('/admin/reward',
       const { characterId, amount, source, metadata } = req.body;
       const transaction = await currencyService.rewardGold(
         characterId,
-        amount,
+        BigInt(amount),
         source,
         metadata
       );
 
-      return res.json({
+      res.json({
         success: true,
         transaction: {
           id: transaction.id,
@@ -207,7 +207,7 @@ router.post('/admin/reward',
         body: req.body,
         service: 'currency-routes' 
       });
-      return res.status(500).json({ error: 'Failed to reward gold' });
+      res.status(500).json({ error: 'Failed to reward gold' });
     }
   }
 );

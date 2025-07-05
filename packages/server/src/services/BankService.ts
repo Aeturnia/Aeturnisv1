@@ -1,7 +1,7 @@
 import { eq, and } from 'drizzle-orm';
 import { db } from '../database/config';
 import { personalBanks, sharedBanks, characters, transactions } from '../database/schema';
-import redis from '../utils/redis';
+import { redis } from '../utils/redis';
 import { BankSlot, BankTransferRequest, PersonalBank, SharedBank } from '../types/bank';
 import { logger } from '../utils/logger';
 
@@ -95,9 +95,9 @@ export class BankService {
             await tx
               .update(personalBanks)
               .set({
-                quantity: (existing[0] as any).quantity + quantity,
+                quantity: existing[0].quantity + quantity,
                 updatedAt: new Date(),
-              } as any)
+              })
               .where(and(
                 eq(personalBanks.characterId, characterId),
                 eq(personalBanks.slot, slot)
@@ -114,7 +114,7 @@ export class BankService {
               slot,
               itemId,
               quantity,
-            } as any);
+            });
         }
 
         // Clear cache
@@ -172,9 +172,9 @@ export class BankService {
           await tx
             .update(personalBanks)
             .set({
-              quantity: (item as any).quantity - removeQuantity,
+              quantity: item.quantity - removeQuantity,
               updatedAt: new Date(),
-            } as any)
+            })
             .where(and(
               eq(personalBanks.characterId, characterId),
               eq(personalBanks.slot, slot)
@@ -238,10 +238,10 @@ export class BankService {
       await tx
         .update(characters)
         .set({
-          gold: (character as any).gold - Number(totalCost),
+          gold: character.gold - Number(totalCost),
           bankSlots: newTotalSlots,
           updatedAt: new Date(),
-        } as any)
+        })
         .where(eq(characters.id, characterId));
 
       // Record transaction
@@ -249,15 +249,15 @@ export class BankService {
         characterId,
         type: 'purchase',
         amount: -Number(totalCost),
-        balanceBefore: (character as any).gold,
-        balanceAfter: (character as any).gold - Number(totalCost),
+        balanceBefore: character.gold,
+        balanceAfter: character.gold - Number(totalCost),
         description: `Bank expansion: ${additionalSlots} slots`,
         metadata: { 
           source: 'bank_expansion', 
           quantity: additionalSlots,
-          itemName: `Bank slots (${(character as any).bankSlots} → ${newTotalSlots})`,
+          itemName: `Bank slots (${character.bankSlots} → ${newTotalSlots})`,
         },
-      } as any);
+      });
 
       // Clear caches
       await redis.del(

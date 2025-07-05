@@ -1,18 +1,37 @@
 export interface Item {
-  id: number;
+  id: string;
   name: string;
-  type: string;
-  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
-  value: number;
+  description: string;
+  icon: string;
+  type: ItemType;
+  rarity: ItemRarity;
   stackable: boolean;
   maxStack: number;
-  description?: string;
-  icon?: string;
-  metadata?: Record<string, unknown>;
+  soulbound: boolean;
+  value: number;
+  metadata?: Record<string, any>;
+}
+
+export enum ItemType {
+  WEAPON = 'weapon',
+  ARMOR = 'armor',
+  CONSUMABLE = 'consumable',
+  MATERIAL = 'material',
+  QUEST = 'quest',
+  CURRENCY = 'currency',
+  MISC = 'misc'
+}
+
+export enum ItemRarity {
+  COMMON = 'common',
+  UNCOMMON = 'uncommon',
+  RARE = 'rare',
+  EPIC = 'epic',
+  LEGENDARY = 'legendary',
+  MYTHIC = 'mythic'
 }
 
 export interface ItemStack {
-  itemId: number;
+  itemId: string;
   quantity: number;
-  metadata?: Record<string, unknown>;
 }
