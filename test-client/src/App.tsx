@@ -22,6 +22,7 @@ function App() {
   const [authTest, setAuthTest] = useState<TestState>({ loading: false, response: '', success: false });
   const [economyTest, setEconomyTest] = useState<TestState>({ loading: false, response: '', success: false });
   const [characterTest, setCharacterTest] = useState<TestState>({ loading: false, response: '', success: false });
+  const [equipmentTest, setEquipmentTest] = useState<TestState>({ loading: false, response: '', success: false });
 
   // Form states
   const [email, setEmail] = useState('test@example.com');
@@ -153,6 +154,39 @@ function App() {
       });
     } catch (error) {
       setCharacterTest({
+        loading: false,
+        response: `Error: ${error}`,
+        success: false
+      });
+    }
+  };
+
+  const testEquipment = async (action: 'test' | 'equipment') => {
+    setEquipmentTest({ loading: true, response: '', success: false });
+    
+    try {
+      let url = '';
+      if (action === 'test') {
+        url = '/api/v1/equipment/test';
+      } else if (action === 'equipment') {
+        // Use a test character ID
+        url = '/api/v1/equipment/550e8400-e29b-41d4-a716-446655440000';
+      }
+
+      const response = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const data = await response.json();
+      setEquipmentTest({
+        loading: false,
+        response: JSON.stringify(data, null, 2),
+        success: response.ok
+      });
+    } catch (error) {
+      setEquipmentTest({
         loading: false,
         response: `Error: ${error}`,
         success: false
@@ -305,6 +339,28 @@ function App() {
             </button>
             <div className={`response ${characterTest.success ? 'success' : 'error'}`}>
               {characterTest.loading ? 'Loading...' : characterTest.response || 'No response yet'}
+            </div>
+          </div>
+
+          <div className="test-panel">
+            <h3 className="test-title">Equipment System</h3>
+            <p>Status: No authentication required</p>
+            <button 
+              className="button" 
+              onClick={() => testEquipment('test')}
+              disabled={equipmentTest.loading}
+            >
+              Test System
+            </button>
+            <button 
+              className="button" 
+              onClick={() => testEquipment('equipment')}
+              disabled={equipmentTest.loading}
+            >
+              Mock Equipment
+            </button>
+            <div className={`response ${equipmentTest.success ? 'success' : 'error'}`}>
+              {equipmentTest.loading ? 'Loading...' : equipmentTest.response || 'No response yet'}
             </div>
           </div>
 

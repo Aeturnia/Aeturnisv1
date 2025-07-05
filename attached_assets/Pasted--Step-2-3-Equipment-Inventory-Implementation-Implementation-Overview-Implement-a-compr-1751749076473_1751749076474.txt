@@ -1,0 +1,902 @@
+# Step 2.3: Equipment & Inventory Implementation
+
+## 💡 Implementation Overview
+Implement a comprehensive equipment and inventory system for Aeturnis Online, featuring equipment slots with stat modifiers, item binding mechanics, set bonuses, and a flexible inventory management system with stacking and sorting capabilities.
+
+## 🧱 File Targets
+
+### Database Schema
+`/src/database/schema/equipment.ts`
+```typescript
+import { pgTable, serial, integer, varchar, jsonb, timestamp, boolean, unique } from 'drizzle-orm/pg-core';
+import { characters } from './characters';
+import { items } from './items';
+
+export const equipmentSlots = pgTable('equipment_slots', {
+  id: serial('id').primaryKey(),
+  slotType: varchar('slot_type', { length: 50 }).notNull(), // head, chest, weapon, etc.
+  displayName: varchar('display_name', { length: 100 }).notNull(),
+  sortOrder: integer('sort_order').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const characterEquipment = pgTable('character_equipment', {
+  id: serial('id').primaryKey(),
+  charId: integer('char_id').references(() => characters.id).notNull(),
+  slotId: integer('slot_id').references(() => equipmentSlots.id).notNull(),
+  itemId: integer('item_id').references(() => items.id).notNull(),
+  equippedAt: timestamp('equipped_at').defaultNow().notNull(),
+}, (table) => ({
+  uniqueCharSlot: unique().on(table.charId, table.slotId),
+}));
+
+export const characterInventory = pgTable('character_inventory', {
+  id: serial('id').primaryKey(),
+  charId: integer('char_id').references(() => characters.id).notNull(),
+  itemId: integer('item_id').references(() => items.id).notNull(),
+  quantity: integer('quantity').notNull().default(1),
+  slotPosition: integer('slot_position').notNull(),
+  bindStatus: varchar('bind_status', { length: 50 }), // null, 'soulbound', 'account_bound'
+  bindTime: timestamp('bind_time'),
+  obtainedAt: timestamp('obtained_at').defaultNow().notNull(),
+}, (table) => ({
+  uniqueCharSlot: unique().on(table.charId, table.slotPosition),
+}));
+
+export const itemStats = pgTable('item_stats', {
+  id: serial('id').primaryKey(),
+  itemId: integer('item_id').references(() => items.id).notNull(),
+  statType: varchar('stat_type', { length: 50 }).notNull(), // str, dex, int, etc.
+  value: integer('value').notNull(),
+  isPercentage: boolean('is_percentage').default(false).notNull(),
+});
+
+export const itemSets = pgTable('item_sets', {
+  id: serial('id').primaryKey(),
+  setName: varchar('set_name', { length: 100 }).notNull(),
+  description: varchar('description', { length: 500 }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const itemSetPieces = pgTable('item_set_pieces', {
+  id: serial('id').primaryKey(),
+  setId: integer('set_id').references(() => itemSets.id).notNull(),
+  itemId: integer('item_id').references(() => items.id).notNull().unique(),
+});
+
+export const itemSetBonuses = pgTable('item_set_bonuses', {
+  id: serial('id').primaryKey(),
+  setId: integer('set_id').references(() => itemSets.id).notNull(),
+  requiredPieces: integer('required_pieces').notNull(),
+  bonusStats: jsonb('bonus_stats').notNull(), // {statType: value, ...}
+});
+```
+
+### Types
+`/src/types/equipment.ts`
+```typescript
+export interface EquipmentSlot {
+  id: number;
+  slotType: string;
+  displayName: string;
+  sortOrder: number;
+}
+
+export interface EquipmentItem {
+  id: number;
+  charId: number;
+  slotId: number;
+  itemId: number;
+  item?: Item;
+  equippedAt: Date;
+}
+
+export interface InventoryItem {
+  id: number;
+  charId: number;
+  itemId: number;
+  quantity: number;
+  slotPosition: number;
+  bindStatus?: 'soulbound' | 'account_bound' | null;
+  bindTime?: Date;
+  item?: Item;
+}
+
+export interface ItemStat {
+  statType: string;
+  value: number;
+  isPercentage: boolean;
+}
+
+export interface ItemSet {
+  id: number;
+  setName: string;
+  description?: string;
+  pieces: number[];
+  bonuses: ItemSetBonus[];
+}
+
+export interface ItemSetBonus {
+  requiredPieces: number;
+  bonusStats: Record<string, number>;
+}
+
+export interface EquipmentStats {
+  baseStats: Record<string, number>;
+  setBonuses: Record<string, number>;
+  totalStats: Record<string, number>;
+}
+
+export const EQUIPMENT_SLOTS = {
+  HEAD: 'head',
+  CHEST: 'chest',
+  LEGS: 'legs',
+  FEET: 'feet',
+  HANDS: 'hands',
+  WEAPON: 'weapon',
+  OFFHAND: 'offhand',
+  RING1: 'ring1',
+  RING2: 'ring2',
+  NECK: 'neck',
+} as const;
+
+export const MAX_INVENTORY_SLOTS = 100;
+export const DEFAULT_INVENTORY_SIZE = 20;
+```
+
+### Repository
+`/src/repositories/equipment.repository.ts`
+```typescript
+import { eq, and, inArray } from 'drizzle-orm';
+import { db } from '../database';
+import { 
+  characterEquipment, 
+  characterInventory, 
+  equipmentSlots,
+  itemStats,
+  itemSets,
+  itemSetPieces,
+  itemSetBonuses
+} from '../database/schema/equipment';
+import type { EquipmentItem, InventoryItem, ItemStat } from '../types/equipment';
+
+export class EquipmentRepository {
+  async getCharacterEquipment(charId: number): Promise<EquipmentItem[]> {
+    return db
+      .select()
+      .from(characterEquipment)
+      .where(eq(characterEquipment.charId, charId));
+  }
+
+  async getCharacterInventory(charId: number): Promise<InventoryItem[]> {
+    return db
+      .select()
+      .from(characterInventory)
+      .where(eq(characterInventory.charId, charId))
+      .orderBy(characterInventory.slotPosition);
+  }
+
+  async equipItem(charId: number, slotId: number, itemId: number): Promise<void> {
+    await db.transaction(async (tx) => {
+      // Remove any existing item in that slot
+      await tx
+        .delete(characterEquipment)
+        .where(and(
+          eq(characterEquipment.charId, charId),
+          eq(characterEquipment.slotId, slotId)
+        ));
+
+      // Equip new item
+      await tx.insert(characterEquipment).values({
+        charId,
+        slotId,
+        itemId,
+      });
+    });
+  }
+
+  async unequipItem(charId: number, slotId: number): Promise<number | null> {
+    const result = await db
+      .delete(characterEquipment)
+      .where(and(
+        eq(characterEquipment.charId, charId),
+        eq(characterEquipment.slotId, slotId)
+      ))
+      .returning({ itemId: characterEquipment.itemId });
+    
+    return result[0]?.itemId || null;
+  }
+
+  async addToInventory(
+    charId: number, 
+    itemId: number, 
+    quantity: number,
+    slotPosition: number,
+    bindStatus?: 'soulbound' | 'account_bound'
+  ): Promise<void> {
+    await db.insert(characterInventory).values({
+      charId,
+      itemId,
+      quantity,
+      slotPosition,
+      bindStatus,
+      bindTime: bindStatus ? new Date() : undefined,
+    });
+  }
+
+  async updateInventorySlot(
+    charId: number,
+    slotPosition: number,
+    updates: Partial<InventoryItem>
+  ): Promise<void> {
+    await db
+      .update(characterInventory)
+      .set(updates)
+      .where(and(
+        eq(characterInventory.charId, charId),
+        eq(characterInventory.slotPosition, slotPosition)
+      ));
+  }
+
+  async removeFromInventory(charId: number, slotPosition: number): Promise<void> {
+    await db
+      .delete(characterInventory)
+      .where(and(
+        eq(characterInventory.charId, charId),
+        eq(characterInventory.slotPosition, slotPosition)
+      ));
+  }
+
+  async getItemStats(itemIds: number[]): Promise<Record<number, ItemStat[]>> {
+    const stats = await db
+      .select()
+      .from(itemStats)
+      .where(inArray(itemStats.itemId, itemIds));
+
+    const statsByItem: Record<number, ItemStat[]> = {};
+    stats.forEach(stat => {
+      if (!statsByItem[stat.itemId]) {
+        statsByItem[stat.itemId] = [];
+      }
+      statsByItem[stat.itemId].push({
+        statType: stat.statType,
+        value: stat.value,
+        isPercentage: stat.isPercentage,
+      });
+    });
+
+    return statsByItem;
+  }
+
+  async getItemSetInfo(itemIds: number[]): Promise<Record<number, any>> {
+    const setPieces = await db
+      .select({
+        itemId: itemSetPieces.itemId,
+        setId: itemSetPieces.setId,
+        setName: itemSets.setName,
+      })
+      .from(itemSetPieces)
+      .innerJoin(itemSets, eq(itemSetPieces.setId, itemSets.id))
+      .where(inArray(itemSetPieces.itemId, itemIds));
+
+    const setIds = [...new Set(setPieces.map(p => p.setId))];
+    const setBonuses = await db
+      .select()
+      .from(itemSetBonuses)
+      .where(inArray(itemSetBonuses.setId, setIds));
+
+    // Group by set
+    const setInfo: Record<number, any> = {};
+    setPieces.forEach(piece => {
+      if (!setInfo[piece.setId]) {
+        setInfo[piece.setId] = {
+          setName: piece.setName,
+          items: [],
+          bonuses: setBonuses.filter(b => b.setId === piece.setId),
+        };
+      }
+      setInfo[piece.setId].items.push(piece.itemId);
+    });
+
+    return setInfo;
+  }
+}
+```
+
+### Service
+`/src/services/equipment.service.ts`
+```typescript
+import { EquipmentRepository } from '../repositories/equipment.repository';
+import { ItemRepository } from '../repositories/item.repository';
+import { CharacterRepository } from '../repositories/character.repository';
+import { RedisService } from './redis.service';
+import type { 
+  EquipmentItem, 
+  InventoryItem, 
+  EquipmentStats,
+  EQUIPMENT_SLOTS,
+  MAX_INVENTORY_SLOTS 
+} from '../types/equipment';
+import { BadRequestError, NotFoundError } from '../utils/errors';
+
+export class EquipmentService {
+  constructor(
+    private equipmentRepo: EquipmentRepository,
+    private itemRepo: ItemRepository,
+    private characterRepo: CharacterRepository,
+    private redis: RedisService
+  ) {}
+
+  async getCharacterEquipment(charId: number): Promise<EquipmentItem[]> {
+    const cacheKey = `equipment:${charId}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) return JSON.parse(cached);
+
+    const equipment = await this.equipmentRepo.getCharacterEquipment(charId);
+    await this.redis.setex(cacheKey, 300, JSON.stringify(equipment));
+    return equipment;
+  }
+
+  async getCharacterInventory(charId: number): Promise<InventoryItem[]> {
+    const cacheKey = `inventory:${charId}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) return JSON.parse(cached);
+
+    const inventory = await this.equipmentRepo.getCharacterInventory(charId);
+    await this.redis.setex(cacheKey, 300, JSON.stringify(inventory));
+    return inventory;
+  }
+
+  async equipItem(
+    charId: number, 
+    inventorySlot: number, 
+    equipmentSlot: string
+  ): Promise<void> {
+    // Validate character exists
+    const character = await this.characterRepo.findById(charId);
+    if (!character) {
+      throw new NotFoundError('Character not found');
+    }
+
+    // Get inventory item
+    const inventory = await this.getCharacterInventory(charId);
+    const inventoryItem = inventory.find(item => item.slotPosition === inventorySlot);
+    if (!inventoryItem) {
+      throw new BadRequestError('Item not found in inventory');
+    }
+
+    // Validate item can be equipped in this slot
+    const item = await this.itemRepo.findById(inventoryItem.itemId);
+    if (!item || item.equipmentSlot !== equipmentSlot) {
+      throw new BadRequestError('Item cannot be equipped in this slot');
+    }
+
+    // Check binding restrictions
+    if (inventoryItem.bindStatus === 'soulbound' && inventoryItem.charId !== charId) {
+      throw new BadRequestError('Item is soulbound to another character');
+    }
+
+    // Get slot ID
+    const slotId = await this.getSlotId(equipmentSlot);
+
+    // Perform equipment swap
+    await this.equipmentRepo.equipItem(charId, slotId, inventoryItem.itemId);
+    
+    // Remove from inventory
+    await this.equipmentRepo.removeFromInventory(charId, inventorySlot);
+
+    // Apply binding if needed
+    if (item.bindOnEquip && !inventoryItem.bindStatus) {
+      // Item will be bound when re-added to inventory later
+    }
+
+    // Clear caches
+    await this.clearCharacterCaches(charId);
+  }
+
+  async unequipItem(charId: number, equipmentSlot: string): Promise<void> {
+    // Find empty inventory slot
+    const inventory = await this.getCharacterInventory(charId);
+    const emptySlot = this.findEmptyInventorySlot(inventory);
+    
+    if (emptySlot === -1) {
+      throw new BadRequestError('Inventory is full');
+    }
+
+    const slotId = await this.getSlotId(equipmentSlot);
+    const itemId = await this.equipmentRepo.unequipItem(charId, slotId);
+    
+    if (!itemId) {
+      throw new BadRequestError('No item equipped in that slot');
+    }
+
+    // Add to inventory
+    await this.equipmentRepo.addToInventory(
+      charId,
+      itemId,
+      1,
+      emptySlot,
+      undefined // Maintain existing bind status
+    );
+
+    await this.clearCharacterCaches(charId);
+  }
+
+  async calculateEquipmentStats(charId: number): Promise<EquipmentStats> {
+    const equipment = await this.getCharacterEquipment(charId);
+    const itemIds = equipment.map(e => e.itemId);
+    
+    // Get all item stats
+    const itemStats = await this.equipmentRepo.getItemStats(itemIds);
+    
+    // Calculate base stats
+    const baseStats: Record<string, number> = {};
+    itemIds.forEach(itemId => {
+      const stats = itemStats[itemId] || [];
+      stats.forEach(stat => {
+        if (!baseStats[stat.statType]) baseStats[stat.statType] = 0;
+        baseStats[stat.statType] += stat.value;
+      });
+    });
+
+    // Calculate set bonuses
+    const setInfo = await this.equipmentRepo.getItemSetInfo(itemIds);
+    const setBonuses: Record<string, number> = {};
+    
+    Object.values(setInfo).forEach(set => {
+      const equippedCount = set.items.filter((id: number) => itemIds.includes(id)).length;
+      set.bonuses.forEach((bonus: any) => {
+        if (equippedCount >= bonus.requiredPieces) {
+          Object.entries(bonus.bonusStats as Record<string, number>).forEach(([stat, value]) => {
+            if (!setBonuses[stat]) setBonuses[stat] = 0;
+            setBonuses[stat] += value;
+          });
+        }
+      });
+    });
+
+    // Calculate total stats
+    const totalStats: Record<string, number> = { ...baseStats };
+    Object.entries(setBonuses).forEach(([stat, value]) => {
+      if (!totalStats[stat]) totalStats[stat] = 0;
+      totalStats[stat] += value;
+    });
+
+    return { baseStats, setBonuses, totalStats };
+  }
+
+  async addItemToInventory(
+    charId: number,
+    itemId: number,
+    quantity: number = 1
+  ): Promise<void> {
+    const item = await this.itemRepo.findById(itemId);
+    if (!item) {
+      throw new NotFoundError('Item not found');
+    }
+
+    const inventory = await this.getCharacterInventory(charId);
+    
+    // Check for stackable items
+    if (item.maxStack > 1) {
+      const existingStack = inventory.find(i => 
+        i.itemId === itemId && i.quantity < item.maxStack
+      );
+      
+      if (existingStack) {
+        const spaceInStack = item.maxStack - existingStack.quantity;
+        const toAdd = Math.min(quantity, spaceInStack);
+        
+        await this.equipmentRepo.updateInventorySlot(
+          charId,
+          existingStack.slotPosition,
+          { quantity: existingStack.quantity + toAdd }
+        );
+        
+        quantity -= toAdd;
+      }
+    }
+
+    // Add remaining to new slots
+    while (quantity > 0) {
+      const emptySlot = this.findEmptyInventorySlot(inventory);
+      if (emptySlot === -1) {
+        throw new BadRequestError('Inventory is full');
+      }
+
+      const toAdd = Math.min(quantity, item.maxStack || 1);
+      await this.equipmentRepo.addToInventory(
+        charId,
+        itemId,
+        toAdd,
+        emptySlot,
+        item.bindOnPickup ? 'soulbound' : undefined
+      );
+
+      inventory.push({
+        id: -1, // Temporary
+        charId,
+        itemId,
+        quantity: toAdd,
+        slotPosition: emptySlot,
+      } as InventoryItem);
+
+      quantity -= toAdd;
+    }
+
+    await this.clearCharacterCaches(charId);
+  }
+
+  async sortInventory(charId: number, sortType: 'name' | 'type' | 'rarity'): Promise<void> {
+    const inventory = await this.getCharacterInventory(charId);
+    const items = await this.itemRepo.findByIds(inventory.map(i => i.itemId));
+    
+    // Create item map
+    const itemMap = new Map(items.map(item => [item.id, item]));
+    
+    // Sort inventory items
+    const sorted = [...inventory].sort((a, b) => {
+      const itemA = itemMap.get(a.itemId);
+      const itemB = itemMap.get(b.itemId);
+      
+      if (!itemA || !itemB) return 0;
+      
+      switch (sortType) {
+        case 'name':
+          return itemA.itemName.localeCompare(itemB.itemName);
+        case 'type':
+          return itemA.itemType.localeCompare(itemB.itemType);
+        case 'rarity':
+          return (itemB.rarity || 0) - (itemA.rarity || 0);
+        default:
+          return 0;
+      }
+    });
+
+    // Update positions
+    await this.equipmentRepo.db.transaction(async (tx) => {
+      for (let i = 0; i < sorted.length; i++) {
+        await tx
+          .update(characterInventory)
+          .set({ slotPosition: i })
+          .where(eq(characterInventory.id, sorted[i].id));
+      }
+    });
+
+    await this.clearCharacterCaches(charId);
+  }
+
+  private findEmptyInventorySlot(inventory: InventoryItem[]): number {
+    const occupied = new Set(inventory.map(i => i.slotPosition));
+    for (let i = 0; i < MAX_INVENTORY_SLOTS; i++) {
+      if (!occupied.has(i)) return i;
+    }
+    return -1;
+  }
+
+  private async getSlotId(slotType: string): Promise<number> {
+    // This would be cached in production
+    const slots = await this.equipmentRepo.db
+      .select()
+      .from(equipmentSlots)
+      .where(eq(equipmentSlots.slotType, slotType));
+    
+    if (!slots[0]) {
+      throw new BadRequestError('Invalid equipment slot');
+    }
+    
+    return slots[0].id;
+  }
+
+  private async clearCharacterCaches(charId: number): Promise<void> {
+    await Promise.all([
+      this.redis.del(`equipment:${charId}`),
+      this.redis.del(`inventory:${charId}`),
+      this.redis.del(`character:stats:${charId}`),
+    ]);
+  }
+}
+```
+
+### Controller
+`/src/controllers/equipment.controller.ts`
+```typescript
+import { Request, Response } from 'express';
+import { EquipmentService } from '../services/equipment.service';
+import { validateRequest } from '../middleware/validation';
+import { z } from 'zod';
+
+const equipItemSchema = z.object({
+  inventorySlot: z.number().int().min(0),
+  equipmentSlot: z.string(),
+});
+
+const sortInventorySchema = z.object({
+  sortType: z.enum(['name', 'type', 'rarity']),
+});
+
+export class EquipmentController {
+  constructor(private equipmentService: EquipmentService) {}
+
+  getEquipment = async (req: Request, res: Response) => {
+    const charId = parseInt(req.params.charId);
+    const equipment = await this.equipmentService.getCharacterEquipment(charId);
+    res.json({ equipment });
+  };
+
+  getInventory = async (req: Request, res: Response) => {
+    const charId = parseInt(req.params.charId);
+    const inventory = await this.equipmentService.getCharacterInventory(charId);
+    res.json({ inventory });
+  };
+
+  equipItem = [
+    validateRequest(equipItemSchema),
+    async (req: Request, res: Response) => {
+      const charId = parseInt(req.params.charId);
+      const { inventorySlot, equipmentSlot } = req.body;
+      
+      await this.equipmentService.equipItem(charId, inventorySlot, equipmentSlot);
+      res.json({ success: true });
+    }
+  ];
+
+  unequipItem = async (req: Request, res: Response) => {
+    const charId = parseInt(req.params.charId);
+    const { equipmentSlot } = req.params;
+    
+    await this.equipmentService.unequipItem(charId, equipmentSlot);
+    res.json({ success: true });
+  };
+
+  getEquipmentStats = async (req: Request, res: Response) => {
+    const charId = parseInt(req.params.charId);
+    const stats = await this.equipmentService.calculateEquipmentStats(charId);
+    res.json({ stats });
+  };
+
+  sortInventory = [
+    validateRequest(sortInventorySchema),
+    async (req: Request, res: Response) => {
+      const charId = parseInt(req.params.charId);
+      const { sortType } = req.body;
+      
+      await this.equipmentService.sortInventory(charId, sortType);
+      res.json({ success: true });
+    }
+  ];
+}
+```
+
+### Routes
+`/src/routes/equipment.routes.ts`
+```typescript
+import { Router } from 'express';
+import { EquipmentController } from '../controllers/equipment.controller';
+import { authenticate } from '../middleware/auth';
+import { characterOwnership } from '../middleware/characterOwnership';
+
+export const createEquipmentRoutes = (controller: EquipmentController): Router => {
+  const router = Router();
+
+  router.use(authenticate);
+
+  router.get('/characters/:charId/equipment', characterOwnership, controller.getEquipment);
+  router.get('/characters/:charId/inventory', characterOwnership, controller.getInventory);
+  router.post('/characters/:charId/equip', characterOwnership, controller.equipItem);
+  router.post('/characters/:charId/unequip/:equipmentSlot', characterOwnership, controller.unequipItem);
+  router.get('/characters/:charId/equipment/stats', characterOwnership, controller.getEquipmentStats);
+  router.post('/characters/:charId/inventory/sort', characterOwnership, controller.sortInventory);
+
+  return router;
+};
+```
+
+## 🧪 Validation Rules
+
+1. **Equipment Validation**:
+   - Item must exist in inventory
+   - Item type must match equipment slot
+   - Character must own the item
+   - Binding restrictions must be respected
+
+2. **Inventory Validation**:
+   - Slot position must be valid (0 to MAX_INVENTORY_SLOTS-1)
+   - Cannot exceed item max stack size
+   - Cannot have duplicate items in same slot
+
+3. **Binding Rules**:
+   - Soulbound items cannot be traded or given to other characters
+   - Account bound items can be shared between characters on same account
+   - Bind on equip items become soulbound when equipped
+   - Bind on pickup items become soulbound immediately
+
+## 🔁 Event & Real-Time Logic
+
+### Socket Events
+```typescript
+// When item is equipped
+socket.emit('equipment:equipped', {
+  charId,
+  slot: equipmentSlot,
+  itemId,
+  stats: updatedStats
+});
+
+// When item is unequipped  
+socket.emit('equipment:unequipped', {
+  charId,
+  slot: equipmentSlot,
+  itemId
+});
+
+// When inventory changes
+socket.emit('inventory:updated', {
+  charId,
+  changes: [{
+    slot: slotPosition,
+    itemId,
+    quantity
+  }]
+});
+
+// When set bonus activates
+socket.emit('equipment:setBonus', {
+  charId,
+  setName,
+  piecesEquipped,
+  bonusStats
+});
+```
+
+## 🧪 Example Test Case(s)
+
+```typescript
+describe('EquipmentService', () => {
+  let service: EquipmentService;
+  let mockEquipmentRepo: jest.Mocked<EquipmentRepository>;
+
+  beforeEach(() => {
+    mockEquipmentRepo = createMockRepository<EquipmentRepository>();
+    service = new EquipmentService(
+      mockEquipmentRepo,
+      mockItemRepo,
+      mockCharacterRepo,
+      mockRedis
+    );
+  });
+
+  describe('equipItem', () => {
+    it('should equip item from inventory', async () => {
+      const charId = 1;
+      const inventorySlot = 5;
+      const equipmentSlot = 'weapon';
+      
+      mockCharacterRepo.findById.mockResolvedValue({ id: charId });
+      mockEquipmentRepo.getCharacterInventory.mockResolvedValue([
+        {
+          id: 1,
+          charId,
+          itemId: 100,
+          quantity: 1,
+          slotPosition: inventorySlot,
+          bindStatus: null
+        }
+      ]);
+      mockItemRepo.findById.mockResolvedValue({
+        id: 100,
+        itemName: 'Iron Sword',
+        equipmentSlot: 'weapon',
+        bindOnEquip: false
+      });
+
+      await service.equipItem(charId, inventorySlot, equipmentSlot);
+
+      expect(mockEquipmentRepo.equipItem).toHaveBeenCalledWith(charId, expect.any(Number), 100);
+      expect(mockEquipmentRepo.removeFromInventory).toHaveBeenCalledWith(charId, inventorySlot);
+    });
+
+    it('should reject soulbound items from other characters', async () => {
+      const charId = 1;
+      const inventorySlot = 5;
+      
+      mockEquipmentRepo.getCharacterInventory.mockResolvedValue([
+        {
+          id: 1,
+          charId: 2, // Different character
+          itemId: 100,
+          quantity: 1,
+          slotPosition: inventorySlot,
+          bindStatus: 'soulbound'
+        }
+      ]);
+
+      await expect(service.equipItem(charId, inventorySlot, 'weapon'))
+        .rejects.toThrow('Item is soulbound to another character');
+    });
+  });
+
+  describe('calculateEquipmentStats', () => {
+    it('should calculate stats including set bonuses', async () => {
+      const charId = 1;
+      
+      mockEquipmentRepo.getCharacterEquipment.mockResolvedValue([
+        { id: 1, charId, slotId: 1, itemId: 100 },
+        { id: 2, charId, slotId: 2, itemId: 101 }
+      ]);
+      
+      mockEquipmentRepo.getItemStats.mockResolvedValue({
+        100: [{ statType: 'str', value: 10, isPercentage: false }],
+        101: [{ statType: 'str', value: 5, isPercentage: false }]
+      });
+      
+      mockEquipmentRepo.getItemSetInfo.mockResolvedValue({
+        1: {
+          setName: 'Warrior Set',
+          items: [100, 101],
+          bonuses: [{
+            requiredPieces: 2,
+            bonusStats: { str: 5, def: 3 }
+          }]
+        }
+      });
+
+      const stats = await service.calculateEquipmentStats(charId);
+      
+      expect(stats.baseStats.str).toBe(15);
+      expect(stats.setBonuses.str).toBe(5);
+      expect(stats.totalStats.str).toBe(20);
+      expect(stats.totalStats.def).toBe(3);
+    });
+  });
+});
+```
+
+## 🚧 Edge Cases
+
+1. **Inventory Full**: Handle gracefully when unequipping with full inventory
+2. **Item Stacking**: Properly merge stacks when adding stackable items
+3. **Set Bonus Calculation**: Handle partial sets and multiple sets equipped
+4. **Binding Edge Cases**:
+   - Items that become bound on equip
+   - Account-wide vs character-specific bindings
+   - Preventing exploitation of binding mechanics
+5. **Slot Conflicts**: Two-handed weapons occupying mainhand + offhand
+6. **Race/Class Restrictions**: Items that only certain races/classes can equip
+7. **Level Requirements**: Items with minimum level requirements
+8. **Concurrent Modifications**: Race conditions when multiple clients modify inventory
+
+## 🚀 Deployment Considerations
+
+1. **Database Indexes**:
+   ```sql
+   CREATE INDEX idx_char_equipment_char_id ON character_equipment(char_id);
+   CREATE INDEX idx_char_inventory_char_id ON character_inventory(char_id);
+   CREATE INDEX idx_item_stats_item_id ON item_stats(item_id);
+   CREATE INDEX idx_item_set_pieces_item_id ON item_set_pieces(item_id);
+   ```
+
+2. **Redis Caching**:
+   - Cache equipment for 5 minutes
+   - Cache inventory for 5 minutes
+   - Invalidate on any changes
+   - Consider using Redis Sets for equipped item IDs
+
+3. **Performance**:
+   - Batch load item stats and set info
+   - Use database transactions for equipment swaps
+   - Implement pagination for large inventories
+
+4. **Mobile Optimization**:
+   - Minimize payload size for inventory/equipment data
+   - Implement delta updates for inventory changes
+   - Consider compressed format for stat calculations
+
+---
+
+### 🔐 Self‑Audit Commands
+```bash
+npm run lint:ts --max-warnings=0
+npm test --coverage
+```
+Paste: TS errors / Coverage %
