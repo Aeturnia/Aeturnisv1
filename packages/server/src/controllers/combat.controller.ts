@@ -121,11 +121,7 @@ export const performAction = async (req: AuthRequest, res: Response): Promise<Re
       message: 'Action performed successfully',
       data: {
         result,
-        session,
-        nextTurn: session?.status === 'active' ? {
-          charId: result.nextTurnCharId,
-          roundNumber: session.roundNumber
-        } : null
+        session
       }
     });
   } catch (error) {

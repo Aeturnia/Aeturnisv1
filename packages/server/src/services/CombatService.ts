@@ -88,27 +88,51 @@ export class CombatService {
       throw new Error('Combat session is not active');
     }
 
-    // Validate it's the user's turn
-    const currentCharId = session.turnOrder[session.currentTurnIndex];
-    if (currentCharId !== userId) {
-      throw new Error('Not your turn');
-    }
-
-    const actor = session.participants.find(p => p.charId === currentCharId);
+    // Allow only player actions (players can act anytime)
+    const actor = session.participants.find(p => p.charId === userId && p.team === 'player');
     if (!actor) {
-      throw new Error('Actor not found');
+      throw new Error('Player not found in combat');
     }
 
-    // Process the action based on type
-    const result = await this.executeAction(session, actor, action);
+    if (actor.status !== 'active') {
+      throw new Error('Player is not active');
+    }
 
-    // Update session state
-    this.updateSessionAfterAction(session, result);
-
-    // Check for combat end conditions
+    // Process the player's action
+    const playerResult = await this.executeAction(session, actor, action);
+    
+    // Check for combat end after player action
     await this.checkCombatEnd(session);
+    
+    // If combat ended, return just the player result
+    if (session.status === 'ended') {
+      return playerResult;
+    }
 
-    return result;
+    // Automatically process enemy turns
+    const enemyMessages: string[] = [];
+    const enemies = session.participants.filter(p => p.team === 'enemy' && p.status === 'active');
+    
+    for (const enemy of enemies) {
+      const enemyAction = this.chooseAIAction(session, enemy);
+      const enemyResult = await this.executeAction(session, enemy, enemyAction);
+      enemyMessages.push(enemyResult.message);
+      
+      // Check for combat end after each enemy action
+      await this.checkCombatEnd(session);
+      if (session.status === 'ended') {
+        break;
+      }
+    }
+
+    // Combine player and enemy messages
+    const combinedMessage = [playerResult.message, ...enemyMessages].join('\n');
+    
+    return {
+      ...playerResult,
+      message: combinedMessage,
+      combatStatus: session.status
+    };
   }
 
   /**
@@ -225,9 +249,6 @@ export class CombatService {
         throw new Error('Invalid action type');
     }
 
-    // Determine next turn
-    const nextTurnCharId = this.getNextTurnCharId(session);
-
     return {
       sessionId: session.sessionId,
       action,
@@ -236,8 +257,7 @@ export class CombatService {
       damage,
       healing,
       resourceCost,
-      message,
-      nextTurnCharId
+      message
     };
   }
 

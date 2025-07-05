@@ -21,7 +21,7 @@ export interface CombatSession {
   turnOrder: string[]; // Array of charIds
   currentTurnIndex: number;
   roundNumber: number;
-  status: 'active' | 'completed' | 'abandoned';
+  status: 'active' | 'completed' | 'abandoned' | 'ended';
   startTime: number;
   endTime?: number;
   winner?: string; // charId or 'draw'
@@ -61,7 +61,7 @@ export interface CombatResult {
   resourceCost?: ResourceUpdate[];
   statusEffects?: Array<CombatBuff | CombatDebuff>;
   message: string;
-  nextTurnCharId: string;
+  combatStatus?: string;
 }
 
 export interface CharacterCombatStats {
