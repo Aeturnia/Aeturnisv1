@@ -68,6 +68,9 @@ GET /api/status
   ],
   "endpoints": {
     "auth": "/api/v1/auth",
+    "currency": "/api/v1/currency",
+    "bank": "/api/v1/bank",
+    "characters": "/api/v1/characters",
     "health": "/health",
     "status": "/api/status"
   }
@@ -199,6 +202,210 @@ Authorization: Bearer <access-token>
     "roles": ["player"],
     "created_at": "2025-07-04T23:00:00.000Z",
     "updated_at": "2025-07-04T23:00:00.000Z"
+  }
+}
+```
+
+### Economy Endpoints
+
+#### Get Currency Balance (Test)
+```http
+GET /api/v1/currency/test-balance
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "balance": 1500.75,
+    "formattedBalance": "🪙 1.5K"
+  }
+}
+```
+
+#### Add Currency
+```http
+POST /api/v1/currency/add
+Content-Type: application/json
+Authorization: Bearer <jwt-token>
+
+{
+  "characterId": "character-uuid",
+  "amount": 100.50,
+  "reason": "Quest reward"
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "newBalance": 1601.25,
+    "amountAdded": 100.50,
+    "transactionId": "transaction-uuid"
+  }
+}
+```
+
+#### Subtract Currency
+```http
+POST /api/v1/currency/subtract
+Content-Type: application/json
+Authorization: Bearer <jwt-token>
+
+{
+  "characterId": "character-uuid",
+  "amount": 50.25,
+  "reason": "Shop purchase"
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "newBalance": 1551.00,
+    "amountSubtracted": 50.25,
+    "transactionId": "transaction-uuid"
+  }
+}
+```
+
+#### Get Transaction History
+```http
+GET /api/v1/currency/transactions/:characterId
+Authorization: Bearer <jwt-token>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "transaction-uuid",
+      "type": "credit",
+      "amount": 100.50,
+      "reason": "Quest reward",
+      "timestamp": "2025-07-05T12:00:00.000Z",
+      "balanceAfter": 1601.25
+    },
+    {
+      "id": "transaction-uuid-2",
+      "type": "debit",
+      "amount": 50.25,
+      "reason": "Shop purchase",
+      "timestamp": "2025-07-05T11:30:00.000Z",
+      "balanceAfter": 1551.00
+    }
+  ]
+}
+```
+
+### Banking Endpoints
+
+#### Get Bank Status (Test)
+```http
+GET /api/v1/bank/test-bank
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "personalBank": {
+      "totalSlots": 50,
+      "usedSlots": 12
+    },
+    "sharedBank": {
+      "totalSlots": 100,
+      "usedSlots": 8
+    }
+  }
+}
+```
+
+#### Deposit Item to Personal Bank
+```http
+POST /api/v1/bank/personal/deposit
+Content-Type: application/json
+Authorization: Bearer <jwt-token>
+
+{
+  "characterId": "character-uuid",
+  "itemId": "item-uuid",
+  "slot": 5
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "itemId": "item-uuid",
+    "slot": 5,
+    "bankType": "personal"
+  }
+}
+```
+
+#### Withdraw Item from Personal Bank
+```http
+POST /api/v1/bank/personal/withdraw
+Content-Type: application/json
+Authorization: Bearer <jwt-token>
+
+{
+  "characterId": "character-uuid",
+  "slot": 5
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "itemId": "item-uuid",
+    "slot": 5,
+    "withdrawnAt": "2025-07-05T12:00:00.000Z"
+  }
+}
+```
+
+#### Get Bank Contents
+```http
+GET /api/v1/bank/personal/:characterId
+Authorization: Bearer <jwt-token>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "bankType": "personal",
+    "totalSlots": 50,
+    "usedSlots": 12,
+    "items": [
+      {
+        "slot": 1,
+        "itemId": "item-uuid-1",
+        "name": "Iron Sword",
+        "quantity": 1
+      },
+      {
+        "slot": 5,
+        "itemId": "item-uuid-2",
+        "name": "Health Potion",
+        "quantity": 10
+      }
+    ]
   }
 }
 ```

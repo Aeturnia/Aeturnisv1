@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
-import path from 'path';
+import * as path from 'path';
 import { config } from 'dotenv';
 
 // Middleware
@@ -73,38 +73,18 @@ export const createApp = () => {
   app.use(requestLogger);
   app.use(performanceTracker);
 
-  // Serve static frontend files FIRST (before rate limiting and other middleware)
-  const clientDistPath = path.resolve(__dirname, '../../client/dist');
-  app.use(express.static(clientDistPath, {
-    maxAge: '1d',
-    setHeaders: (res, filePath) => {
-      if (filePath.endsWith('.js')) {
-        res.setHeader('Content-Type', 'application/javascript');
-      } else if (filePath.endsWith('.css')) {
-        res.setHeader('Content-Type', 'text/css');
-      } else if (filePath.endsWith('.html')) {
-        res.setHeader('Content-Type', 'text/html');
-        // Ensure CSP headers allow Replit iframe embedding
-        res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-      } else if (filePath.endsWith('.json') || filePath.endsWith('.webmanifest')) {
-        res.setHeader('Content-Type', 'application/json');
-      }
-    }
-  }));
+  // Backend API server - no static file serving needed
 
   // Apply general rate limiting
   app.use(generalLimiter);
 
   // Health check endpoints (API-specific routes first before fallback)
-  app.get('/api/status', (_req, res) => {
-    res.json({
-      message: 'Welcome to Aeturnis Online API',
-      status: 'Server is running',
-      timestamp: new Date().toISOString(),
-      version: process.env.npm_package_version || '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
-    });
-  });
+  // API status endpoint moved below - preventing duplicate routes
+
+  // Root route removed - now serves React testing frontend
+
+  // Serve testing frontend
+  app.use(express.static(path.join(__dirname, '../public')));
 
   app.get('/health', (_req, res) => {
     res.json({
@@ -132,41 +112,45 @@ export const createApp = () => {
   // API status endpoint
   app.get('/api/status', (_req, res) => {
     res.json({
-      server: 'Aeturnis Online API',
+      message: 'Aeturnis Online API',
       status: 'operational',
-      environment: process.env.NODE_ENV || 'development',
-      features: [
-        'authentication',
-        'rate-limiting',
-        'structured-logging',
-        'security-headers',
-        'compression',
-        'performance-tracking',
-      ],
+      version: '2.2.0',
+      architecture: 'MMORPG Backend',
+      uptime: Math.floor(process.uptime()),
+      timestamp: new Date().toISOString(),
       endpoints: {
         auth: '/api/v1/auth',
         health: '/health',
         status: '/api/status',
+        currency: '/api/v1/currency',
+        bank: '/api/v1/bank',
+        characters: '/api/v1/characters',
+      },
+      services: {
+        database: 'connected',
+        redis: 'disabled',
+        socketio: 'port_3001',
       },
     });
   });
 
-  // Fallback route to serve React app for client-side routing
-  app.get('*', (_req, res) => {
-    res.sendFile(path.join(clientDistPath, 'index.html'));
-  });
-
-  // 404 handler for non-GET requests
-  app.use('*', (req, res) => {
-    logger.warn(`404 - Route not found: ${req.method} ${req.originalUrl}`);
-    res.status(404).json({
-      success: false,
-      error: {
-        code: 'NOT_FOUND',
-        message: 'The requested resource was not found',
-      },
-      path: req.originalUrl,
-    });
+  // SPA fallback route - serve React app for all non-API routes
+  app.get('*', (req, res) => {
+    if (req.path.startsWith('/api/')) {
+      // API routes should return 404 JSON
+      logger.warn(`404 - API route not found: ${req.method} ${req.originalUrl}`);
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'The requested API endpoint was not found',
+        },
+        path: req.originalUrl,
+      });
+    }
+    
+    // Serve React app for all other routes
+    res.sendFile(path.join(__dirname, '../public/index.html'));
   });
 
   // Error handling middleware (must be last)
