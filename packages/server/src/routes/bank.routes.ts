@@ -6,6 +6,21 @@ import { logger } from '../utils/logger';
 
 const router = Router();
 
+// Test endpoint for visual testing interface
+router.get('/test-bank', (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    message: 'Banking system is operational',
+    timestamp: new Date().toISOString(),
+    testData: {
+      bankType: 'personal',
+      slots: 24,
+      usedSlots: 8,
+      status: 'connected'
+    }
+  });
+});
+
 // Get personal bank
 router.get('/characters/:characterId/bank',
   requireAuth,

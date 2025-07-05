@@ -79,15 +79,7 @@ export const createApp = () => {
   app.use(generalLimiter);
 
   // Health check endpoints (API-specific routes first before fallback)
-  app.get('/api/status', (_req, res) => {
-    res.json({
-      message: 'Welcome to Aeturnis Online API',
-      status: 'Server is running',
-      timestamp: new Date().toISOString(),
-      version: process.env.npm_package_version || '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
-    });
-  });
+  // API status endpoint moved below - preventing duplicate routes
 
   // Root route removed - now serves React testing frontend
 

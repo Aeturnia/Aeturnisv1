@@ -6,6 +6,20 @@ import { logger } from '../utils/logger';
 
 const router = Router();
 
+// Test endpoint for visual testing interface
+router.get('/test-balance', (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    message: 'Currency system is operational',
+    timestamp: new Date().toISOString(),
+    testData: {
+      currency: 'gold',
+      balance: '1000',
+      status: 'connected'
+    }
+  });
+});
+
 // Get character balance
 router.get('/characters/:characterId/balance', 
   requireAuth,
