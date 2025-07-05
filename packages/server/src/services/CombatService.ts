@@ -200,7 +200,22 @@ export class CombatService {
           duration: 1,
           modifier: 0.5 // 50% damage reduction
         });
-        message = `${actor.charName} takes a defensive stance!`;
+        
+        // Restore some stamina when defending (prevents AI from getting stuck)
+        const staminaRestore = Math.min(3, actor.maxStamina - actor.stamina);
+        if (staminaRestore > 0) {
+          actor.stamina += staminaRestore;
+          resourceCost.push({
+            charId: actor.charId,
+            poolType: 'stamina',
+            currentValue: actor.stamina,
+            maxValue: actor.maxStamina,
+            change: staminaRestore,
+            reason: 'defend'
+          });
+        }
+        
+        message = `${actor.charName} takes a defensive stance and recovers ${staminaRestore} stamina!`;
         break;
 
       case CombatActionType.FLEE:
@@ -573,23 +588,55 @@ export class CombatService {
   }
 
   /**
-   * Simple AI action selection
+   * Enhanced AI action selection with anti-stuck logic
    */
   private chooseAIAction(session: CombatSession, actor: CombatParticipant): CombatAction {
-    // Simple AI: attack if stamina available, otherwise defend
-    if (actor.stamina >= 5) {
-      // Find a target from opposing team
-      const enemies = session.participants.filter(p => 
-        p.team !== actor.team && p.status === 'active'
-      );
-      
-      if (enemies.length > 0) {
-        return {
-          type: CombatActionType.ATTACK,
-          targetCharId: enemies[0].charId,
-          timestamp: Date.now()
-        };
-      }
+    // Find targets
+    const enemies = session.participants.filter(p => 
+      p.team !== actor.team && p.status === 'active'
+    );
+    
+    if (enemies.length === 0) {
+      return {
+        type: CombatActionType.DEFEND,
+        timestamp: Date.now()
+      };
+    }
+
+    // Check if actor has been defending too much (anti-stuck logic)
+    const recentDefends = session.combatLog
+      ? session.combatLog.filter(log => 
+          log.includes(actor.charName) && 
+          log.includes('defensive stance') &&
+          Date.now() - log.timestamp < 30000 // Last 30 seconds
+        ).length
+      : 0;
+
+    // If been defending 3+ times recently, force an attack even with low stamina
+    if (recentDefends >= 3) {
+      return {
+        type: CombatActionType.ATTACK,
+        targetCharId: enemies[0].charId,
+        timestamp: Date.now()
+      };
+    }
+
+    // Normal AI logic with lower stamina threshold
+    if (actor.stamina >= 3) { // Lowered from 5 to 3
+      return {
+        type: CombatActionType.ATTACK,
+        targetCharId: enemies[0].charId,
+        timestamp: Date.now()
+      };
+    }
+
+    // 30% chance to attack even with very low stamina (risky behavior)
+    if (Math.random() < 0.3) {
+      return {
+        type: CombatActionType.ATTACK,
+        targetCharId: enemies[0].charId,
+        timestamp: Date.now()
+      };
     }
 
     return {

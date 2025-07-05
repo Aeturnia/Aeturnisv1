@@ -531,6 +531,18 @@ The expanded monorepo now includes:
 - **Rate Limiting Replacement**: Replaced previous rate limiting system with more intuitive cooldown approach
 - **Status**: Anti-spam cooldown system COMPLETE - Responsive combat with proper spam protection operational
 
+### July 05, 2025 - Defend Action Bug Fix & Enemy AI Enhancement Complete ✅
+- **Rate Limiter Disabled**: Removed general rate limiter causing 429 errors, allowing cooldown system to work properly
+- **Enemy AI Anti-Stuck Logic**: Fixed enemy getting stuck in defensive mode after 9 defend actions
+- **Enhanced AI Decision Making**: Added logic to force attack if enemy has defended 3+ times recently
+- **Lowered Stamina Threshold**: Reduced attack stamina requirement from 5 to 3 for more aggressive AI behavior
+- **Risky AI Behavior**: Added 30% chance for enemies to attack even with very low stamina
+- **Stamina Regeneration**: Defend action now restores 3 stamina, preventing infinite defensive loops
+- **Combat Balance**: Defending now provides strategic value with stamina recovery while maintaining damage reduction
+- **Dynamic Combat**: Enemies now break out of defensive patterns and engage in more varied combat behavior
+- **Bug Resolution**: Eliminated the core issue where goblins would get permanently stuck in defensive stance
+- **Status**: Defend action bug FIXED - Combat system now provides fluid, engaging gameplay without defensive loops
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

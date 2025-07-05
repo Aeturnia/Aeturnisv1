@@ -77,8 +77,8 @@ export const createApp = () => {
 
   // Backend API server - no static file serving needed
 
-  // Apply general rate limiting
-  app.use(generalLimiter);
+  // Apply general rate limiting (disabled for combat routes to use cooldown system)
+  // app.use(generalLimiter);
 
   // Health check endpoints (API-specific routes first before fallback)
   // API status endpoint moved below - preventing duplicate routes
