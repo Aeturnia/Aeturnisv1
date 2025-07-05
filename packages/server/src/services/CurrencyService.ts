@@ -1,7 +1,7 @@
 import { eq, desc, sql } from 'drizzle-orm';
 import { db } from '../database/config';
 import { characters, transactions } from '../database/schema';
-import { redis } from '../utils/redis';
+import redis from '../utils/redis';
 import { Transaction, TransactionType, TransactionMetadata } from '../types/currency';
 import { logger } from '../utils/logger';
 
@@ -62,7 +62,7 @@ export class CurrencyService {
         .set({ 
           gold: balanceAfter,
           updatedAt: new Date() 
-        })
+        } as any)
         .where(eq(characters.id, characterId));
 
       // Record transaction
@@ -77,7 +77,7 @@ export class CurrencyService {
           relatedCharacterId,
           description,
           metadata,
-        })
+        } as any)
         .returning();
 
       // Invalidate cache
