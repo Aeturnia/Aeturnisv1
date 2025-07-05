@@ -25,14 +25,14 @@ export class CharacterRepository {
       wisdomTier: 0,
       constitutionTier: 0,
       charismaTier: 0,
-      bonusStrength: BigInt(0),
-      bonusDexterity: BigInt(0),
-      bonusIntelligence: BigInt(0),
-      bonusWisdom: BigInt(0),
-      bonusConstitution: BigInt(0),
-      bonusCharisma: BigInt(0),
+      bonusStrength: 0,
+      bonusDexterity: 0,
+      bonusIntelligence: 0,
+      bonusWisdom: 0,
+      bonusConstitution: 0,
+      bonusCharisma: 0,
       prestigeLevel: 0,
-      paragonPoints: BigInt(0),
+      paragonPoints: 0,
       paragonDistribution: {},
     } as Character;
     
@@ -42,7 +42,7 @@ export class CharacterRepository {
       accountId,
       name: data.name,
       level: 1,
-      experience: BigInt(0),
+      experience: 0,
       race: data.race,
       class: data.class,
       gender: data.gender,
@@ -64,16 +64,16 @@ export class CharacterRepository {
       charismaTier: 0,
       
       // Initialize bonus stats to 0
-      bonusStrength: BigInt(0),
-      bonusDexterity: BigInt(0),
-      bonusIntelligence: BigInt(0),
-      bonusWisdom: BigInt(0),
-      bonusConstitution: BigInt(0),
-      bonusCharisma: BigInt(0),
+      bonusStrength: 0,
+      bonusDexterity: 0,
+      bonusIntelligence: 0,
+      bonusWisdom: 0,
+      bonusConstitution: 0,
+      bonusCharisma: 0,
       
       // Initialize progression systems
       prestigeLevel: 0,
-      paragonPoints: BigInt(0),
+      paragonPoints: 0,
       paragonDistribution: {},
       
       // Set initial resource pools
@@ -190,10 +190,19 @@ export class CharacterRepository {
     bonusConstitution?: bigint;
     bonusCharisma?: bigint;
   }): Promise<Character | null> {
+    // Convert bigint bonus stats to numbers for database
+    const updates: any = { ...statUpdates };
+    if (updates.bonusStrength !== undefined) updates.bonusStrength = Number(updates.bonusStrength);
+    if (updates.bonusDexterity !== undefined) updates.bonusDexterity = Number(updates.bonusDexterity);
+    if (updates.bonusIntelligence !== undefined) updates.bonusIntelligence = Number(updates.bonusIntelligence);
+    if (updates.bonusWisdom !== undefined) updates.bonusWisdom = Number(updates.bonusWisdom);
+    if (updates.bonusConstitution !== undefined) updates.bonusConstitution = Number(updates.bonusConstitution);
+    if (updates.bonusCharisma !== undefined) updates.bonusCharisma = Number(updates.bonusCharisma);
+    
     const result = await db
       .update(characters)
       .set({
-        ...statUpdates,
+        ...updates,
         updatedAt: new Date(),
       })
       .where(and(eq(characters.id, id), eq(characters.isDeleted, false)))
@@ -207,10 +216,16 @@ export class CharacterRepository {
     currentMp?: bigint;
     currentStamina?: bigint;
   }): Promise<Character | null> {
+    // Convert bigint resources to numbers for database
+    const updates: any = { ...resources };
+    if (updates.currentHp !== undefined) updates.currentHp = Number(updates.currentHp);
+    if (updates.currentMp !== undefined) updates.currentMp = Number(updates.currentMp);
+    if (updates.currentStamina !== undefined) updates.currentStamina = Number(updates.currentStamina);
+    
     const result = await db
       .update(characters)
       .set({
-        ...resources,
+        ...updates,
         updatedAt: new Date(),
       })
       .where(and(eq(characters.id, id), eq(characters.isDeleted, false)))
@@ -250,7 +265,7 @@ export class CharacterRepository {
     const result = await db
       .update(characters)
       .set({
-        paragonPoints,
+        paragonPoints: Number(paragonPoints),
         paragonDistribution: distribution,
         updatedAt: new Date(),
       })

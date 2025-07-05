@@ -16,12 +16,14 @@ import { generalLimiter, authLimiter } from './middleware/rateLimiter';
 import authRoutes from './routes/auth.routes';
 import sessionRoutes from './routes/session.routes';
 import characterRoutes from './routes/character.routes.simple';
+import currencyRoutes from './routes/currency.routes';
+import bankRoutes from './routes/bank.routes';
 
 // Services
 // import { shutdownServices } from './services/index';
 
 // Utilities
-import { logger, morganStream } from './utils/logger';
+import { logger, stream } from './utils/logger';
 
 // Initialize environment variables
 config();
@@ -42,6 +44,7 @@ export const createApp = () => {
         styleSrc: ["'self'", "'unsafe-inline'"],
         scriptSrc: ["'self'"],
         imgSrc: ["'self'", "data:", "https:"],
+        frameAncestors: ["'self'", "*.replit.dev", "*.replit.com", "*.replit.app", "replit.com"],
       },
     },
   }));
@@ -64,7 +67,7 @@ export const createApp = () => {
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
   // Logging middleware
-  app.use(morgan('combined', { stream: morganStream }));
+  app.use(morgan('combined', { stream }));
 
   // Custom middleware
   app.use(requestLogger);
@@ -74,11 +77,17 @@ export const createApp = () => {
   const clientDistPath = path.resolve(__dirname, '../../client/dist');
   app.use(express.static(clientDistPath, {
     maxAge: '1d',
-    setHeaders: (res, path) => {
-      if (path.endsWith('.js')) {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.js')) {
         res.setHeader('Content-Type', 'application/javascript');
-      } else if (path.endsWith('.css')) {
+      } else if (filePath.endsWith('.css')) {
         res.setHeader('Content-Type', 'text/css');
+      } else if (filePath.endsWith('.html')) {
+        res.setHeader('Content-Type', 'text/html');
+        // Ensure CSP headers allow Replit iframe embedding
+        res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+      } else if (filePath.endsWith('.json') || filePath.endsWith('.webmanifest')) {
+        res.setHeader('Content-Type', 'application/json');
       }
     }
   }));
@@ -114,6 +123,8 @@ export const createApp = () => {
   app.use('/api/v1/auth', authLimiter, authRoutes);
   app.use('/api/v1/sessions', generalLimiter, sessionRoutes);
   app.use('/api/v1/characters', generalLimiter, characterRoutes);
+  app.use('/api/v1/currency', generalLimiter, currencyRoutes);
+  app.use('/api/v1/bank', generalLimiter, bankRoutes);
 
   // Legacy auth routes (for backward compatibility)
   app.use('/api/auth', authLimiter, authRoutes);

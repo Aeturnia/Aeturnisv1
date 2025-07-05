@@ -9,6 +9,13 @@ interface Character {
   maxHealth: number;
   mana: number;
   maxMana: number;
+  gold?: number;
+  strength?: number;
+  dexterity?: number;
+  intelligence?: number;
+  constitution?: number;
+  wisdom?: number;
+  charisma?: number;
 }
 
 interface GameState {

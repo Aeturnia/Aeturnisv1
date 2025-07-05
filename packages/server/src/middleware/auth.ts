@@ -80,3 +80,6 @@ export const authorize = (roles: string[]) => {
     next();
   };
 };
+
+// Export alias for requireAuth
+export const requireAuth = authenticate;

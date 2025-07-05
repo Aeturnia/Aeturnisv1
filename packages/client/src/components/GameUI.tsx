@@ -2,45 +2,16 @@ import { useGame } from '../stores/gameStore';
 import styles from './GameUI.module.css';
 
 export function GameUI() {
-  const game = useGame();
+  const { isConnected } = useGame();
   
   const handleAction = (action: string) => {
     // Here you would typically send the action to the game server
     console.warn(`Game action: ${action}`);
   };
 
-  const currentCharacter = game?.currentCharacter || null;
-  const isConnected = game?.isConnected || false;
-
   return (
     <div className={styles.gameUI}>
-      <div className={`${styles.uiPanel} ${styles.topLeft}`}>
-        <h4>Character Stats</h4>
-        {currentCharacter && (
-          <div className="stats">
-            <div className={styles.statBar}>
-              <label>Health</label>
-              <div className={styles.bar}>
-                <div 
-                  className={`${styles.barFill} ${styles.health}`}
-                  style={{ width: `${(currentCharacter.health / currentCharacter.maxHealth) * 100}%` }}
-                />
-              </div>
-              <span>{currentCharacter.health}/{currentCharacter.maxHealth}</span>
-            </div>
-            <div className={styles.statBar}>
-              <label>Mana</label>
-              <div className={styles.bar}>
-                <div 
-                  className={`${styles.barFill} ${styles.mana}`}
-                  style={{ width: `${(currentCharacter.mana / currentCharacter.maxMana) * 100}%` }}
-                />
-              </div>
-              <span>{currentCharacter.mana}/{currentCharacter.maxMana}</span>
-            </div>
-          </div>
-        )}
-      </div>
+      {/* Character stats moved to Character Info panel */}
 
       <div className={`${styles.uiPanel} ${styles.bottomCenter}`}>
         <div className={styles.actionButtons}>

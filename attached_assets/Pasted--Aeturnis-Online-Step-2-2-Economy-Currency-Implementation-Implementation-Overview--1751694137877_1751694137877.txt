@@ -1,0 +1,976 @@
+# 🏦 Aeturnis Online - Step 2.2: Economy & Currency Implementation
+
+## 💡 Implementation Overview
+Implement a comprehensive economy system for Aeturnis Online including currency management, transaction tracking, and banking features. This system will handle gold/coins, personal banks, shared account banks, and item transfers between storage locations.
+
+---
+
+## 🧱 File Targets
+
+### Database Schema Updates
+```typescript
+// src/database/schema/character.ts
+export const characterTable = pgTable('characters', {
+  // ... existing fields
+  gold: integer('gold').default(0).notNull(),
+  bankSlots: integer('bank_slots').default(20).notNull(),
+  // ... existing fields
+});
+
+// src/database/schema/bank.ts (NEW FILE)
+export const bankTable = pgTable('banks', {
+  id: serial('id').primaryKey(),
+  charId: integer('char_id').references(() => characterTable.id).notNull(),
+  slot: integer('slot').notNull(),
+  itemId: integer('item_id').references(() => itemTable.id),
+  quantity: integer('quantity').default(1).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const bankIndex = index('idx_bank_char_slot').on(bankTable.charId, bankTable.slot);
+
+// src/database/schema/shared-bank.ts (NEW FILE)
+export const sharedBankTable = pgTable('shared_banks', {
+  id: serial('id').primaryKey(),
+  accountId: integer('account_id').references(() => accountTable.id).notNull(),
+  slot: integer('slot').notNull(),
+  itemId: integer('item_id').references(() => itemTable.id),
+  quantity: integer('quantity').default(1).notNull(),
+  lastAccessedBy: integer('last_accessed_by').references(() => characterTable.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const sharedBankIndex = index('idx_shared_bank_account_slot').on(sharedBankTable.accountId, sharedBankTable.slot);
+
+// src/database/schema/transaction.ts (NEW FILE)
+export const transactionTable = pgTable('transactions', {
+  id: serial('id').primaryKey(),
+  charId: integer('char_id').references(() => characterTable.id).notNull(),
+  type: varchar('type', { length: 50 }).notNull(), // 'deposit', 'withdraw', 'transfer', 'purchase', 'sale', 'reward'
+  amount: integer('amount').notNull(),
+  balanceBefore: integer('balance_before').notNull(),
+  balanceAfter: integer('balance_after').notNull(),
+  relatedCharId: integer('related_char_id').references(() => characterTable.id),
+  description: text('description'),
+  metadata: jsonb('metadata').$type<TransactionMetadata>(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const transactionIndex = index('idx_transaction_char_created').on(transactionTable.charId, transactionTable.createdAt);
+```
+
+### TypeScript Interfaces
+```typescript
+// src/types/currency.ts (NEW FILE)
+export interface Currency {
+  gold: number;
+}
+
+export interface Transaction {
+  id: number;
+  charId: number;
+  type: TransactionType;
+  amount: number;
+  balanceBefore: number;
+  balanceAfter: number;
+  relatedCharId?: number;
+  description?: string;
+  metadata?: TransactionMetadata;
+  createdAt: Date;
+}
+
+export type TransactionType = 'deposit' | 'withdraw' | 'transfer' | 'purchase' | 'sale' | 'reward';
+
+export interface TransactionMetadata {
+  itemId?: number;
+  itemName?: string;
+  quantity?: number;
+  unitPrice?: number;
+  source?: string;
+  destination?: string;
+}
+
+// src/types/bank.ts (NEW FILE)
+export interface BankSlot {
+  slot: number;
+  itemId?: number;
+  quantity: number;
+  item?: Item; // populated on fetch
+}
+
+export interface BankTransferRequest {
+  fromType: 'inventory' | 'bank' | 'sharedBank';
+  toType: 'inventory' | 'bank' | 'sharedBank';
+  fromSlot: number;
+  toSlot: number;
+  quantity?: number;
+}
+
+export interface BankExpansionRequest {
+  slots: number; // number of slots to add
+}
+```
+
+### Service Implementation
+```typescript
+// src/services/currency.service.ts (NEW FILE)
+import { db } from '../database';
+import { characterTable, transactionTable } from '../database/schema';
+import { eq, and, desc } from 'drizzle-orm';
+import { Transaction, TransactionType } from '../types/currency';
+import { Redis } from 'ioredis';
+import { AppError } from '../utils/errors';
+
+export class CurrencyService {
+  constructor(private redis: Redis) {}
+
+  async getBalance(charId: number): Promise<number> {
+    const cacheKey = `currency:balance:${charId}`;
+    const cached = await this.redis.get(cacheKey);
+    
+    if (cached !== null) {
+      return parseInt(cached, 10);
+    }
+
+    const [character] = await db
+      .select({ gold: characterTable.gold })
+      .from(characterTable)
+      .where(eq(characterTable.id, charId));
+
+    if (!character) {
+      throw new AppError('Character not found', 404);
+    }
+
+    await this.redis.setex(cacheKey, 300, character.gold.toString());
+    return character.gold;
+  }
+
+  async modifyBalance(
+    charId: number,
+    amount: number,
+    type: TransactionType,
+    description?: string,
+    metadata?: any,
+    relatedCharId?: number
+  ): Promise<Transaction> {
+    return await db.transaction(async (tx) => {
+      // Lock character row
+      const [character] = await tx
+        .select()
+        .from(characterTable)
+        .where(eq(characterTable.id, charId))
+        .for('update');
+
+      if (!character) {
+        throw new AppError('Character not found', 404);
+      }
+
+      const balanceBefore = character.gold;
+      const balanceAfter = balanceBefore + amount;
+
+      if (balanceAfter < 0) {
+        throw new AppError('Insufficient funds', 400);
+      }
+
+      // Update balance
+      await tx
+        .update(characterTable)
+        .set({ gold: balanceAfter })
+        .where(eq(characterTable.id, charId));
+
+      // Record transaction
+      const [transaction] = await tx
+        .insert(transactionTable)
+        .values({
+          charId,
+          type,
+          amount,
+          balanceBefore,
+          balanceAfter,
+          relatedCharId,
+          description,
+          metadata,
+        })
+        .returning();
+
+      // Invalidate cache
+      await this.redis.del(`currency:balance:${charId}`);
+
+      return transaction;
+    });
+  }
+
+  async transferGold(
+    fromCharId: number,
+    toCharId: number,
+    amount: number,
+    description?: string
+  ): Promise<{ senderTransaction: Transaction; receiverTransaction: Transaction }> {
+    if (amount <= 0) {
+      throw new AppError('Transfer amount must be positive', 400);
+    }
+
+    return await db.transaction(async (tx) => {
+      // Deduct from sender
+      const senderTransaction = await this.modifyBalance(
+        fromCharId,
+        -amount,
+        'transfer',
+        description || `Transfer to character ${toCharId}`,
+        { transferType: 'send' },
+        toCharId
+      );
+
+      // Add to receiver
+      const receiverTransaction = await this.modifyBalance(
+        toCharId,
+        amount,
+        'transfer',
+        description || `Transfer from character ${fromCharId}`,
+        { transferType: 'receive' },
+        fromCharId
+      );
+
+      return { senderTransaction, receiverTransaction };
+    });
+  }
+
+  async getTransactionHistory(
+    charId: number,
+    limit: number = 50,
+    offset: number = 0
+  ): Promise<Transaction[]> {
+    return await db
+      .select()
+      .from(transactionTable)
+      .where(eq(transactionTable.charId, charId))
+      .orderBy(desc(transactionTable.createdAt))
+      .limit(limit)
+      .offset(offset);
+  }
+}
+
+// src/services/bank.service.ts (NEW FILE)
+import { db } from '../database';
+import { bankTable, sharedBankTable, characterTable } from '../database/schema';
+import { eq, and } from 'drizzle-orm';
+import { BankSlot, BankTransferRequest } from '../types/bank';
+import { InventoryService } from './inventory.service';
+import { AppError } from '../utils/errors';
+
+export class BankService {
+  constructor(
+    private inventoryService: InventoryService,
+    private redis: Redis
+  ) {}
+
+  async getPersonalBank(charId: number): Promise<BankSlot[]> {
+    const cacheKey = `bank:personal:${charId}`;
+    const cached = await this.redis.get(cacheKey);
+    
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
+    const slots = await db
+      .select()
+      .from(bankTable)
+      .where(eq(bankTable.charId, charId))
+      .orderBy(bankTable.slot);
+
+    await this.redis.setex(cacheKey, 300, JSON.stringify(slots));
+    return slots;
+  }
+
+  async getSharedBank(accountId: number): Promise<BankSlot[]> {
+    const cacheKey = `bank:shared:${accountId}`;
+    const cached = await this.redis.get(cacheKey);
+    
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
+    const slots = await db
+      .select()
+      .from(sharedBankTable)
+      .where(eq(sharedBankTable.accountId, accountId))
+      .orderBy(sharedBankTable.slot);
+
+    await this.redis.setex(cacheKey, 300, JSON.stringify(slots));
+    return slots;
+  }
+
+  async transferItem(
+    charId: number,
+    accountId: number,
+    request: BankTransferRequest
+  ): Promise<void> {
+    await db.transaction(async (tx) => {
+      // Validate character owns the account
+      const [character] = await tx
+        .select()
+        .from(characterTable)
+        .where(and(
+          eq(characterTable.id, charId),
+          eq(characterTable.accountId, accountId)
+        ));
+
+      if (!character) {
+        throw new AppError('Character not found or unauthorized', 403);
+      }
+
+      // Handle source removal
+      if (request.fromType === 'inventory') {
+        await this.inventoryService.removeItem(charId, request.fromSlot, request.quantity);
+      } else if (request.fromType === 'bank') {
+        await this.removeFromBank(charId, request.fromSlot, tx);
+      } else if (request.fromType === 'sharedBank') {
+        await this.removeFromSharedBank(accountId, request.fromSlot, tx);
+      }
+
+      // Handle destination addition
+      const itemToTransfer = await this.getItemDetails(request.fromType, request.fromSlot, charId, accountId);
+      
+      if (request.toType === 'inventory') {
+        await this.inventoryService.addItem(charId, itemToTransfer.itemId, request.quantity || itemToTransfer.quantity);
+      } else if (request.toType === 'bank') {
+        await this.addToBank(charId, request.toSlot, itemToTransfer.itemId, request.quantity || itemToTransfer.quantity, tx);
+      } else if (request.toType === 'sharedBank') {
+        await this.addToSharedBank(accountId, request.toSlot, itemToTransfer.itemId, request.quantity || itemToTransfer.quantity, charId, tx);
+      }
+
+      // Invalidate caches
+      await this.redis.del(
+        `bank:personal:${charId}`,
+        `bank:shared:${accountId}`,
+        `inventory:${charId}`
+      );
+    });
+  }
+
+  async expandBankSlots(charId: number, additionalSlots: number): Promise<number> {
+    const SLOT_COST = 1000; // Gold per slot
+    const MAX_SLOTS = 100;
+    
+    const [character] = await db
+      .select()
+      .from(characterTable)
+      .where(eq(characterTable.id, charId));
+
+    if (!character) {
+      throw new AppError('Character not found', 404);
+    }
+
+    const newTotalSlots = character.bankSlots + additionalSlots;
+    
+    if (newTotalSlots > MAX_SLOTS) {
+      throw new AppError(`Cannot exceed maximum of ${MAX_SLOTS} bank slots`, 400);
+    }
+
+    const totalCost = additionalSlots * SLOT_COST;
+    
+    if (character.gold < totalCost) {
+      throw new AppError('Insufficient gold for bank expansion', 400);
+    }
+
+    await db.transaction(async (tx) => {
+      // Deduct gold and update slots
+      await tx
+        .update(characterTable)
+        .set({
+          gold: character.gold - totalCost,
+          bankSlots: newTotalSlots
+        })
+        .where(eq(characterTable.id, charId));
+
+      // Record transaction
+      await tx.insert(transactionTable).values({
+        charId,
+        type: 'purchase',
+        amount: -totalCost,
+        balanceBefore: character.gold,
+        balanceAfter: character.gold - totalCost,
+        description: `Bank expansion: ${additionalSlots} slots`,
+        metadata: { expansionType: 'bank', slotsAdded: additionalSlots }
+      });
+    });
+
+    await this.redis.del(`currency:balance:${charId}`);
+    return newTotalSlots;
+  }
+
+  private async removeFromBank(charId: number, slot: number, tx: any): Promise<void> {
+    const result = await tx
+      .delete(bankTable)
+      .where(and(
+        eq(bankTable.charId, charId),
+        eq(bankTable.slot, slot)
+      ));
+
+    if (result.rowCount === 0) {
+      throw new AppError('Bank slot is empty', 400);
+    }
+  }
+
+  private async removeFromSharedBank(accountId: number, slot: number, tx: any): Promise<void> {
+    const result = await tx
+      .delete(sharedBankTable)
+      .where(and(
+        eq(sharedBankTable.accountId, accountId),
+        eq(sharedBankTable.slot, slot)
+      ));
+
+    if (result.rowCount === 0) {
+      throw new AppError('Shared bank slot is empty', 400);
+    }
+  }
+
+  private async addToBank(
+    charId: number,
+    slot: number,
+    itemId: number,
+    quantity: number,
+    tx: any
+  ): Promise<void> {
+    // Check if slot is occupied
+    const existing = await tx
+      .select()
+      .from(bankTable)
+      .where(and(
+        eq(bankTable.charId, charId),
+        eq(bankTable.slot, slot)
+      ));
+
+    if (existing.length > 0) {
+      throw new AppError('Bank slot is already occupied', 400);
+    }
+
+    await tx.insert(bankTable).values({
+      charId,
+      slot,
+      itemId,
+      quantity
+    });
+  }
+
+  private async addToSharedBank(
+    accountId: number,
+    slot: number,
+    itemId: number,
+    quantity: number,
+    lastAccessedBy: number,
+    tx: any
+  ): Promise<void> {
+    const existing = await tx
+      .select()
+      .from(sharedBankTable)
+      .where(and(
+        eq(sharedBankTable.accountId, accountId),
+        eq(sharedBankTable.slot, slot)
+      ));
+
+    if (existing.length > 0) {
+      throw new AppError('Shared bank slot is already occupied', 400);
+    }
+
+    await tx.insert(sharedBankTable).values({
+      accountId,
+      slot,
+      itemId,
+      quantity,
+      lastAccessedBy
+    });
+  }
+
+  private async getItemDetails(
+    storageType: string,
+    slot: number,
+    charId: number,
+    accountId: number
+  ): Promise<{ itemId: number; quantity: number }> {
+    // Implementation to fetch item details from the specified storage
+    // This would query the appropriate table based on storageType
+    throw new Error('Not implemented');
+  }
+}
+```
+
+### API Routes
+```typescript
+// src/routes/currency.routes.ts (NEW FILE)
+import { Router } from 'express';
+import { authenticate } from '../middleware/auth';
+import { validate } from '../middleware/validate';
+import { body, param, query } from 'express-validator';
+import { CurrencyController } from '../controllers/currency.controller';
+
+const router = Router();
+const currencyController = new CurrencyController();
+
+router.use(authenticate);
+
+// Get current balance
+router.get(
+  '/balance/:charId',
+  [param('charId').isInt().toInt()],
+  validate,
+  currencyController.getBalance
+);
+
+// Get transaction history
+router.get(
+  '/transactions/:charId',
+  [
+    param('charId').isInt().toInt(),
+    query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
+    query('offset').optional().isInt({ min: 0 }).toInt()
+  ],
+  validate,
+  currencyController.getTransactionHistory
+);
+
+// Transfer gold between characters
+router.post(
+  '/transfer',
+  [
+    body('fromCharId').isInt().toInt(),
+    body('toCharId').isInt().toInt(),
+    body('amount').isInt({ min: 1 }).toInt(),
+    body('description').optional().isString().trim()
+  ],
+  validate,
+  currencyController.transferGold
+);
+
+export default router;
+
+// src/routes/bank.routes.ts (NEW FILE)
+import { Router } from 'express';
+import { authenticate } from '../middleware/auth';
+import { validate } from '../middleware/validate';
+import { body, param } from 'express-validator';
+import { BankController } from '../controllers/bank.controller';
+
+const router = Router();
+const bankController = new BankController();
+
+router.use(authenticate);
+
+// Get personal bank
+router.get(
+  '/personal/:charId',
+  [param('charId').isInt().toInt()],
+  validate,
+  bankController.getPersonalBank
+);
+
+// Get shared bank
+router.get(
+  '/shared/:accountId',
+  [param('accountId').isInt().toInt()],
+  validate,
+  bankController.getSharedBank
+);
+
+// Transfer items between storages
+router.post(
+  '/transfer',
+  [
+    body('charId').isInt().toInt(),
+    body('fromType').isIn(['inventory', 'bank', 'sharedBank']),
+    body('toType').isIn(['inventory', 'bank', 'sharedBank']),
+    body('fromSlot').isInt({ min: 0 }).toInt(),
+    body('toSlot').isInt({ min: 0 }).toInt(),
+    body('quantity').optional().isInt({ min: 1 }).toInt()
+  ],
+  validate,
+  bankController.transferItem
+);
+
+// Expand bank slots
+router.post(
+  '/expand/:charId',
+  [
+    param('charId').isInt().toInt(),
+    body('slots').isInt({ min: 1, max: 20 }).toInt()
+  ],
+  validate,
+  bankController.expandBankSlots
+);
+
+export default router;
+```
+
+### Controllers
+```typescript
+// src/controllers/currency.controller.ts (NEW FILE)
+import { Request, Response, NextFunction } from 'express';
+import { CurrencyService } from '../services/currency.service';
+import { redis } from '../config/redis';
+
+export class CurrencyController {
+  private currencyService: CurrencyService;
+
+  constructor() {
+    this.currencyService = new CurrencyService(redis);
+  }
+
+  getBalance = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { charId } = req.params;
+      
+      // Verify ownership
+      if (req.user!.id !== charId && !req.user!.isAdmin) {
+        return res.status(403).json({ error: 'Unauthorized access to character' });
+      }
+
+      const balance = await this.currencyService.getBalance(Number(charId));
+      
+      res.json({ gold: balance });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getTransactionHistory = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { charId } = req.params;
+      const { limit = 50, offset = 0 } = req.query;
+      
+      // Verify ownership
+      if (req.user!.id !== charId && !req.user!.isAdmin) {
+        return res.status(403).json({ error: 'Unauthorized access to character' });
+      }
+
+      const transactions = await this.currencyService.getTransactionHistory(
+        Number(charId),
+        Number(limit),
+        Number(offset)
+      );
+      
+      res.json({ transactions });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  transferGold = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { fromCharId, toCharId, amount, description } = req.body;
+      
+      // Verify ownership of sender character
+      if (req.user!.id !== fromCharId && !req.user!.isAdmin) {
+        return res.status(403).json({ error: 'Unauthorized to transfer from this character' });
+      }
+
+      const result = await this.currencyService.transferGold(
+        fromCharId,
+        toCharId,
+        amount,
+        description
+      );
+      
+      res.json({
+        success: true,
+        senderBalance: result.senderTransaction.balanceAfter,
+        receiverBalance: result.receiverTransaction.balanceAfter
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+}
+
+// src/controllers/bank.controller.ts (NEW FILE)
+import { Request, Response, NextFunction } from 'express';
+import { BankService } from '../services/bank.service';
+import { InventoryService } from '../services/inventory.service';
+import { redis } from '../config/redis';
+
+export class BankController {
+  private bankService: BankService;
+
+  constructor() {
+    const inventoryService = new InventoryService(redis);
+    this.bankService = new BankService(inventoryService, redis);
+  }
+
+  getPersonalBank = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { charId } = req.params;
+      
+      // Verify ownership
+      if (req.user!.id !== charId && !req.user!.isAdmin) {
+        return res.status(403).json({ error: 'Unauthorized access to bank' });
+      }
+
+      const bank = await this.bankService.getPersonalBank(Number(charId));
+      
+      res.json({ slots: bank });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getSharedBank = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { accountId } = req.params;
+      
+      // Verify account ownership
+      if (req.user!.accountId !== accountId && !req.user!.isAdmin) {
+        return res.status(403).json({ error: 'Unauthorized access to shared bank' });
+      }
+
+      const bank = await this.bankService.getSharedBank(Number(accountId));
+      
+      res.json({ slots: bank });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  transferItem = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { charId, fromType, toType, fromSlot, toSlot, quantity } = req.body;
+      
+      // Get character's accountId for validation
+      const accountId = req.user!.accountId;
+
+      await this.bankService.transferItem(charId, accountId, {
+        fromType,
+        toType,
+        fromSlot,
+        toSlot,
+        quantity
+      });
+      
+      res.json({ success: true });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  expandBankSlots = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { charId } = req.params;
+      const { slots } = req.body;
+      
+      // Verify ownership
+      if (req.user!.id !== charId && !req.user!.isAdmin) {
+        return res.status(403).json({ error: 'Unauthorized to expand bank' });
+      }
+
+      const newTotalSlots = await this.bankService.expandBankSlots(Number(charId), slots);
+      
+      res.json({ 
+        success: true,
+        totalSlots: newTotalSlots,
+        cost: slots * 1000
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+}
+```
+
+---
+
+## 🧪 Validation Rules
+
+### Currency Operations
+- Gold amount must be >= 0
+- Transfer amounts must be > 0
+- Transaction types must be valid enum values
+- Character must exist in database
+- Sufficient funds check before deduction
+
+### Banking Operations
+- Slot numbers must be >= 0 and < max slots
+- Bank expansion limited to 20 slots per request
+- Maximum 100 total bank slots
+- Item quantities must be > 0
+- Storage types must be valid ('inventory', 'bank', 'sharedBank')
+
+---
+
+## 🔁 Event & Real-Time Logic
+
+### Socket Events
+```typescript
+// Emit on gold change
+socket.emit('currency:updated', {
+  charId,
+  gold: newBalance
+});
+
+// Emit on bank update
+socket.emit('bank:updated', {
+  charId,
+  type: 'personal' | 'shared',
+  slots: updatedSlots
+});
+
+// Emit on successful transfer
+socket.emit('transfer:completed', {
+  fromCharId,
+  toCharId,
+  amount,
+  timestamp: new Date()
+});
+```
+
+### Redis Keys
+- `currency:balance:{charId}` - Cached gold balance (TTL: 300s)
+- `bank:personal:{charId}` - Personal bank inventory (TTL: 300s)
+- `bank:shared:{accountId}` - Shared bank inventory (TTL: 300s)
+- `transfer:lock:{charId}` - Transfer operation lock (TTL: 30s)
+
+---
+
+## 🧪 Example Test Case(s)
+
+```typescript
+// src/services/__tests__/currency.service.test.ts
+describe('CurrencyService', () => {
+  let currencyService: CurrencyService;
+  let mockRedis: jest.Mocked<Redis>;
+
+  beforeEach(() => {
+    mockRedis = {
+      get: jest.fn(),
+      setex: jest.fn(),
+      del: jest.fn(),
+    } as any;
+    currencyService = new CurrencyService(mockRedis);
+  });
+
+  describe('transferGold', () => {
+    it('should transfer gold between characters', async () => {
+      const fromCharId = 1;
+      const toCharId = 2;
+      const amount = 1000;
+
+      // Mock character data
+      jest.spyOn(db, 'transaction').mockImplementation(async (callback) => {
+        const mockTx = {
+          select: jest.fn().mockReturnThis(),
+          from: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          for: jest.fn().mockResolvedValue([{ id: fromCharId, gold: 5000 }]),
+          update: jest.fn().mockReturnThis(),
+          set: jest.fn().mockReturnThis(),
+          insert: jest.fn().mockReturnThis(),
+          values: jest.fn().mockReturnThis(),
+          returning: jest.fn().mockResolvedValue([{ 
+            id: 1,
+            charId: fromCharId,
+            type: 'transfer',
+            amount: -amount,
+            balanceBefore: 5000,
+            balanceAfter: 4000
+          }]),
+        };
+        return callback(mockTx);
+      });
+
+      const result = await currencyService.transferGold(fromCharId, toCharId, amount);
+
+      expect(result.senderTransaction.balanceAfter).toBe(4000);
+      expect(result.receiverTransaction.balanceAfter).toBe(1000);
+      expect(mockRedis.del).toHaveBeenCalledWith(`currency:balance:${fromCharId}`);
+      expect(mockRedis.del).toHaveBeenCalledWith(`currency:balance:${toCharId}`);
+    });
+
+    it('should fail with insufficient funds', async () => {
+      const fromCharId = 1;
+      const toCharId = 2;
+      const amount = 10000;
+
+      jest.spyOn(db, 'transaction').mockImplementation(async (callback) => {
+        const mockTx = {
+          select: jest.fn().mockReturnThis(),
+          from: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          for: jest.fn().mockResolvedValue([{ id: fromCharId, gold: 100 }]),
+        };
+        return callback(mockTx);
+      });
+
+      await expect(
+        currencyService.transferGold(fromCharId, toCharId, amount)
+      ).rejects.toThrow('Insufficient funds');
+    });
+  });
+});
+
+// src/controllers/__tests__/bank.controller.test.ts
+describe('POST /api/bank/transfer', () => {
+  it('should transfer item from inventory to bank', async () => {
+    const transferData = {
+      charId: 1,
+      fromType: 'inventory',
+      toType: 'bank',
+      fromSlot: 5,
+      toSlot: 0,
+      quantity: 1
+    };
+
+    const response = await request(app)
+      .post('/api/bank/transfer')
+      .set('Authorization', `Bearer ${validToken}`)
+      .send(transferData);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+  });
+});
+```
+
+---
+
+## 🚧 Edge Cases
+
+1. **Concurrent Transfers**: Use database transactions with row locks
+2. **Negative Balance**: Validate before any deduction operation
+3. **Bank Slot Conflicts**: Check slot availability before transfer
+4. **Cross-Account Access**: Verify character belongs to account
+5. **Redis Cache Invalidation**: Clear all related caches on update
+6. **Transaction Rollback**: Ensure atomic operations for transfers
+7. **Max Integer Overflow**: Validate gold doesn't exceed INT_MAX
+
+---
+
+## 🚀 Deployment Considerations
+
+1. **Database Migrations**
+   ```bash
+   npm run db:generate -- --name add_economy_tables
+   npm run db:migrate
+   ```
+
+2. **Redis Configuration**
+   - Set appropriate TTL for balance caches
+   - Configure Redis persistence for critical data
+   - Monitor memory usage for large player bases
+
+3. **Performance Optimization**
+   - Index on `char_id` and `created_at` for transaction queries
+   - Batch cache invalidation for bulk operations
+   - Consider read replicas for transaction history
+
+4. **Monitoring**
+   - Track failed transfer rates
+   - Monitor average transaction response times
+   - Alert on unusual gold generation patterns
+
+---
+
+### 🔐 Self‑Audit Commands
+```bash
+npm run lint:ts --max-warnings=0
+npm test --coverage
+```
+Paste: TS errors / Coverage %
