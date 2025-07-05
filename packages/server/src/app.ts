@@ -33,10 +33,17 @@ export const createApp = () => {
   // Trust proxy for rate limiting and IP detection
   app.set('trust proxy', 1);
 
-  // Security middleware - disabled CSP temporarily for debugging
+  // Security middleware
   app.use(helmet({
     crossOriginEmbedderPolicy: false,
-    contentSecurityPolicy: false, // Temporarily disabled
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
+      },
+    },
   }));
 
   // Compression middleware
@@ -131,32 +138,6 @@ export const createApp = () => {
         status: '/api/status',
       },
     });
-  });
-
-  // Test endpoint for debugging
-  app.get('/test', (_req, res) => {
-    res.send(`
-      <html>
-        <head>
-          <title>Server Test</title>
-          <style>
-            body { font-family: Arial; background: #1a1a2e; color: white; text-align: center; padding: 2rem; }
-            .success { background: #16213e; padding: 2rem; border-radius: 8px; border: 2px solid #00d2ff; margin: 2rem auto; max-width: 600px; }
-          </style>
-        </head>
-        <body>
-          <div class="success">
-            <h1>🎮 Server Test - SUCCESS!</h1>
-            <p>Express server is working correctly.</p>
-            <p><strong>Static file serving is operational.</strong></p>
-            <p>CSP headers are disabled for debugging.</p>
-            <hr>
-            <p><a href="/" style="color: #00d2ff;">Return to React App</a></p>
-          </div>
-          <script>console.log('Test page loaded successfully');</script>
-        </body>
-      </html>
-    `);
   });
 
   // Fallback route to serve React app for client-side routing
