@@ -120,21 +120,24 @@ export const createApp = () => {
   // API status endpoint
   app.get('/api/status', (_req, res) => {
     res.json({
-      server: 'Aeturnis Online API',
+      message: 'Aeturnis Online API',
       status: 'operational',
-      environment: process.env.NODE_ENV || 'development',
-      features: [
-        'authentication',
-        'rate-limiting',
-        'structured-logging',
-        'security-headers',
-        'compression',
-        'performance-tracking',
-      ],
+      version: '2.2.0',
+      architecture: 'MMORPG Backend',
+      uptime: Math.floor(process.uptime()),
+      timestamp: new Date().toISOString(),
       endpoints: {
         auth: '/api/v1/auth',
         health: '/health',
         status: '/api/status',
+        currency: '/api/v1/currency',
+        bank: '/api/v1/bank',
+        characters: '/api/v1/characters',
+      },
+      services: {
+        database: 'connected',
+        redis: 'disabled',
+        socketio: 'port_3001',
       },
     });
   });

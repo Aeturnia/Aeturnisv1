@@ -47,18 +47,22 @@ function App() {
     setAuthTest({ loading: true, response: '', success: false });
     
     try {
+      const requestBody = action === 'login' 
+        ? { emailOrUsername: email, password }
+        : { email, username, password };
+        
       const response = await fetch(`/api/v1/auth/${action}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, username, password }),
+        body: JSON.stringify(requestBody),
       });
       
       const data = await response.json();
       
-      if (response.ok && data.accessToken) {
-        setAuthToken(data.accessToken);
+      if (response.ok && data.success && data.data?.accessToken) {
+        setAuthToken(data.data.accessToken);
         setAuthTest({
           loading: false,
           response: JSON.stringify(data, null, 2),
