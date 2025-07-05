@@ -281,3 +281,197 @@ export interface TransactionMetadata {
 
 export type TransactionType = 'deposit' | 'withdraw' | 'transfer' | 'purchase' | 'sale' | 'reward' | 'quest' | 'trade';
 export type CurrencyType = 'gold' | 'silver' | 'copper' | 'premium';
+
+// =============================================================================
+// EQUIPMENT & INVENTORY SYSTEM
+// =============================================================================
+
+// Items table - Core item definitions
+export const items = pgTable('items', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  itemType: varchar('item_type', { length: 50 }).notNull(), // 'weapon', 'armor', 'consumable', 'quest', 'misc'
+  rarity: varchar('rarity', { length: 20 }).notNull().default('common'), // 'common', 'uncommon', 'rare', 'epic', 'legendary'
+  levelRequirement: integer('level_requirement').notNull().default(1),
+  equipmentSlot: varchar('equipment_slot', { length: 50 }), // 'head', 'chest', 'weapon', etc. (null for non-equipment)
+  maxStack: integer('max_stack').notNull().default(1),
+  sellPrice: bigint('sell_price', { mode: 'number' }).notNull().default(0),
+  buyPrice: bigint('buy_price', { mode: 'number' }).notNull().default(0),
+  bindOnEquip: boolean('bind_on_equip').notNull().default(false),
+  bindOnPickup: boolean('bind_on_pickup').notNull().default(false),
+  durability: integer('durability').default(100), // null for items without durability
+  iconPath: varchar('icon_path', { length: 255 }),
+  metadata: jsonb('metadata').default({}).$type<Record<string, unknown>>(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => {
+  return {
+    nameIdx: index('idx_items_name').on(table.name),
+    typeIdx: index('idx_items_type').on(table.itemType),
+    levelIdx: index('idx_items_level').on(table.levelRequirement),
+    equipSlotIdx: index('idx_items_equip_slot').on(table.equipmentSlot),
+  };
+});
+
+// Equipment slots configuration
+export const equipmentSlots = pgTable('equipment_slots', {
+  id: serial('id').primaryKey(),
+  slotType: varchar('slot_type', { length: 50 }).notNull().unique(), // 'head', 'chest', 'weapon', etc.
+  displayName: varchar('display_name', { length: 100 }).notNull(),
+  sortOrder: integer('sort_order').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Character equipment - what items are currently equipped
+export const characterEquipment = pgTable('character_equipment', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  charId: uuid('char_id').references(() => characters.id, { onDelete: 'cascade' }).notNull(),
+  slotType: varchar('slot_type', { length: 50 }).notNull(),
+  itemId: integer('item_id').references(() => items.id).notNull(),
+  durability: integer('durability').notNull().default(100),
+  equippedAt: timestamp('equipped_at').defaultNow().notNull(),
+}, (table) => {
+  return {
+    charSlotIdx: uniqueIndex('idx_char_equip_slot').on(table.charId, table.slotType),
+    charIdx: index('idx_char_equipment').on(table.charId),
+  };
+});
+
+// Character inventory - items in backpack
+export const characterInventory = pgTable('character_inventory', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  charId: uuid('char_id').references(() => characters.id, { onDelete: 'cascade' }).notNull(),
+  itemId: integer('item_id').references(() => items.id).notNull(),
+  quantity: integer('quantity').notNull().default(1),
+  slotPosition: integer('slot_position').notNull(),
+  bindStatus: varchar('bind_status', { length: 50 }), // null, 'soulbound', 'account_bound'
+  bindTime: timestamp('bind_time'),
+  durability: integer('durability'),
+  obtainedAt: timestamp('obtained_at').defaultNow().notNull(),
+}, (table) => {
+  return {
+    charSlotIdx: uniqueIndex('idx_char_inventory_slot').on(table.charId, table.slotPosition),
+    charIdx: index('idx_char_inventory').on(table.charId),
+    itemIdx: index('idx_inventory_item').on(table.itemId),
+  };
+});
+
+// Item stats - stat bonuses provided by items
+export const itemStats = pgTable('item_stats', {
+  id: serial('id').primaryKey(),
+  itemId: integer('item_id').references(() => items.id, { onDelete: 'cascade' }).notNull(),
+  statType: varchar('stat_type', { length: 50 }).notNull(), // 'strength', 'dexterity', 'intelligence', etc.
+  value: integer('value').notNull(),
+  isPercentage: boolean('is_percentage').default(false).notNull(),
+}, (table) => {
+  return {
+    itemIdx: index('idx_item_stats').on(table.itemId),
+    statTypeIdx: index('idx_item_stats_type').on(table.statType),
+  };
+});
+
+// Item sets - for set bonuses
+export const itemSets = pgTable('item_sets', {
+  id: serial('id').primaryKey(),
+  setName: varchar('set_name', { length: 100 }).notNull(),
+  description: text('description'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Items that belong to sets
+export const itemSetPieces = pgTable('item_set_pieces', {
+  id: serial('id').primaryKey(),
+  setId: integer('set_id').references(() => itemSets.id, { onDelete: 'cascade' }).notNull(),
+  itemId: integer('item_id').references(() => items.id, { onDelete: 'cascade' }).notNull(),
+}, (table) => {
+  return {
+    setIdx: index('idx_set_pieces_set').on(table.setId),
+    itemIdx: uniqueIndex('idx_set_pieces_item').on(table.itemId),
+  };
+});
+
+// Set bonuses - stat bonuses for wearing multiple pieces of a set
+export const itemSetBonuses = pgTable('item_set_bonuses', {
+  id: serial('id').primaryKey(),
+  setId: integer('set_id').references(() => itemSets.id, { onDelete: 'cascade' }).notNull(),
+  requiredPieces: integer('required_pieces').notNull(),
+  bonusStats: jsonb('bonus_stats').notNull().$type<Record<string, number>>(), // {statType: value, ...}
+}, (table) => {
+  return {
+    setIdx: index('idx_set_bonuses_set').on(table.setId),
+    piecesIdx: index('idx_set_bonuses_pieces').on(table.requiredPieces),
+  };
+});
+
+// Equipment & Inventory Relations
+export const itemsRelations = relations(items, ({ many }) => ({
+  stats: many(itemStats),
+  setPieces: many(itemSetPieces),
+  characterEquipment: many(characterEquipment),
+  characterInventory: many(characterInventory),
+}));
+
+export const itemStatsRelations = relations(itemStats, ({ one }) => ({
+  item: one(items, {
+    fields: [itemStats.itemId],
+    references: [items.id],
+  }),
+}));
+
+export const characterEquipmentRelations = relations(characterEquipment, ({ one }) => ({
+  character: one(characters, {
+    fields: [characterEquipment.charId],
+    references: [characters.id],
+  }),
+  item: one(items, {
+    fields: [characterEquipment.itemId],
+    references: [items.id],
+  }),
+}));
+
+export const characterInventoryRelations = relations(characterInventory, ({ one }) => ({
+  character: one(characters, {
+    fields: [characterInventory.charId],
+    references: [characters.id],
+  }),
+  item: one(items, {
+    fields: [characterInventory.itemId],
+    references: [items.id],
+  }),
+}));
+
+export const itemSetsRelations = relations(itemSets, ({ many }) => ({
+  pieces: many(itemSetPieces),
+  bonuses: many(itemSetBonuses),
+}));
+
+export const itemSetPiecesRelations = relations(itemSetPieces, ({ one }) => ({
+  set: one(itemSets, {
+    fields: [itemSetPieces.setId],
+    references: [itemSets.id],
+  }),
+  item: one(items, {
+    fields: [itemSetPieces.itemId],
+    references: [items.id],
+  }),
+}));
+
+export const itemSetBonusesRelations = relations(itemSetBonuses, ({ one }) => ({
+  set: one(itemSets, {
+    fields: [itemSetBonuses.setId],
+    references: [itemSets.id],
+  }),
+}));
+
+// Update characters relations to include equipment and inventory
+export const charactersRelationsUpdated = relations(characters, ({ one, many }) => ({
+  account: one(users, {
+    fields: [characters.accountId],
+    references: [users.id],
+  }),
+  equipment: many(characterEquipment),
+  inventory: many(characterInventory),
+  transactions: many(transactions),
+  personalBank: many(personalBanks),
+}));

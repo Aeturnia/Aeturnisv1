@@ -18,6 +18,7 @@ import sessionRoutes from './routes/session.routes';
 import characterRoutes from './routes/character.routes.simple';
 import currencyRoutes from './routes/currency.routes';
 import bankRoutes from './routes/bank.routes';
+import equipmentRoutes from './routes/equipment.routes.simple';
 
 // Services
 // import { shutdownServices } from './services/index';
@@ -105,6 +106,7 @@ export const createApp = () => {
   app.use('/api/v1/characters', generalLimiter, characterRoutes);
   app.use('/api/v1/currency', generalLimiter, currencyRoutes);
   app.use('/api/v1/bank', generalLimiter, bankRoutes);
+  app.use('/api/v1/equipment', generalLimiter, equipmentRoutes);
 
   // Legacy auth routes (for backward compatibility)
   app.use('/api/auth', authLimiter, authRoutes);
@@ -125,6 +127,7 @@ export const createApp = () => {
         currency: '/api/v1/currency',
         bank: '/api/v1/bank',
         characters: '/api/v1/characters',
+        equipment: '/api/v1/equipment',
       },
       services: {
         database: 'connected',
