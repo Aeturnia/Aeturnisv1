@@ -15,7 +15,7 @@ import { generalLimiter, authLimiter } from './middleware/rateLimiter';
 // Routes
 import authRoutes from './routes/auth.routes';
 import sessionRoutes from './routes/session.routes';
-import characterRoutes from './routes/character.routes.simple';
+// import characterRoutes from './routes/character.routes.simple';
 
 // Services
 // import { shutdownServices } from './services/index';
@@ -104,7 +104,7 @@ export const createApp = () => {
   // API routes
   app.use('/api/v1/auth', authLimiter, authRoutes);
   app.use('/api/v1/sessions', generalLimiter, sessionRoutes);
-  app.use('/api/v1/characters', generalLimiter, characterRoutes);
+  // app.use('/api/v1/characters', generalLimiter, characterRoutes);
 
   // Legacy auth routes (for backward compatibility)
   app.use('/api/auth', authLimiter, authRoutes);
