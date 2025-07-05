@@ -4,7 +4,7 @@ import {
   validateCombatAction, 
   validateCombatStart, 
   validateSessionId,
-  rateLimitCombatActions 
+  combatActionCooldown 
 } from '../middleware/combat.middleware';
 import * as combatController from '../controllers/combat.controller';
 
@@ -26,13 +26,14 @@ router.get('/session/:sessionId',
 router.post('/action', 
   authenticate, 
   validateCombatAction, 
-  rateLimitCombatActions,
+  combatActionCooldown,
   combatController.performAction
 );
 
 router.post('/flee/:sessionId', 
   authenticate, 
   validateSessionId, 
+  combatActionCooldown,
   combatController.fleeCombat
 );
 

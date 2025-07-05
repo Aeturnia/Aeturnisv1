@@ -518,6 +518,19 @@ The expanded monorepo now includes:
 - **Dynamic Naming**: Messages include actual player and enemy names for personalized feedback
 - **Status**: Win/loss combat messaging COMPLETE - Combat endings now provide clear, engaging feedback
 
+### July 05, 2025 - Anti-Spam Cooldown System & Enhanced Status Messages Complete ✅
+- **3-Second Combat Cooldown**: Implemented user-based cooldown system preventing combat action spam with 3-second delays
+- **Cooldown Middleware**: Created combatActionCooldown middleware with in-memory player tracking and countdown messages
+- **Enhanced Error Messages**: Added clear status messages for players trying to attack/flee without being in combat
+- **Out-of-Combat Status**: "⚔️ You are not in combat! Start a combat session first to attack or defend."
+- **No Session Found**: "⚔️ Combat session not found! You are not currently in combat. Start a new combat session first."
+- **Session Ended**: "⚔️ Combat session has ended! Start a new combat session to continue fighting."
+- **Flee Status Messages**: Added corresponding flee messages with "💨" icons for consistency
+- **Cooldown Feedback**: Provides real-time countdown "⏰ Combat action cooldown active. Please wait X seconds before your next action."
+- **Applied to All Actions**: Cooldown system covers attack, defend, flee, and all combat actions
+- **Rate Limiting Replacement**: Replaced previous rate limiting system with more intuitive cooldown approach
+- **Status**: Anti-spam cooldown system COMPLETE - Responsive combat with proper spam protection operational
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

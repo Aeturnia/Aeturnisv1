@@ -155,22 +155,39 @@ export const validateSessionId = (req: Request, res: Response, next: NextFunctio
   next();
 };
 
-/**
- * Rate limiting for combat actions (prevent spam)
- */
-export const rateLimitCombatActions = (req: Request, res: Response, next: NextFunction): void => {
-  // TODO: Implement proper rate limiting
-  // For now, add a simple delay check
-  const lastActionTime = req.body.lastActionTime || 0;
-  const minDelay = 1000; // 1 second minimum between actions
+// In-memory cooldown tracking for combat actions
+const playerCooldowns = new Map<string, number>();
 
-  if (Date.now() - lastActionTime < minDelay) {
-    res.status(429).json({
+/**
+ * Anti-spam cooldown for combat actions (3 seconds)
+ */
+export const combatActionCooldown = (req: Request, res: Response, next: NextFunction): void => {
+  const userId = (req as any).user?.userId;
+  
+  if (!userId) {
+    res.status(401).json({
       success: false,
-      message: 'Action too frequent, please wait'
+      message: 'Authentication required'
     });
     return;
   }
 
+  const now = Date.now();
+  const lastActionTime = playerCooldowns.get(userId) || 0;
+  const cooldownMs = 3000; // 3 seconds
+  const timeRemaining = Math.max(0, cooldownMs - (now - lastActionTime));
+
+  if (timeRemaining > 0) {
+    res.status(429).json({
+      success: false,
+      message: `⏰ Combat action cooldown active. Please wait ${Math.ceil(timeRemaining / 1000)} seconds before your next action.`,
+      cooldownRemaining: timeRemaining
+    });
+    return;
+  }
+
+  // Update cooldown timestamp
+  playerCooldowns.set(userId, now);
+  
   next();
 };

@@ -111,6 +111,31 @@ export const performAction = async (req: AuthRequest, res: Response): Promise<Re
 
     const { sessionId, action }: CombatActionRequest = req.body;
 
+    // Check if session exists first
+    if (!sessionId) {
+      return res.status(400).json({
+        success: false,
+        message: '⚔️ You are not in combat! Start a combat session first to attack or defend.'
+      });
+    }
+
+    // Check if session exists
+    const existingSession = await combatService.getSession(sessionId);
+    if (!existingSession) {
+      return res.status(404).json({
+        success: false,
+        message: '⚔️ Combat session not found! You are not currently in combat. Start a new combat session first.'
+      });
+    }
+
+    // Check if session is active
+    if (existingSession.status !== 'active') {
+      return res.status(400).json({
+        success: false,
+        message: '⚔️ Combat session has ended! Start a new combat session to continue fighting.'
+      });
+    }
+
     const result = await combatService.processAction(sessionId, userId, action);
 
     // Get updated session state
@@ -146,6 +171,32 @@ export const fleeCombat = async (req: AuthRequest, res: Response): Promise<Respo
     }
 
     const { sessionId } = req.params;
+    
+    // Check if session exists first
+    if (!sessionId) {
+      return res.status(400).json({
+        success: false,
+        message: '💨 You are not in combat! There is nothing to flee from.'
+      });
+    }
+
+    // Check if session exists
+    const existingSession = await combatService.getSession(sessionId);
+    if (!existingSession) {
+      return res.status(404).json({
+        success: false,
+        message: '💨 Combat session not found! You are not currently in combat. There is nothing to flee from.'
+      });
+    }
+
+    // Check if session is active
+    if (existingSession.status !== 'active') {
+      return res.status(400).json({
+        success: false,
+        message: '💨 Combat has already ended! There is nothing to flee from.'
+      });
+    }
+
     const result = await combatService.fleeCombat(sessionId, userId);
 
     return res.json({
