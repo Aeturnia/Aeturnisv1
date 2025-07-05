@@ -3,6 +3,7 @@ import { Server as HTTPServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { createServer } from 'http';
 import { io as ClientIO, Socket } from 'socket.io-client';
+import { testUtils } from '../../../test-utils/setup';
 
 describe('Simple Ping Test', () => {
   let server: HTTPServer;
@@ -29,6 +30,9 @@ describe('Simple Ping Test', () => {
         resolve();
       });
     });
+    
+    // Wait for server to be fully ready
+    await testUtils.delay(100);
   });
 
   afterAll(async () => {
@@ -38,22 +42,44 @@ describe('Simple Ping Test', () => {
   });
 
   it('should handle basic ping-pong', async () => {
-    clientSocket = ClientIO(`http://localhost:${serverPort}`);
+    clientSocket = ClientIO(`http://localhost:${serverPort}`, {
+      timeout: 5000,
+      forceNew: true,
+    });
     
-    await new Promise<void>((resolve) => {
+    // Enhanced connection handling with timeout
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Connection timeout'));
+      }, 3000);
+      
       clientSocket.on('connect', () => {
+        clearTimeout(timeout);
         console.log('Client: Connected');
         resolve();
       });
+      
+      clientSocket.on('connect_error', (error) => {
+        clearTimeout(timeout);
+        reject(error);
+      });
     });
 
-    const pongPromise = new Promise((resolve) => {
+    // Enhanced pong handling with timeout
+    const pongPromise = new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Pong timeout'));
+      }, 2000);
+      
       clientSocket.on('test-pong', (data) => {
+        clearTimeout(timeout);
         console.log('Client: Received test-pong', data);
         resolve(data);
       });
     });
 
+    // Add small delay before sending
+    await testUtils.delay(100);
     console.log('Client: Sending test-ping');
     clientSocket.emit('test-ping');
 

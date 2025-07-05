@@ -3,6 +3,7 @@ import { ConnectionHandlers } from '../../handlers/FixedConnectionHandlers';
 import { MockSocket, createMockUser } from '../mocks/socketMocks';
 import { RoomService } from '../../services/RoomService';
 import { RoomType } from '../../../types/socket.types';
+import { testUtils } from '../../../test-utils/setup';
 
 // Mock dependencies
 vi.mock('../../services/RoomService');
@@ -21,9 +22,12 @@ describe('ConnectionHandlers', () => {
   let mockRoomService: any;
   let mockIo: any;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Reset all mocks
     vi.clearAllMocks();
+    
+    // Add small delay for test isolation
+    await testUtils.delay(50);
     
     // Mock RoomService
     mockRoomService = {

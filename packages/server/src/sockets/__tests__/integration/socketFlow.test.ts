@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from
 import { TestSocketServer } from '../setup/testServer';
 import { createTestClient, waitForEvent, TestClient } from '../setup/testHelpers';
 import { AuthService } from '../../../services/AuthService';
+import { testUtils } from '../../../test-utils/setup';
 
 describe('Socket.IO Integration Flow', () => {
   let testServer: TestSocketServer;
@@ -13,6 +14,9 @@ describe('Socket.IO Integration Flow', () => {
     testServer = new TestSocketServer({ mockAuth: true });
     serverPort = await testServer.start();
     authService = new AuthService();
+    
+    // Wait for server to be fully ready
+    await testUtils.delay(200);
   });
 
   afterAll(async () => {
@@ -22,10 +26,17 @@ describe('Socket.IO Integration Flow', () => {
   describe('Authentication Flow', () => {
     let client: TestClient;
 
+    beforeEach(async () => {
+      // Small delay for test isolation
+      await testUtils.delay(100);
+    });
+
     afterEach(async () => {
       if (client?.socket) {
         client.socket.close();
       }
+      // Wait for cleanup to complete
+      await testUtils.delay(50);
     });
 
     it('should authenticate with test token', async () => {

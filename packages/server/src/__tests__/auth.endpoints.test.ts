@@ -1,70 +1,44 @@
-import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
-import { createServer } from 'http';
-import { createApp } from '../app';
-import { checkDatabaseConnection } from '../database/config';
+import { describe, it, expect, beforeEach, beforeAll, afterAll, vi } from 'vitest';
+import { TestServerManager, testHttpUtils } from '../test-utils/testServer';
 import type { Server } from 'http';
 import type { Application } from 'express';
 
-// Helper to wait between tests to avoid rate limiting
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
 // API Endpoint Integration Tests
 describe('Authentication API Endpoints', () => {
+  let testServerManager: TestServerManager;
   let app: Application;
   let server: Server;
   let baseUrl: string;
   let testUser: { email: string; username: string; password: string };
 
   beforeAll(async () => {
-    // Ensure database connection is established before tests
-    const dbConnected = await checkDatabaseConnection();
-    if (!dbConnected) {
-      throw new Error('Database connection failed - tests cannot proceed');
-    }
+    testServerManager = new TestServerManager();
+    const serverInfo = await testServerManager.startTestServer();
     
-    // Wait a bit for database to be fully ready
-    await delay(1000);
+    app = serverInfo.app;
+    server = serverInfo.server;
+    baseUrl = serverInfo.baseUrl;
     
-    // Create Express app
-    app = createApp();
-    
-    // Create HTTP server
-    server = createServer(app);
-    
-    // Start server on random port
-    await new Promise<void>((resolve) => {
-      server.listen(0, () => {
-        const address = server.address();
-        const port = typeof address === 'object' && address ? address.port : 0;
-        baseUrl = `http://localhost:${port}`;
-        console.log(`Test server started on ${baseUrl}`);
-        resolve();
-      });
-    });
+    // Wait for server to be fully ready
+    await testHttpUtils.waitForServerReady(baseUrl);
   });
 
   afterAll(async () => {
-    // Close server
-    await new Promise<void>((resolve) => {
-      server.close(() => {
-        console.log('Test server closed');
-        resolve();
-      });
-    });
+    await testServerManager.stopTestServer();
   });
 
   beforeEach(async () => {
-    // Wait longer between tests to avoid timing issues in full test suite
-    await delay(500);
+    // Clear any previous mocks
+    vi.clearAllMocks();
     
-    // Create unique test user for each test with timestamp to ensure uniqueness
-    const timestamp = Date.now();
-    const randomId = Math.floor(Math.random() * 100000);
-    testUser = {
-      email: `test${timestamp}${randomId}@example.com`,
-      username: `user${timestamp}${randomId}`.substring(0, 20), // Ensure max 20 chars
-      password: 'SecurePass123!', // Has uppercase, lowercase, number, and special char
-    };
+    // Enhanced timing management for test isolation
+    await testHttpUtils.delay(1000);
+    
+    // Create unique test user for each test
+    testUser = testHttpUtils.createTestUser();
+    
+    // Wait for server stability
+    await testHttpUtils.delay(500);
   });
 
   it('should register a new user successfully', async () => {
@@ -111,8 +85,8 @@ describe('Authentication API Endpoints', () => {
     }
     expect(registerResponse.status).toBe(201);
 
-    // Wait longer to ensure database writes are complete in full test suite
-    await delay(500);
+    // Enhanced wait to ensure database writes are complete in full test suite
+    await testHttpUtils.delay(1500);
 
     // Now login
     const response = await fetch(`${baseUrl}/api/auth/login`, {
