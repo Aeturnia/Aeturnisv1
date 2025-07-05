@@ -33,7 +33,7 @@ export const createApp = () => {
   // Trust proxy for rate limiting and IP detection
   app.set('trust proxy', 1);
 
-  // Security middleware
+  // Security middleware - relaxed CSP for Replit environment
   app.use(helmet({
     crossOriginEmbedderPolicy: false,
     contentSecurityPolicy: {
@@ -42,6 +42,7 @@ export const createApp = () => {
         styleSrc: ["'self'", "'unsafe-inline'"],
         scriptSrc: ["'self'"],
         imgSrc: ["'self'", "data:", "https:"],
+        frameAncestors: ["'self'", "*.replit.dev", "*.replit.com", "replit.dev", "replit.com"],
       },
     },
   }));
