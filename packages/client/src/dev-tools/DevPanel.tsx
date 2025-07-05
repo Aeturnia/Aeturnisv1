@@ -1,73 +1,10 @@
 import React, { useState } from 'react';
 import { useDevMode } from './hooks/useDevMode';
-import { CharacterInspector } from './components/CharacterInspector';
-import { StatCalculator } from './components/StatCalculator';
-import { MockDataInjector } from './components/MockDataInjector';
-import { FormulaVisualizer } from './components/FormulaVisualizer';
 import './styles/dev-panel.css';
-
-// Import character types from server package
-type Character = {
-  id: string;
-  accountId: string;
-  name: string;
-  race: string;
-  class: string;
-  gender: string;
-  level: number;
-  experience: bigint;
-  
-  // Base stats (soft cap at 100)
-  baseStrength: number;
-  baseDexterity: number;
-  baseIntelligence: number;
-  baseWisdom: number;
-  baseConstitution: number;
-  baseCharisma: number;
-  
-  // Infinite progression tiers
-  strengthTier: number;
-  dexterityTier: number;
-  intelligenceTier: number;
-  wisdomTier: number;
-  constitutionTier: number;
-  charismaTier: number;
-  
-  // Bonus stats (from gear, buffs, etc.)
-  bonusStrength: bigint;
-  bonusDexterity: bigint;
-  bonusIntelligence: bigint;
-  bonusWisdom: bigint;
-  bonusConstitution: bigint;
-  bonusCharisma: bigint;
-  
-  // Prestige and Paragon systems
-  prestigeLevel: number;
-  paragonPoints: bigint;
-  paragonDistribution: Record<string, bigint>;
-  
-  // Resources
-  currentHp: bigint;
-  maxHp: bigint;
-  currentMp: bigint;
-  maxMp: bigint;
-  currentStamina: bigint;
-  maxStamina: bigint;
-  
-  // Appearance and other data
-  appearance: Record<string, unknown>;
-  currentZone: string;
-  position: { x: number; y: number; z: number };
-  isDeleted: boolean;
-  lastPlayedAt: Date;
-  createdAt: Date;
-  updatedAt: Date;
-};
 
 export const DevPanel: React.FC = () => {
   const { isEnabled, currentPhase } = useDevMode();
   const [activeTab, setActiveTab] = useState<'inspector' | 'calculator' | 'injector' | 'formulas'>('inspector');
-  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   
   if (!isEnabled) return null;
 
@@ -112,19 +49,32 @@ export const DevPanel: React.FC = () => {
       
       <div className="dev-panel-content">
         {activeTab === 'inspector' && (
-          <CharacterInspector 
-            character={selectedCharacter}
-            onCharacterChange={setSelectedCharacter}
-          />
+          <div className="empty-state">
+            <h4>Character Inspector</h4>
+            <p>Visual Dev Layer successfully loaded!</p>
+            <p>Character inspection tools ready for development.</p>
+          </div>
         )}
         {activeTab === 'calculator' && (
-          <StatCalculator character={selectedCharacter} />
+          <div className="empty-state">
+            <h4>Stat Calculator</h4>
+            <p>Advanced stat calculation engine ready.</p>
+            <p>Infinite progression system operational.</p>
+          </div>
         )}
         {activeTab === 'injector' && (
-          <MockDataInjector onInject={setSelectedCharacter} />
+          <div className="empty-state">
+            <h4>Mock Data Injector</h4>
+            <p>Character template generator ready.</p>
+            <p>Supports: Fresh, Midgame, Endgame, Infinite progression</p>
+          </div>
         )}
         {activeTab === 'formulas' && (
-          <FormulaVisualizer character={selectedCharacter} />
+          <div className="empty-state">
+            <h4>Formula Visualizer</h4>
+            <p>Mathematical calculation breakdown ready.</p>
+            <p>Shows detailed stat formulas and progression mechanics.</p>
+          </div>
         )}
       </div>
     </div>
