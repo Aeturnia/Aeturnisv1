@@ -256,7 +256,7 @@ function App() {
       }
 
       const startData = await startResponse.json();
-      const sessionId = startData.data?.sessionId;
+      const sessionId = startData.data?.session?.sessionId;
       
       if (!sessionId) {
         throw new Error('No session ID returned from combat start');
