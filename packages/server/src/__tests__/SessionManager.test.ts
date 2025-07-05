@@ -6,9 +6,18 @@ import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest';
 // Mock CacheService
 vi.mock('../services/CacheService');
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 describe('SessionManager', () => {
   let sessionManager: SessionManager;
-  let mockCacheService: any;
+  let mockCacheService: {
+    get: ReturnType<typeof vi.fn>;
+    set: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
+    ttl: ReturnType<typeof vi.fn>;
+    exists: ReturnType<typeof vi.fn>;
+    disconnect: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     // Create mock CacheService
@@ -21,7 +30,7 @@ describe('SessionManager', () => {
       disconnect: vi.fn()
     };
     
-    sessionManager = new SessionManager(mockCacheService);
+    sessionManager = new SessionManager(mockCacheService as unknown as CacheService);
   });
 
   afterEach(() => {
@@ -37,8 +46,8 @@ describe('SessionManager', () => {
         gameVersion: '1.0.0'
       };
 
-      mockCacheService.get.mockResolvedValue([]); // Empty user sessions array
-      mockCacheService.set.mockResolvedValue(undefined);
+      (mockCacheService as any).get.mockResolvedValue([]); // Empty user sessions array
+      (mockCacheService as any).set.mockResolvedValue(undefined);
 
       const sessionId = await sessionManager.createSession(userId, metadata);
 
@@ -46,7 +55,7 @@ describe('SessionManager', () => {
       expect(typeof sessionId).toBe('string');
       
       // Verify session was stored
-      expect(mockCacheService.set).toHaveBeenCalledWith(
+      expect((mockCacheService as any).set).toHaveBeenCalledWith(
         `session:${sessionId}`,
         expect.objectContaining({
           sessionId,
@@ -60,7 +69,7 @@ describe('SessionManager', () => {
       );
       
       // Verify user sessions were updated
-      expect(mockCacheService.set).toHaveBeenCalledWith(
+      expect((mockCacheService as any).set).toHaveBeenCalledWith(
         `user:${userId}:sessions`,
         [sessionId],
         30 * 24 * 60 * 60
@@ -72,12 +81,12 @@ describe('SessionManager', () => {
       const metadata: SessionMetadata = { platform: 'web' };
       const existingSessions = ['session1', 'session2'];
 
-      mockCacheService.get.mockResolvedValue(existingSessions);
-      mockCacheService.set.mockResolvedValue(undefined);
+      (mockCacheService as any).get.mockResolvedValue(existingSessions);
+      (mockCacheService as any).set.mockResolvedValue(undefined);
 
       const sessionId = await sessionManager.createSession(userId, metadata);
 
-      expect(mockCacheService.set).toHaveBeenCalledWith(
+      expect((mockCacheService as any).set).toHaveBeenCalledWith(
         `user:${userId}:sessions`,
         [...existingSessions, sessionId],
         30 * 24 * 60 * 60
@@ -97,16 +106,16 @@ describe('SessionManager', () => {
         metadata: { platform: 'web' }
       };
 
-      mockCacheService.get.mockResolvedValue(mockSession);
+      (mockCacheService as any).get.mockResolvedValue(mockSession);
 
       const result = await sessionManager.getSession(sessionId);
 
       expect(result).toEqual(mockSession);
-      expect(mockCacheService.get).toHaveBeenCalledWith(`session:${sessionId}`);
+      expect((mockCacheService as any).get).toHaveBeenCalledWith(`session:${sessionId}`);
     });
 
     test('should return null for non-existent session', async () => {
-      mockCacheService.get.mockResolvedValue(null);
+      (mockCacheService as any).get.mockResolvedValue(null);
 
       const result = await sessionManager.getSession('nonexistent');
 
@@ -124,13 +133,13 @@ describe('SessionManager', () => {
         metadata: { platform: 'web' }
       };
 
-      mockCacheService.get.mockResolvedValueOnce(expiredSession).mockResolvedValueOnce(null);
-      mockCacheService.delete.mockResolvedValue(undefined);
+      (mockCacheService as any).get.mockResolvedValueOnce(expiredSession).mockResolvedValueOnce(null);
+      (mockCacheService as any).delete.mockResolvedValue(undefined);
 
       const result = await sessionManager.getSession(sessionId);
 
       expect(result).toBeNull();
-      expect(mockCacheService.delete).toHaveBeenCalledWith(`session:${sessionId}`);
+      expect((mockCacheService as any).delete).toHaveBeenCalledWith(`session:${sessionId}`);
     });
   });
 
@@ -148,12 +157,12 @@ describe('SessionManager', () => {
 
       const updateData = { metadata: { platform: 'ios' as const } };
 
-      mockCacheService.get.mockResolvedValue(existingSession);
-      mockCacheService.set.mockResolvedValue(undefined);
+      (mockCacheService as any).get.mockResolvedValue(existingSession);
+      (mockCacheService as any).set.mockResolvedValue(undefined);
 
       await sessionManager.updateSession(sessionId, updateData);
 
-      expect(mockCacheService.set).toHaveBeenCalledWith(
+      expect((mockCacheService as any).set).toHaveBeenCalledWith(
         `session:${sessionId}`,
         expect.objectContaining({
           ...existingSession,
@@ -165,7 +174,7 @@ describe('SessionManager', () => {
     });
 
     test('should throw error for non-existent session', async () => {
-      mockCacheService.get.mockResolvedValue(null);
+      (mockCacheService as any).get.mockResolvedValue(null);
 
       await expect(sessionManager.updateSession('nonexistent', {}))
         .rejects.toThrow('Session not found');
@@ -184,12 +193,12 @@ describe('SessionManager', () => {
         metadata: { platform: 'web' }
       };
 
-      mockCacheService.get.mockResolvedValue(existingSession);
-      mockCacheService.set.mockResolvedValue(undefined);
+      (mockCacheService as any).get.mockResolvedValue(existingSession);
+      (mockCacheService as any).set.mockResolvedValue(undefined);
 
       await sessionManager.extendSession(sessionId);
 
-      expect(mockCacheService.set).toHaveBeenCalledWith(
+      expect((mockCacheService as any).set).toHaveBeenCalledWith(
         `session:${sessionId}`,
         expect.objectContaining({
           lastActive: expect.any(String),
@@ -200,7 +209,7 @@ describe('SessionManager', () => {
     });
 
     test('should throw error for non-existent session', async () => {
-      mockCacheService.get.mockResolvedValue(null);
+      (mockCacheService as any).get.mockResolvedValue(null);
 
       await expect(sessionManager.extendSession('nonexistent'))
         .rejects.toThrow('Session not found');
@@ -222,16 +231,16 @@ describe('SessionManager', () => {
 
       const userSessions = ['session888', sessionId, 'session777'];
 
-      mockCacheService.get
+      (mockCacheService as any).get
         .mockResolvedValueOnce(session) // First call to get session
         .mockResolvedValueOnce(userSessions); // Second call to get user sessions
-      mockCacheService.delete.mockResolvedValue(undefined);
-      mockCacheService.set.mockResolvedValue(undefined);
+      (mockCacheService as any).delete.mockResolvedValue(undefined);
+      (mockCacheService as any).set.mockResolvedValue(undefined);
 
       await sessionManager.destroySession(sessionId);
 
-      expect(mockCacheService.delete).toHaveBeenCalledWith(`session:${sessionId}`);
-      expect(mockCacheService.set).toHaveBeenCalledWith(
+      expect((mockCacheService as any).delete).toHaveBeenCalledWith(`session:${sessionId}`);
+      expect((mockCacheService as any).set).toHaveBeenCalledWith(
         `user:${userId}:sessions`,
         ['session888', 'session777'],
         30 * 24 * 60 * 60
@@ -252,19 +261,19 @@ describe('SessionManager', () => {
 
       const userSessions = [sessionId]; // Only one session
 
-      mockCacheService.get
+      (mockCacheService as any).get
         .mockResolvedValueOnce(session)
         .mockResolvedValueOnce(userSessions);
-      mockCacheService.delete.mockResolvedValue(undefined);
+      (mockCacheService as any).delete.mockResolvedValue(undefined);
 
       await sessionManager.destroySession(sessionId);
 
-      expect(mockCacheService.delete).toHaveBeenCalledWith(`session:${sessionId}`);
-      expect(mockCacheService.delete).toHaveBeenCalledWith(`user:${userId}:sessions`);
+      expect((mockCacheService as any).delete).toHaveBeenCalledWith(`session:${sessionId}`);
+      expect((mockCacheService as any).delete).toHaveBeenCalledWith(`user:${userId}:sessions`);
     });
 
     test('should handle non-existent session gracefully', async () => {
-      mockCacheService.get.mockResolvedValue(null);
+      (mockCacheService as any).get.mockResolvedValue(null);
 
       await expect(sessionManager.destroySession('nonexistent'))
         .resolves.not.toThrow();
@@ -284,7 +293,7 @@ describe('SessionManager', () => {
         metadata: { platform: 'web' }
       }));
 
-      mockCacheService.get
+      (mockCacheService as any).get
         .mockResolvedValueOnce(sessionIds) // User sessions list
         .mockResolvedValueOnce(sessions[0]) // First session
         .mockResolvedValueOnce(sessions[1]) // Second session
@@ -293,7 +302,7 @@ describe('SessionManager', () => {
       const result = await sessionManager.getUserSessions(userId);
 
       expect(result).toEqual(sessions);
-      expect(mockCacheService.get).toHaveBeenCalledWith(`user:${userId}:sessions`);
+      expect((mockCacheService as any).get).toHaveBeenCalledWith(`user:${userId}:sessions`);
     });
 
     test('should filter out null sessions', async () => {
@@ -308,7 +317,7 @@ describe('SessionManager', () => {
         metadata: { platform: 'web' }
       };
 
-      mockCacheService.get
+      (mockCacheService as any).get
         .mockResolvedValueOnce(sessionIds)
         .mockResolvedValueOnce(validSession) // Valid session
         .mockResolvedValueOnce(null) // Expired/invalid session
@@ -320,7 +329,7 @@ describe('SessionManager', () => {
     });
 
     test('should return empty array for user with no sessions', async () => {
-      mockCacheService.get.mockResolvedValue([]);
+      (mockCacheService as any).get.mockResolvedValue([]);
 
       const result = await sessionManager.getUserSessions('user_no_sessions');
 

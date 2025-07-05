@@ -34,7 +34,7 @@ export async function waitForEvent(
   socket: ClientSocket,
   event: string,
   timeout: number = 1000
-): Promise<any> {
+): Promise<unknown> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       reject(new Error(`Timeout waiting for event: ${event}`));

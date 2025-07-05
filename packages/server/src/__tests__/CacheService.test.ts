@@ -21,7 +21,15 @@ vi.mock('ioredis', () => {
 
 describe('CacheService', () => {
   let cacheService: CacheService;
-  let mockRedis: any;
+  let mockRedis: {
+    get: ReturnType<typeof vi.fn>;
+    set: ReturnType<typeof vi.fn>;
+    setex: ReturnType<typeof vi.fn>;
+    del: ReturnType<typeof vi.fn>;
+    ttl: ReturnType<typeof vi.fn>;
+    exists: ReturnType<typeof vi.fn>;
+    quit: ReturnType<typeof vi.fn>;
+  };
   
   const config: CacheConfig = {
     host: 'localhost',
@@ -35,7 +43,7 @@ describe('CacheService', () => {
     
     cacheService = new CacheService(config);
     // Get the mock Redis instance
-    mockRedis = (cacheService as any).redis;
+    mockRedis = (cacheService as any).redis; // eslint-disable-line @typescript-eslint/no-explicit-any
   });
 
   afterEach(async () => {

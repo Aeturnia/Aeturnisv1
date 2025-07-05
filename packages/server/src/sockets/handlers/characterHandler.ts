@@ -433,6 +433,7 @@ export class CharacterHandler {
   private validateStatusChanges(_socket: SocketWithAuth, _payload: CharacterStatusPayload): boolean {
     // TODO: Implement server-side validation against stored character state
     // This would prevent clients from sending arbitrary status updates
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return true;
   }
 

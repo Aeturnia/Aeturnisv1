@@ -5,6 +5,8 @@ import { AuthService } from '../../../services/AuthService';
 import { ConnectionHandlers } from '../../handlers/FixedConnectionHandlers';
 import { RoomService } from '../../services/RoomService';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export interface TestServerConfig {
   port?: number;
   mockAuth?: boolean;
@@ -51,7 +53,7 @@ export class TestSocketServer {
     this.io.use((socket, next) => {
       const token = socket.handshake.auth.token;
       if (token === 'test-token') {
-        (socket as any).user = {
+        (socket as unknown as { user: unknown }).user = {
           userId: 'test-user-id',
           email: 'test@example.com',
           username: 'testuser',

@@ -23,7 +23,7 @@ export class ConnectionHandlers {
       return;
     }
 
-    const { userId, email, characterId: _characterId } = socket.user;
+    const { userId, email, characterId: _characterId } = socket.user; // eslint-disable-line @typescript-eslint/no-unused-vars
 
     logger.info('User connected via socket', {
       userId,

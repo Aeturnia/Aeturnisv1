@@ -13,5 +13,5 @@ export interface SessionMetadata {
   deviceId?: string;
   platform?: 'ios' | 'android' | 'web';
   gameVersion?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }

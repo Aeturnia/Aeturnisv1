@@ -27,7 +27,7 @@ export class CacheService {
     }
   }
 
-  async set(key: string, value: any, ttlSeconds?: number): Promise<void> {
+  async set(key: string, value: unknown, ttlSeconds?: number): Promise<void> {
     try {
       const fullKey = `${this.namespace}:${key}`;
       const serialized = JSON.stringify(value);
