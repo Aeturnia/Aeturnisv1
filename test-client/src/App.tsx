@@ -24,6 +24,8 @@ function App() {
   const [characterTest, setCharacterTest] = useState<TestState>({ loading: false, response: '', success: false });
   const [equipmentTest, setEquipmentTest] = useState<TestState>({ loading: false, response: '', success: false });
   const [combatTest, setCombatTest] = useState<TestState>({ loading: false, response: '', success: false });
+  const [liveCombatTest, setLiveCombatTest] = useState<TestState>({ loading: false, response: '', success: false });
+  const [combatSessionId, setCombatSessionId] = useState<string>('');
 
   // Form states
   const [email, setEmail] = useState('test@example.com');
@@ -232,6 +234,188 @@ function App() {
     }
   };
 
+  const startLiveCombatTest = async () => {
+    setLiveCombatTest({ loading: true, response: 'Starting combat session...', success: false });
+    
+    try {
+      // Step 1: Start combat session
+      const startResponse = await fetch('/api/v1/combat/start', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          targetIds: ['enemy_550e8400-e29b-41d4-a716-446655440001'],
+          battleType: 'pve'
+        })
+      });
+
+      if (!startResponse.ok) {
+        throw new Error(`Failed to start combat: ${startResponse.status}`);
+      }
+
+      const startData = await startResponse.json();
+      const sessionId = startData.data?.sessionId;
+      
+      if (!sessionId) {
+        throw new Error('No session ID returned from combat start');
+      }
+
+      setCombatSessionId(sessionId);
+      
+      // Step 2: Get initial combat state
+      const sessionResponse = await fetch(`/api/v1/combat/session/${sessionId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+      });
+
+      const sessionData = await sessionResponse.json();
+      
+      // Format the response to show combat progression
+      const combatLog = {
+        "Combat Session Started": startData,
+        "Initial Combat State": sessionData,
+        "Combat Session ID": sessionId,
+        "Next Steps": [
+          "Use 'Perform Attack' to make an attack action",
+          "Use 'Check Status' to see current combat state",
+          "Use 'Flee Combat' to end the combat session"
+        ]
+      };
+
+      setLiveCombatTest({
+        loading: false,
+        response: JSON.stringify(combatLog, null, 2),
+        success: true
+      });
+
+    } catch (error) {
+      setLiveCombatTest({
+        loading: false,
+        response: `Error starting live combat: ${error}`,
+        success: false
+      });
+    }
+  };
+
+  const performCombatAction = async (actionType: 'attack' | 'defend' | 'flee') => {
+    if (!combatSessionId) {
+      setLiveCombatTest({
+        loading: false,
+        response: 'No active combat session. Start combat first.',
+        success: false
+      });
+      return;
+    }
+
+    setLiveCombatTest({ loading: true, response: 'Performing combat action...', success: false });
+
+    try {
+      if (actionType === 'flee') {
+        // Use flee endpoint
+        const response = await fetch(`/api/v1/combat/flee/${combatSessionId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,
+          },
+        });
+
+        const data = await response.json();
+        setCombatSessionId(''); // Clear session after fleeing
+        
+        setLiveCombatTest({
+          loading: false,
+          response: JSON.stringify({
+            "Action": "Flee",
+            "Result": data,
+            "Combat Status": "Ended"
+          }, null, 2),
+          success: response.ok
+        });
+      } else {
+        // Use action endpoint
+        const response = await fetch('/api/v1/combat/action', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({
+            sessionId: combatSessionId,
+            action: {
+              type: actionType,
+              targetId: actionType === 'attack' ? 'enemy_550e8400-e29b-41d4-a716-446655440001' : undefined
+            }
+          })
+        });
+
+        const data = await response.json();
+        
+        setLiveCombatTest({
+          loading: false,
+          response: JSON.stringify({
+            "Action": actionType.toUpperCase(),
+            "Session ID": combatSessionId,
+            "Action Result": data
+          }, null, 2),
+          success: response.ok
+        });
+      }
+
+    } catch (error) {
+      setLiveCombatTest({
+        loading: false,
+        response: `Error performing ${actionType}: ${error}`,
+        success: false
+      });
+    }
+  };
+
+  const checkCombatStatus = async () => {
+    if (!combatSessionId) {
+      setLiveCombatTest({
+        loading: false,
+        response: 'No active combat session. Start combat first.',
+        success: false
+      });
+      return;
+    }
+
+    setLiveCombatTest({ loading: true, response: 'Checking combat status...', success: false });
+
+    try {
+      const response = await fetch(`/api/v1/combat/session/${combatSessionId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+      });
+
+      const data = await response.json();
+      
+      setLiveCombatTest({
+        loading: false,
+        response: JSON.stringify({
+          "Current Combat State": data,
+          "Session ID": combatSessionId,
+          "Status Check": new Date().toISOString()
+        }, null, 2),
+        success: response.ok
+      });
+
+    } catch (error) {
+      setLiveCombatTest({
+        loading: false,
+        response: `Error checking combat status: ${error}`,
+        success: false
+      });
+    }
+  };
+
   return (
     <div className="app-container">
       <div className="header">
@@ -428,6 +612,65 @@ function App() {
             </button>
             <div className={`response ${combatTest.success ? 'success' : 'error'}`}>
               {combatTest.loading ? 'Loading...' : combatTest.response || 'No response yet'}
+            </div>
+          </div>
+
+          <div className="test-panel">
+            <h3 className="test-title">Live Combat Testing</h3>
+            <p>Status: {authToken ? 'Authentication Required' : 'Please login first'}</p>
+            <p>Active Session: {combatSessionId || 'None'}</p>
+            
+            <div style={{ marginBottom: '10px' }}>
+              <button 
+                className="button" 
+                onClick={startLiveCombatTest}
+                disabled={liveCombatTest.loading || !authToken}
+                style={{ backgroundColor: '#2a4a2a' }}
+              >
+                Start Combat Session
+              </button>
+            </div>
+
+            <div style={{ marginBottom: '10px' }}>
+              <button 
+                className="button" 
+                onClick={() => performCombatAction('attack')}
+                disabled={liveCombatTest.loading || !authToken || !combatSessionId}
+                style={{ backgroundColor: '#4a2a2a' }}
+              >
+                Perform Attack
+              </button>
+              <button 
+                className="button" 
+                onClick={() => performCombatAction('defend')}
+                disabled={liveCombatTest.loading || !authToken || !combatSessionId}
+                style={{ backgroundColor: '#2a2a4a' }}
+              >
+                Defend
+              </button>
+              <button 
+                className="button" 
+                onClick={() => performCombatAction('flee')}
+                disabled={liveCombatTest.loading || !authToken || !combatSessionId}
+                style={{ backgroundColor: '#4a4a2a' }}
+              >
+                Flee Combat
+              </button>
+            </div>
+
+            <div style={{ marginBottom: '10px' }}>
+              <button 
+                className="button" 
+                onClick={checkCombatStatus}
+                disabled={liveCombatTest.loading || !authToken || !combatSessionId}
+                style={{ backgroundColor: '#2a4a4a' }}
+              >
+                Check Status
+              </button>
+            </div>
+
+            <div className={`response ${liveCombatTest.success ? 'success' : 'error'}`}>
+              {liveCombatTest.loading ? 'Loading...' : liveCombatTest.response || 'Start a combat session to see live combat in action'}
             </div>
           </div>
 
