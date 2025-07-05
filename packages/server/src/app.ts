@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
+import path from 'path';
 import { config } from 'dotenv';
 
 // Middleware
@@ -72,8 +73,12 @@ export const createApp = () => {
   // Apply general rate limiting
   app.use(generalLimiter);
 
-  // Health check endpoints
-  app.get('/', (_req, res) => {
+  // Serve static frontend files
+  const clientDistPath = path.resolve(__dirname, '../../client/dist');
+  app.use(express.static(clientDistPath));
+
+  // Health check endpoints (API-specific routes first before fallback)
+  app.get('/api/status', (_req, res) => {
     res.json({
       message: 'Welcome to Aeturnis Online API',
       status: 'Server is running',
@@ -126,7 +131,12 @@ export const createApp = () => {
     });
   });
 
-  // 404 handler
+  // Fallback route to serve React app for client-side routing
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+
+  // 404 handler for non-GET requests
   app.use('*', (req, res) => {
     logger.warn(`404 - Route not found: ${req.method} ${req.originalUrl}`);
     res.status(404).json({

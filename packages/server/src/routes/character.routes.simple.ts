@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { body, param } from 'express-validator';
 import { CharacterService } from '../services/CharacterService';
-import { StatsService } from '../services/StatsService';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { CharacterRace, CharacterClass, CharacterGender } from '../types/character.types';
@@ -10,8 +9,8 @@ const router = Router();
 const characterService = new CharacterService();
 
 // Test endpoint to verify character system is working
-router.get('/test', (req, res) => {
-  res.json({
+router.get('/test', (_req, res) => {
+  return res.json({
     success: true,
     message: 'Character system is operational',
     timestamp: new Date().toISOString()
@@ -26,7 +25,7 @@ router.get(
     const userId = req.user!.userId;
     const characters = await characterService.getCharactersByAccount(userId);
     
-    res.json({
+    return res.json({
       success: true,
       data: {
         characters,
@@ -72,12 +71,12 @@ router.post(
         appearance
       });
 
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         data: character
       });
     } catch (error) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         error: error instanceof Error ? error.message : 'Failed to create character'
       });
@@ -110,7 +109,7 @@ router.get(
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: result
     });
@@ -130,7 +129,7 @@ router.post(
     
     const validation = await characterService.validateCharacterName(name);
     
-    res.json({
+    return res.json({
       success: true,
       data: validation
     });
@@ -146,7 +145,7 @@ router.get(
     
     const appearance = await characterService.getRandomStartingAppearance(race as CharacterRace);
     
-    res.json({
+    return res.json({
       success: true,
       data: appearance
     });
