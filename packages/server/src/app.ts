@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
+import * as path from 'path';
 import { config } from 'dotenv';
 
 // Middleware
@@ -88,31 +89,10 @@ export const createApp = () => {
     });
   });
 
-  // Root route for backend API status
-  app.get('/', (_req, res) => {
-    res.json({
-      message: 'Aeturnis Online Backend API Server',
-      version: '2.2.0',
-      status: 'operational',
-      architecture: 'backend-only',
-      uptime: process.uptime(),
-      timestamp: new Date().toISOString(),
-      endpoints: {
-        health: '/health',
-        api_status: '/api/status',
-        authentication: '/api/v1/auth',
-        characters: '/api/v1/characters',
-        currency: '/api/v1/currency',
-        banking: '/api/v1/bank',
-        sessions: '/api/v1/sessions'
-      },
-      services: {
-        database: 'connected',
-        redis: 'disabled',
-        socket_io: 'port_3001'
-      }
-    });
-  });
+  // Root route removed - now serves React testing frontend
+
+  // Serve testing frontend
+  app.use(express.static(path.join(__dirname, '../public')));
 
   app.get('/health', (_req, res) => {
     res.json({
@@ -159,19 +139,23 @@ export const createApp = () => {
     });
   });
 
-  // Backend API server - no fallback route needed
-
-  // 404 handler for non-GET requests
-  app.use('*', (req, res) => {
-    logger.warn(`404 - Route not found: ${req.method} ${req.originalUrl}`);
-    res.status(404).json({
-      success: false,
-      error: {
-        code: 'NOT_FOUND',
-        message: 'The requested resource was not found',
-      },
-      path: req.originalUrl,
-    });
+  // SPA fallback route - serve React app for all non-API routes
+  app.get('*', (req, res) => {
+    if (req.path.startsWith('/api/')) {
+      // API routes should return 404 JSON
+      logger.warn(`404 - API route not found: ${req.method} ${req.originalUrl}`);
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'The requested API endpoint was not found',
+        },
+        path: req.originalUrl,
+      });
+    }
+    
+    // Serve React app for all other routes
+    res.sendFile(path.join(__dirname, '../public/index.html'));
   });
 
   // Error handling middleware (must be last)
