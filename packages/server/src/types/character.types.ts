@@ -111,7 +111,7 @@ export interface Character {
   accountId: string;
   name: string;
   level: number;
-  experience: bigint;
+  experience: number;
   race: CharacterRace;
   class: CharacterClass;
   gender: CharacterGender;
@@ -133,25 +133,29 @@ export interface Character {
   charismaTier: number;
   
   // Bonus Stats (from gear/buffs)
-  bonusStrength: bigint;
-  bonusDexterity: bigint;
-  bonusIntelligence: bigint;
-  bonusWisdom: bigint;
-  bonusConstitution: bigint;
-  bonusCharisma: bigint;
+  bonusStrength: number;
+  bonusDexterity: number;
+  bonusIntelligence: number;
+  bonusWisdom: number;
+  bonusConstitution: number;
+  bonusCharisma: number;
   
   // Progression Systems
   prestigeLevel: number;
-  paragonPoints: bigint;
+  paragonPoints: number;
   paragonDistribution: ParagonDistribution;
   
   // Resources
-  currentHp: bigint;
-  maxHp: bigint;
-  currentMp: bigint;
-  maxMp: bigint;
-  currentStamina: bigint;
-  maxStamina: bigint;
+  currentHp: number;
+  maxHp: number;
+  currentMp: number;
+  maxMp: number;
+  currentStamina: number;
+  maxStamina: number;
+  
+  // Economy
+  gold: number;
+  bankSlots: number;
   
   // Location & Appearance
   appearance: CharacterAppearance;

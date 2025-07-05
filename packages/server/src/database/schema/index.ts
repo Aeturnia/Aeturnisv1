@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, timestamp, jsonb, boolean, index, uniqueIndex, integer, bigint } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, timestamp, jsonb, boolean, index, uniqueIndex, integer, bigint, serial, decimal } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import type { CharacterRace, CharacterClass, CharacterGender, CharacterAppearance, CharacterPosition, ParagonDistribution } from '../../types/character.types';
 
@@ -86,7 +86,7 @@ export const characters = pgTable('characters', {
   accountId: uuid('account_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 32 }).notNull().unique(),
   level: integer('level').notNull().default(1),
-  experience: bigint('experience', { mode: 'bigint' }).notNull(),
+  experience: bigint('experience', { mode: 'number' }).notNull().default(0),
   race: varchar('race', { length: 20 }).notNull().$type<CharacterRace>(),
   class: varchar('class', { length: 20 }).notNull().$type<CharacterClass>(),
   gender: varchar('gender', { length: 10 }).notNull().$type<CharacterGender>(),
@@ -108,25 +108,29 @@ export const characters = pgTable('characters', {
   charismaTier: integer('charisma_tier').notNull().default(0),
   
   // Bonus Stats (from gear, buffs, etc.)
-  bonusStrength: bigint('bonus_strength', { mode: 'bigint' }).notNull(),
-  bonusDexterity: bigint('bonus_dexterity', { mode: 'bigint' }).notNull(),
-  bonusIntelligence: bigint('bonus_intelligence', { mode: 'bigint' }).notNull(),
-  bonusWisdom: bigint('bonus_wisdom', { mode: 'bigint' }).notNull(),
-  bonusConstitution: bigint('bonus_constitution', { mode: 'bigint' }).notNull(),
-  bonusCharisma: bigint('bonus_charisma', { mode: 'bigint' }).notNull(),
+  bonusStrength: bigint('bonus_strength', { mode: 'number' }).notNull().default(0),
+  bonusDexterity: bigint('bonus_dexterity', { mode: 'number' }).notNull().default(0),
+  bonusIntelligence: bigint('bonus_intelligence', { mode: 'number' }).notNull().default(0),
+  bonusWisdom: bigint('bonus_wisdom', { mode: 'number' }).notNull().default(0),
+  bonusConstitution: bigint('bonus_constitution', { mode: 'number' }).notNull().default(0),
+  bonusCharisma: bigint('bonus_charisma', { mode: 'number' }).notNull().default(0),
   
   // Progression Systems
   prestigeLevel: integer('prestige_level').notNull().default(0),
-  paragonPoints: bigint('paragon_points', { mode: 'bigint' }).notNull(),
+  paragonPoints: bigint('paragon_points', { mode: 'number' }).notNull().default(0),
   paragonDistribution: jsonb('paragon_distribution').notNull().default({}).$type<ParagonDistribution>(),
   
   // Resource pools
-  currentHp: bigint('current_hp', { mode: 'bigint' }).notNull(),
-  maxHp: bigint('max_hp', { mode: 'bigint' }).notNull(),
-  currentMp: bigint('current_mp', { mode: 'bigint' }).notNull(),
-  maxMp: bigint('max_mp', { mode: 'bigint' }).notNull(),
-  currentStamina: bigint('current_stamina', { mode: 'bigint' }).notNull(),
-  maxStamina: bigint('max_stamina', { mode: 'bigint' }).notNull(),
+  currentHp: bigint('current_hp', { mode: 'number' }).notNull().default(100),
+  maxHp: bigint('max_hp', { mode: 'number' }).notNull().default(100),
+  currentMp: bigint('current_mp', { mode: 'number' }).notNull().default(100),
+  maxMp: bigint('max_mp', { mode: 'number' }).notNull().default(100),
+  currentStamina: bigint('current_stamina', { mode: 'number' }).notNull().default(100),
+  maxStamina: bigint('max_stamina', { mode: 'number' }).notNull().default(100),
+  
+  // Economy
+  gold: bigint('gold', { mode: 'number' }).notNull().default(100),
+  bankSlots: integer('bank_slots').notNull().default(20),
   
   // Customization
   appearance: jsonb('appearance').notNull().default({}).$type<CharacterAppearance>(),
@@ -161,3 +165,119 @@ export const usersRelationsUpdated = relations(users, ({ many }) => ({
   auditLogs: many(auditLog),
   characters: many(characters),
 }));
+
+// Transaction table for tracking all currency movements
+export const transactions = pgTable('transactions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  characterId: uuid('character_id').references(() => characters.id).notNull(),
+  type: varchar('type', { length: 50 }).notNull(), // 'deposit', 'withdraw', 'transfer', 'purchase', 'sale', 'reward', 'quest', 'trade'
+  amount: bigint('amount', { mode: 'number' }).notNull(),
+  balanceBefore: bigint('balance_before', { mode: 'number' }).notNull(),
+  balanceAfter: bigint('balance_after', { mode: 'number' }).notNull(),
+  relatedCharacterId: uuid('related_character_id').references(() => characters.id),
+  description: text('description'),
+  metadata: jsonb('metadata').$type<TransactionMetadata>().default({}),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => {
+  return {
+    characterCreatedIdx: index('idx_transaction_char_created').on(table.characterId, table.createdAt),
+    typeIdx: index('idx_transaction_type').on(table.type),
+    relatedCharIdx: index('idx_transaction_related_char').on(table.relatedCharacterId),
+  };
+});
+
+// Personal bank storage
+export const personalBanks = pgTable('personal_banks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  characterId: uuid('character_id').references(() => characters.id).notNull(),
+  slot: integer('slot').notNull(),
+  itemId: integer('item_id'), // Will reference items table when created
+  quantity: integer('quantity').default(1).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => {
+  return {
+    characterSlotIdx: index('idx_bank_char_slot').on(table.characterId, table.slot),
+    characterSlotUnique: uniqueIndex('unique_bank_char_slot').on(table.characterId, table.slot),
+  };
+});
+
+// Shared bank storage (account-wide)
+export const sharedBanks = pgTable('shared_banks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id).notNull(),
+  slot: integer('slot').notNull(),
+  itemId: integer('item_id'), // Will reference items table when created
+  quantity: integer('quantity').default(1).notNull(),
+  lastAccessedBy: uuid('last_accessed_by').references(() => characters.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => {
+  return {
+    userSlotIdx: index('idx_shared_bank_user_slot').on(table.userId, table.slot),
+    userSlotUnique: uniqueIndex('unique_shared_bank_user_slot').on(table.userId, table.slot),
+  };
+});
+
+// Currency exchange rates (for future multi-currency support)
+export const currencyExchange = pgTable('currency_exchange', {
+  id: serial('id').primaryKey(),
+  fromCurrency: varchar('from_currency', { length: 10 }).notNull().default('gold'),
+  toCurrency: varchar('to_currency', { length: 10 }).notNull(),
+  rate: decimal('rate', { precision: 10, scale: 4 }).notNull(),
+  activeFrom: timestamp('active_from').defaultNow().notNull(),
+  activeTo: timestamp('active_to'),
+}, (table) => {
+  return {
+    currencyIdx: index('idx_exchange_currencies').on(table.fromCurrency, table.toCurrency),
+    activeIdx: index('idx_exchange_active').on(table.activeFrom, table.activeTo),
+  };
+});
+
+// Economy table relations
+export const transactionsRelations = relations(transactions, ({ one }) => ({
+  character: one(characters, {
+    fields: [transactions.characterId],
+    references: [characters.id],
+  }),
+  relatedCharacter: one(characters, {
+    fields: [transactions.relatedCharacterId],
+    references: [characters.id],
+  }),
+}));
+
+export const personalBanksRelations = relations(personalBanks, ({ one }) => ({
+  character: one(characters, {
+    fields: [personalBanks.characterId],
+    references: [characters.id],
+  }),
+}));
+
+export const sharedBanksRelations = relations(sharedBanks, ({ one }) => ({
+  user: one(users, {
+    fields: [sharedBanks.userId],
+    references: [users.id],
+  }),
+  lastAccessedByCharacter: one(characters, {
+    fields: [sharedBanks.lastAccessedBy],
+    references: [characters.id],
+  }),
+}));
+
+// TypeScript types for economy
+export interface TransactionMetadata {
+  itemId?: number;
+  itemName?: string;
+  quantity?: number;
+  unitPrice?: number;
+  source?: string;
+  destination?: string;
+  transferType?: 'send' | 'receive';
+  questId?: number;
+  npcId?: number;
+  shopId?: number;
+  tradeId?: string;
+}
+
+export type TransactionType = 'deposit' | 'withdraw' | 'transfer' | 'purchase' | 'sale' | 'reward' | 'quest' | 'trade';
+export type CurrencyType = 'gold' | 'silver' | 'copper' | 'premium';
