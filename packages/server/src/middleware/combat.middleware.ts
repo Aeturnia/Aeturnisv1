@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { CombatActionType } from '../types/combat.types';
+import { testMonsterService } from '../services/TestMonsterService';
 
 /**
  * Validate combat action request
@@ -82,13 +83,17 @@ export const validateCombatStart = (req: Request, res: Response, next: NextFunct
     return;
   }
 
-  // Validate target IDs format (basic UUID check)
+  // Validate target IDs format (UUID or test monster ID)
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  const invalidTargets = targetIds.filter(id => !uuidRegex.test(id));
+  const invalidTargets = targetIds.filter(id => {
+    // Allow test monster IDs or valid UUIDs
+    return !testMonsterService.isTestMonster(id) && !uuidRegex.test(id);
+  });
+  
   if (invalidTargets.length > 0) {
     res.status(400).json({
       success: false,
-      message: 'Invalid target ID format',
+      message: 'Invalid target ID format (must be UUID or test monster ID)',
       details: { invalidTargets }
     });
     return;
