@@ -14,10 +14,10 @@ router.get(
   '/',
   authenticate,
   asyncHandler(async (req: AuthRequest, res) => {
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
     const characters = await characterService.getCharactersByAccount(userId);
     
-    return res.json({
+    res.json({
       success: true,
       data: {
         characters,
@@ -32,9 +32,9 @@ router.get(
   '/:id',
   authenticate,
   param('id').isUUID('4').withMessage('Invalid character ID'),
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
     
     const result = await characterService.getCharacterWithStats(id);
     if (!result) {
