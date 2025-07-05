@@ -84,6 +84,8 @@ export const createApp = () => {
         res.setHeader('Content-Type', 'text/html');
         // Ensure CSP headers allow Replit iframe embedding
         res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+      } else if (filePath.endsWith('.json') || filePath.endsWith('.webmanifest')) {
+        res.setHeader('Content-Type', 'application/json');
       }
     }
   }));

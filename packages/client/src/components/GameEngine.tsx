@@ -71,7 +71,13 @@ export function GameEngine() {
         health: 100,
         maxHealth: 100,
         mana: 50,
-        maxMana: 50
+        maxMana: 50,
+        strength: 15,
+        dexterity: 12,
+        intelligence: 10,
+        constitution: 14,
+        wisdom: 11,
+        charisma: 9
       });
     }, 1000);
 

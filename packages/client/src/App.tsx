@@ -27,11 +27,27 @@ function GameContent() {
           <h3>Character Info</h3>
           {currentCharacter ? (
             <div>
-              <p><strong>Name:</strong> {currentCharacter.name}</p>
-              <p><strong>Level:</strong> {currentCharacter.level}</p>
-              <p><strong>Race:</strong> {currentCharacter.race}</p>
-              <p><strong>Health:</strong> {currentCharacter.health}/{currentCharacter.maxHealth}</p>
-              <p><strong>Mana:</strong> {currentCharacter.mana}/{currentCharacter.maxMana}</p>
+              <div className="info-section">
+                <p><strong>Name:</strong> {currentCharacter.name}</p>
+                <p><strong>Level:</strong> {currentCharacter.level}</p>
+                <p><strong>Race:</strong> {currentCharacter.race}</p>
+              </div>
+              <div className="divider"></div>
+              <div className="info-section">
+                <h4>Resources</h4>
+                <p><strong>Health:</strong> {currentCharacter.health}/{currentCharacter.maxHealth}</p>
+                <p><strong>Mana:</strong> {currentCharacter.mana}/{currentCharacter.maxMana}</p>
+              </div>
+              <div className="divider"></div>
+              <div className="info-section">
+                <h4>Stats</h4>
+                <p><strong>STR:</strong> {currentCharacter.strength || 10}</p>
+                <p><strong>DEX:</strong> {currentCharacter.dexterity || 10}</p>
+                <p><strong>INT:</strong> {currentCharacter.intelligence || 10}</p>
+                <p><strong>CON:</strong> {currentCharacter.constitution || 10}</p>
+                <p><strong>WIS:</strong> {currentCharacter.wisdom || 10}</p>
+                <p><strong>CHA:</strong> {currentCharacter.charisma || 10}</p>
+              </div>
             </div>
           ) : (
             <p style={{ textAlign: 'center', color: '#aaa' }}>No character selected</p>

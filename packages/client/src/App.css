@@ -44,12 +44,13 @@ header h1 {
 .game-info {
   position: absolute;
   top: 20px;
-  left: 20px;
+  right: 20px;
   background: rgba(20, 25, 40, 0.95);
   padding: 1.5rem;
   border-radius: 12px;
   border: 2px solid #00d2ff;
-  min-width: 220px;
+  min-width: 250px;
+  max-width: 300px;
   z-index: 100;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
@@ -58,21 +59,43 @@ header h1 {
   margin: 0 0 1rem 0;
   color: #00d2ff;
   text-align: center;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.game-info h4 {
+  margin: 0.5rem 0;
+  color: #00d2ff;
+  font-size: 1.1rem;
+  text-align: center;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .game-info p {
-  margin: 0.7rem 0;
-  font-size: 1rem;
+  margin: 0.4rem 0;
+  font-size: 0.95rem;
   color: #e0e0e0;
-  line-height: 1.4;
+  line-height: 1.3;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .game-info p strong {
   color: #ffffff;
   font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.info-section {
+  margin: 0.5rem 0;
+}
+
+.divider {
+  height: 1px;
+  background: rgba(0, 210, 255, 0.3);
+  margin: 0.8rem 0;
 }
 
 footer {
