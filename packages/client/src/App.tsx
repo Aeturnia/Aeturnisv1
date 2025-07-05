@@ -2,7 +2,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GameProvider, useGame } from './stores/gameStore';
 import { GameEngine } from './components/GameEngine';
 import { GameUI } from './components/GameUI';
-import { useDevTools } from './dev-tools';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -10,7 +9,6 @@ const queryClient = new QueryClient();
 function GameContent() {
   const game = useGame();
   const { isConnected, currentCharacter } = game;
-  const DevTools = useDevTools();
 
   return (
     <div className="app">
@@ -42,9 +40,6 @@ function GameContent() {
       <footer>
         <p>MMORPG Development Environment Ready</p>
       </footer>
-      
-      {/* Visual Dev Layer - Only renders in development with REACT_APP_VISUAL_DEV=true */}
-      {DevTools && <DevTools />}
     </div>
   );
 }
