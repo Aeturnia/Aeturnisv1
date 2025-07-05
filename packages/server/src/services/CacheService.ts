@@ -11,8 +11,8 @@ export class CacheService {
       port: config.port,
       password: config.password,
       retryStrategy: (times) => Math.min(times * 50, 2000),
-      lazyConnect: true,
-      enableOfflineQueue: false
+      connectTimeout: 10000,
+      enableOfflineQueue: true
     });
   }
 
