@@ -1,17 +1,25 @@
 # Game Design Overview
 
+**Last Updated:** July 05, 2025  
+**Current Status:** Phase 2 Core Game Systems - Character Foundation Complete
+
 ## Vision
 
 Aeturnis Online is a browser-based MMORPG that combines classic RPG elements with modern web technology to create an accessible and engaging multiplayer experience.
 
 ## Core Mechanics
 
-### Character System
+### Character System (Implemented ✅)
 
-- **Races**: Human, Elf, Dwarf, Orc, Halfling, Gnome, Dark Elf, Lizardman
-- **Stats**: Strength, Intelligence, Vitality, Dexterity, Wisdom
-- **Leveling**: Infinite progression with scaling experience requirements
-- **Customization**: Equipment, skills, and appearance options
+- **Races**: Human, Elf, Dwarf, Orc, Halfling, Dragonborn (6 races)
+- **Classes**: Warrior, Mage, Rogue, Cleric, Ranger, Paladin (6 classes)
+- **Stats**: Strength, Dexterity, Intelligence, Constitution, Wisdom, Charisma
+- **Leveling**: Infinite progression system with:
+  - Standard levels (1-100)
+  - Paragon levels (100-500)
+  - Prestige system (500+)
+  - Stat tier scaling for infinite growth
+- **Customization**: Character appearance, gender options (male/female/other)
 
 ### Combat System
 

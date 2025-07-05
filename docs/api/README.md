@@ -203,6 +203,201 @@ Authorization: Bearer <access-token>
 }
 ```
 
+### Character Endpoints
+
+#### Create Character
+```http
+POST /api/v1/characters
+Content-Type: application/json
+Authorization: Bearer <jwt-token>
+
+{
+  "name": "HeroName",
+  "race": "human",
+  "class": "warrior",
+  "gender": "male"
+}
+```
+
+**Validation Rules:**
+- Name: 3-50 characters, no special characters except hyphens/apostrophes
+- Race: human, elf, dwarf, orc, halfling, dragonborn
+- Class: warrior, mage, rogue, cleric, ranger, paladin
+- Gender: male, female, other
+
+**Success Response (201):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "character-uuid",
+    "name": "HeroName",
+    "race": "human",
+    "class": "warrior",
+    "level": 1,
+    "experience": 0,
+    "health": 120,
+    "mana": 20,
+    "base_strength": 15,
+    "base_dexterity": 12,
+    "base_intelligence": 10,
+    "base_constitution": 14,
+    "base_wisdom": 11,
+    "base_charisma": 9
+  }
+}
+```
+
+#### Get Character
+```http
+GET /api/v1/characters/:characterId
+Authorization: Bearer <jwt-token>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "character-uuid",
+    "name": "HeroName",
+    "race": "human",
+    "class": "warrior",
+    "level": 25,
+    "experience": 125000,
+    "stats": {
+      "strength": 18,
+      "dexterity": 14,
+      "intelligence": 12,
+      "constitution": 17,
+      "wisdom": 13,
+      "charisma": 11
+    },
+    "resources": {
+      "health": 340,
+      "maxHealth": 340,
+      "mana": 50,
+      "maxMana": 50,
+      "stamina": 150,
+      "maxStamina": 150
+    },
+    "position": {
+      "zone": "Tutorial Area",
+      "x": 100.50,
+      "y": 200.75,
+      "z": 0.00
+    }
+  }
+}
+```
+
+#### Validate Character Name
+```http
+GET /api/v1/characters/validate-name?name=HeroName
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "available": true,
+    "valid": true
+  }
+}
+```
+
+### Session Management Endpoints
+
+#### Create Session
+```http
+POST /api/v1/sessions
+Content-Type: application/json
+Authorization: Bearer <jwt-token>
+
+{
+  "metadata": {
+    "platform": "web",
+    "device": "Chrome 120"
+  }
+}
+```
+
+**Success Response (201):**
+```json
+{
+  "success": true,
+  "data": {
+    "sessionId": "session-uuid",
+    "userId": "user-uuid",
+    "expiresAt": "2025-08-04T23:00:00.000Z",
+    "metadata": {
+      "ip": "192.168.1.1",
+      "userAgent": "Mozilla/5.0...",
+      "platform": "web"
+    }
+  }
+}
+```
+
+#### Get User Sessions
+```http
+GET /api/v1/sessions
+Authorization: Bearer <jwt-token>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "sessionId": "session-uuid-1",
+      "lastActive": "2025-07-05T05:00:00.000Z",
+      "platform": "web",
+      "device": "Chrome 120"
+    },
+    {
+      "sessionId": "session-uuid-2",
+      "lastActive": "2025-07-05T04:30:00.000Z",
+      "platform": "ios",
+      "device": "iPhone 15"
+    }
+  ]
+}
+```
+
+#### Extend Session
+```http
+PUT /api/v1/sessions/:sessionId/extend
+Authorization: Bearer <jwt-token>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "sessionId": "session-uuid",
+    "newExpiresAt": "2025-08-04T23:00:00.000Z"
+  }
+}
+```
+
+#### Delete Session
+```http
+DELETE /api/v1/sessions/:sessionId
+Authorization: Bearer <jwt-token>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Session destroyed successfully"
+}
+```
+
 ## Rate Limiting
 
 ### General API Endpoints
@@ -363,6 +558,13 @@ curl http://localhost:5000/api/v1/auth/profile \
 ```
 
 ## Changelog
+
+### Version 1.1.0 (July 5, 2025)
+- Added Character API endpoints (create, retrieve, validate name)
+- Implemented Session Management API
+- Enhanced authentication with session tracking
+- Character system with 6 races and 6 classes
+- Infinite progression mechanics support
 
 ### Version 1.0.0 (July 4, 2025)
 - Initial API release
