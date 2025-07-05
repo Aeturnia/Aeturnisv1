@@ -23,6 +23,7 @@ function App() {
   const [economyTest, setEconomyTest] = useState<TestState>({ loading: false, response: '', success: false });
   const [characterTest, setCharacterTest] = useState<TestState>({ loading: false, response: '', success: false });
   const [equipmentTest, setEquipmentTest] = useState<TestState>({ loading: false, response: '', success: false });
+  const [combatTest, setCombatTest] = useState<TestState>({ loading: false, response: '', success: false });
 
   // Form states
   const [email, setEmail] = useState('test@example.com');
@@ -187,6 +188,43 @@ function App() {
       });
     } catch (error) {
       setEquipmentTest({
+        loading: false,
+        response: `Error: ${error}`,
+        success: false
+      });
+    }
+  };
+
+  const testCombat = async (action: 'test' | 'stats' | 'resources') => {
+    setCombatTest({ loading: true, response: '', success: false });
+    
+    try {
+      let url = '';
+      if (action === 'test') {
+        url = '/api/v1/combat/test';
+      } else if (action === 'stats') {
+        // Use a test character ID
+        url = '/api/v1/combat/stats/550e8400-e29b-41d4-a716-446655440000';
+      } else if (action === 'resources') {
+        // Use a test character ID
+        url = '/api/v1/combat/resources/550e8400-e29b-41d4-a716-446655440000';
+      }
+
+      const response = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+      });
+      
+      const data = await response.json();
+      setCombatTest({
+        loading: false,
+        response: JSON.stringify(data, null, 2),
+        success: response.ok
+      });
+    } catch (error) {
+      setCombatTest({
         loading: false,
         response: `Error: ${error}`,
         success: false
@@ -361,6 +399,35 @@ function App() {
             </button>
             <div className={`response ${equipmentTest.success ? 'success' : 'error'}`}>
               {equipmentTest.loading ? 'Loading...' : equipmentTest.response || 'No response yet'}
+            </div>
+          </div>
+
+          <div className="test-panel">
+            <h3 className="test-title">Combat System</h3>
+            <p>Status: {authToken ? 'Authenticated' : 'No authentication required for system test'}</p>
+            <button 
+              className="button" 
+              onClick={() => testCombat('test')}
+              disabled={combatTest.loading}
+            >
+              Test System
+            </button>
+            <button 
+              className="button" 
+              onClick={() => testCombat('stats')}
+              disabled={combatTest.loading || !authToken}
+            >
+              Character Stats
+            </button>
+            <button 
+              className="button" 
+              onClick={() => testCombat('resources')}
+              disabled={combatTest.loading || !authToken}
+            >
+              Resource Management
+            </button>
+            <div className={`response ${combatTest.success ? 'success' : 'error'}`}>
+              {combatTest.loading ? 'Loading...' : combatTest.response || 'No response yet'}
             </div>
           </div>
 

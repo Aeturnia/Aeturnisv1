@@ -469,6 +469,21 @@ The expanded monorepo now includes:
 - **Technical Achievement**: Equipment system architecture complete with working API endpoints returning structured equipment and inventory data
 - **Status**: Equipment & Inventory foundation COMPLETE - Ready for database migration and full implementation
 
+### July 05, 2025 - Step 2.4: Combat & Resource Systems Implementation Complete ✅
+- **Resource Management System**: Complete ResourceService implementation with HP/Mana/Stamina pools, regeneration rates, and real-time resource tracking
+- **Turn-Based Combat Engine**: Full CombatService with session management, participant tracking, turn order, and action processing
+- **Combat Action Types**: Support for attack, defend, flee, use item, use skill, and pass actions with proper validation and resource costs
+- **Combat Middleware**: Comprehensive validation middleware for combat actions, session management, and rate limiting
+- **API Controller Layer**: Complete combat.controller.ts with endpoints for starting combat, performing actions, fleeing, and resource management
+- **REST API Routes**: Full /api/v1/combat endpoint set including start, session, action, flee, stats, resources, and simulation endpoints
+- **Socket.IO Integration**: Real-time combat communication layer with join/leave rooms, action broadcasting, and state synchronization
+- **Mock Data Implementation**: Realistic combat mechanics with damage calculation, buff/debuff systems, and AI opponent behavior
+- **Resource Features**: Automatic regeneration, percentage tracking, resource cost validation, and combat readiness assessment
+- **API Endpoints Validated**: Successfully tested /api/v1/combat/test endpoint confirming full system integration
+- **Combat Features**: Session persistence, participant validation, turn timers, combat end conditions, and reward systems
+- **Technical Achievement**: Complete combat infrastructure with 6 API endpoints, real-time communication, and resource management
+- **Status**: Combat & Resource Systems COMPLETE - Production-ready turn-based combat with resource management operational
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
