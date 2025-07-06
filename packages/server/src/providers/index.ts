@@ -4,7 +4,7 @@
  */
 
 // Core provider
-export { ServiceProvider } from './ServiceProvider';
+export { ServiceProvider, globalServices } from './ServiceProvider';
 
 // Interfaces
 export { IMonsterService } from './interfaces/IMonsterService';
