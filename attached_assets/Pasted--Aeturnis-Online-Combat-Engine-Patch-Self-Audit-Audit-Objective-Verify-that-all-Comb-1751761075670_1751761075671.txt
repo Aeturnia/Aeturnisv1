@@ -1,0 +1,649 @@
+# 🔍 Aeturnis Online - Combat Engine Patch Self-Audit
+
+## 🎯 Audit Objective
+Verify that all Combat Engine mathematical and balance fixes have been correctly implemented according to the patch specifications.
+
+---
+
+## 📋 Patch Verification Checklist
+
+### 1. Pre-Audit Setup
+```bash
+# Ensure latest code is compiled
+echo "=== Compiling TypeScript ==="
+npx tsc --noEmit
+
+# Check if combat service was modified
+echo "=== Checking file modifications ==="
+git diff --name-only | grep -E "(combat\.service\.ts|combat\.types\.ts)" || echo "⚠️  No combat files modified"
+
+# Install test dependencies if needed
+npm install --save-dev @types/jest jest ts-jest
+```
+
+### 2. Mathematical Logic Verification
+
+**Create verification script `/scripts/verify-combat-math.ts`:**
+```typescript
+import { CombatService } from '../src/services/combat.service';
+
+async function verifyDamageCalculations() {
+  console.log('=== Damage Calculation Verification ===\n');
+  
+  const service = new CombatService();
+  const session = await service.startCombat('player1', ['enemy1']);
+  
+  // Test 1: Verify damage is never negative
+  console.log('Test 1: Checking damage clamping...');
+  
+  // Access private method for testing (you may need to make it public temporarily)
+  const calculateDamage = (service as any).calculateDamage;
+  
+  // Mock participants with extreme defense
+  const attacker = { 
+    charId: 'test1', 
+    charName: 'Attacker',
+    buffs: [] 
+  };
+  
+  const defender = { 
+    charId: 'test2', 
+    charName: 'Defender',
+    buffs: []
+  };
+  
+  let hasNegative = false;
+  for (let i = 0; i < 100; i++) {
+    const damage = calculateDamage.call(service, attacker, defender);
+    if (damage < 1) {
+      hasNegative = true;
+      console.log(`❌ Negative/zero damage detected: ${damage}`);
+      break;
+    }
+  }
+  
+  if (!hasNegative) {
+    console.log('✅ Damage is always positive (minimum 1)\n');
+  }
+  
+  // Test 2: Verify skill damage considers defense
+  console.log('Test 2: Checking skill damage defense consideration...');
+  const calculateSkillDamage = (service as any).calculateSkillDamage;
+  
+  const skillDamages = [];
+  for (let i = 0; i < 10; i++) {
+    const damage = calculateSkillDamage.call(service, attacker, defender);
+    skillDamages.push(damage);
+  }
+  
+  const avgSkillDamage = skillDamages.reduce((a, b) => a + b) / skillDamages.length;
+  console.log(`Average skill damage: ${avgSkillDamage.toFixed(2)}`);
+  
+  if (avgSkillDamage > 20 && avgSkillDamage < 40) {
+    console.log('✅ Skill damage is within expected range (defense applied)\n');
+  } else {
+    console.log('❌ Skill damage out of expected range\n');
+  }
+}
+
+verifyDamageCalculations().catch(console.error);
+```
+
+Run with:
+```bash
+npx ts-node scripts/verify-combat-math.ts
+```
+
+### 3. Resource Validation Verification
+
+**Create test script `/scripts/verify-resource-checks.ts`:**
+```typescript
+import { CombatService } from '../src/services/combat.service';
+import { CombatActionType } from '../src/types/combat.types';
+
+async function verifyResourceValidation() {
+  console.log('=== Resource Validation Verification ===\n');
+  
+  const service = new CombatService();
+  const session = await service.startCombat('player1', ['enemy1']);
+  
+  // Test 1: Attack with insufficient stamina
+  console.log('Test 1: Attack with low stamina...');
+  const player = session.participants.find(p => p.charId === 'player1');
+  if (player) {
+    player.stamina = 3; // Below required 5
+    
+    const result = await service.processAction(session.sessionId, 'player1', {
+      type: CombatActionType.ATTACK,
+      targetCharId: 'enemy1',
+      timestamp: Date.now()
+    });
+    
+    if ('error' in result && result.code === 'INSUFFICIENT_RESOURCES') {
+      console.log('✅ Attack correctly blocked with insufficient stamina');
+      console.log(`   Error: ${result.error}\n`);
+    } else {
+      console.log('❌ Attack allowed with insufficient stamina\n');
+    }
+  }
+  
+  // Test 2: Skill use with insufficient mana
+  console.log('Test 2: Skill use with low mana...');
+  if (player) {
+    player.stamina = 30; // Restore stamina
+    player.mana = 5; // Below required 10
+    
+    const result = await service.processAction(session.sessionId, 'player1', {
+      type: CombatActionType.USE_SKILL,
+      targetCharId: 'enemy1',
+      skillId: 'test-skill',
+      timestamp: Date.now()
+    });
+    
+    if ('error' in result && result.code === 'INSUFFICIENT_RESOURCES') {
+      console.log('✅ Skill correctly blocked with insufficient mana');
+      console.log(`   Error: ${result.error}\n`);
+    } else {
+      console.log('❌ Skill allowed with insufficient mana\n');
+    }
+  }
+  
+  // Test 3: Defend always allowed (no resource requirement)
+  console.log('Test 3: Defend with zero resources...');
+  if (player) {
+    player.stamina = 0;
+    player.mana = 0;
+    
+    const result = await service.processAction(session.sessionId, 'player1', {
+      type: CombatActionType.DEFEND,
+      timestamp: Date.now()
+    });
+    
+    if (!('error' in result)) {
+      console.log('✅ Defend allowed with zero resources\n');
+    } else {
+      console.log('❌ Defend blocked with zero resources\n');
+    }
+  }
+}
+
+verifyResourceValidation().catch(console.error);
+```
+
+Run with:
+```bash
+npx ts-node scripts/verify-resource-checks.ts
+```
+
+### 4. AI Enhancement Verification
+
+**Create AI test script `/scripts/verify-ai-improvements.ts`:**
+```typescript
+import { CombatService } from '../src/services/combat.service';
+
+async function verifyAIImprovements() {
+  console.log('=== AI Enhancement Verification ===\n');
+  
+  const service = new CombatService();
+  
+  // Test 1: Target variety
+  console.log('Test 1: AI target selection variety...');
+  const session = await service.startCombat('enemy1', ['player1', 'player2', 'player3'], {
+    enableAIVariety: true
+  });
+  
+  const targetCounts = new Map<string, number>();
+  const enemy = session.participants.find(p => p.charId === 'enemy1');
+  
+  if (enemy) {
+    // Run AI decision 50 times
+    for (let i = 0; i < 50; i++) {
+      const action = (service as any).chooseAIAction(session, enemy);
+      if (action.targetCharId) {
+        targetCounts.set(
+          action.targetCharId, 
+          (targetCounts.get(action.targetCharId) || 0) + 1
+        );
+      }
+    }
+  }
+  
+  console.log('Target distribution:');
+  targetCounts.forEach((count, target) => {
+    console.log(`  ${target}: ${count} times (${(count/50*100).toFixed(1)}%)`);
+  });
+  
+  if (targetCounts.size >= 2) {
+    console.log('✅ AI targets multiple enemies\n');
+  } else {
+    console.log('❌ AI only targets one enemy\n');
+  }
+  
+  // Test 2: Low HP targeting
+  console.log('Test 2: AI low HP targeting...');
+  const player1 = session.participants.find(p => p.charId === 'player1');
+  const player2 = session.participants.find(p => p.charId === 'player2');
+  
+  if (player1 && player2) {
+    player1.hp = 10;  // Low HP
+    player2.hp = 100; // Full HP
+    
+    let lowHpTargeted = 0;
+    for (let i = 0; i < 30; i++) {
+      const action = (service as any).chooseAIAction(session, enemy);
+      if (action.targetCharId === 'player1') lowHpTargeted++;
+    }
+    
+    const percentage = (lowHpTargeted / 30 * 100).toFixed(1);
+    console.log(`Low HP target selected: ${lowHpTargeted}/30 times (${percentage}%)`);
+    
+    if (lowHpTargeted >= 10) {
+      console.log('✅ AI prioritizes low HP targets\n');
+    } else {
+      console.log('⚠️  AI may not be prioritizing low HP targets effectively\n');
+    }
+  }
+  
+  // Test 3: Combat log parsing
+  console.log('Test 3: Combat log parsing...');
+  if (!session.combatLog) session.combatLog = [];
+  
+  // Add mock defense logs
+  for (let i = 0; i < 4; i++) {
+    session.combatLog.push({
+      message: 'Enemy takes a defensive stance',
+      timestamp: Date.now() - i * 1000,
+      actorId: 'enemy1',
+      type: 'buff'
+    });
+  }
+  
+  if (enemy) {
+    enemy.stamina = 5; // Enough to attack
+    const action = (service as any).chooseAIAction(session, enemy);
+    
+    if (action.type === CombatActionType.ATTACK) {
+      console.log('✅ AI breaks defensive loop after 3+ defends\n');
+    } else {
+      console.log('❌ AI stuck in defensive loop\n');
+    }
+  }
+}
+
+verifyAIImprovements().catch(console.error);
+```
+
+Run with:
+```bash
+npx ts-node scripts/verify-ai-improvements.ts
+```
+
+### 5. Buff/Debuff Mechanics Verification
+
+**Create buff test script `/scripts/verify-buff-mechanics.ts`:**
+```typescript
+import { CombatService } from '../src/services/combat.service';
+import { CombatActionType } from '../src/types/combat.types';
+
+async function verifyBuffMechanics() {
+  console.log('=== Buff/Debuff Mechanics Verification ===\n');
+  
+  const service = new CombatService();
+  const session = await service.startCombat('player1', ['enemy1']);
+  
+  // Test 1: Defensive buff application
+  console.log('Test 1: Defensive buff application...');
+  await service.processAction(session.sessionId, 'player1', {
+    type: CombatActionType.DEFEND,
+    timestamp: Date.now()
+  });
+  
+  const player = session.participants.find(p => p.charId === 'player1');
+  const defendBuff = player?.buffs.find(b => b.name === 'Defending');
+  
+  if (defendBuff && defendBuff.duration === 1) {
+    console.log('✅ Defensive buff applied with 1 turn duration');
+  } else {
+    console.log('❌ Defensive buff not properly applied');
+  }
+  
+  // Test 2: Buff non-stacking
+  console.log('\nTest 2: Buff stacking prevention...');
+  
+  // Force player turn again
+  session.currentTurnIndex = 0;
+  
+  await service.processAction(session.sessionId, 'player1', {
+    type: CombatActionType.DEFEND,
+    timestamp: Date.now()
+  });
+  
+  const defendBuffs = player?.buffs.filter(b => b.name === 'Defending') || [];
+  
+  if (defendBuffs.length === 1) {
+    console.log('✅ Defensive buffs do not stack');
+  } else {
+    console.log(`❌ Multiple defensive buffs found: ${defendBuffs.length}`);
+  }
+  
+  // Test 3: Buff expiration
+  console.log('\nTest 3: Buff expiration...');
+  
+  // Enemy turn
+  await service.processAction(session.sessionId, 'enemy1', {
+    type: CombatActionType.ATTACK,
+    targetCharId: 'player1',
+    timestamp: Date.now()
+  });
+  
+  const buffsAfterTurn = player?.buffs.filter(b => b.name === 'Defending') || [];
+  
+  if (buffsAfterTurn.length === 0) {
+    console.log('✅ Defensive buff expired after one turn');
+  } else {
+    console.log('❌ Defensive buff did not expire');
+  }
+}
+
+verifyBuffMechanics().catch(console.error);
+```
+
+### 6. Timeout Functionality Verification
+
+**Create timeout test script `/scripts/verify-timeouts.ts`:**
+```typescript
+import { CombatService } from '../src/services/combat.service';
+
+async function verifyTimeouts() {
+  console.log('=== Timeout Functionality Verification ===\n');
+  
+  // Use Jest fake timers if available, otherwise skip
+  const hasFakeTimers = typeof jest !== 'undefined';
+  
+  if (!hasFakeTimers) {
+    console.log('⚠️  Timeout tests require Jest environment');
+    console.log('Run: npm test -- --testNamePattern="Turn Timeout"');
+    return;
+  }
+  
+  console.log('Test 1: Turn timeout enforcement...');
+  console.log('✓ See test results for timeout verification');
+  
+  console.log('\nTest 2: Maximum turns limit...');
+  console.log('✓ See test results for max turns verification');
+}
+
+// Check if timeout-related code exists
+async function checkTimeoutImplementation() {
+  const fs = require('fs').promises;
+  const content = await fs.readFile('src/services/combat.service.ts', 'utf-8');
+  
+  const checks = [
+    { pattern: 'turnTimers:', name: 'Turn timer storage' },
+    { pattern: 'startTurnTimer', name: 'Start timer method' },
+    { pattern: 'clearTurnTimer', name: 'Clear timer method' },
+    { pattern: 'handleTurnTimeout', name: 'Timeout handler' },
+    { pattern: 'turnTimeoutSeconds', name: 'Timeout configuration' },
+    { pattern: 'maxTurns', name: 'Max turns configuration' }
+  ];
+  
+  console.log('\n=== Timeout Implementation Check ===');
+  checks.forEach(check => {
+    if (content.includes(check.pattern)) {
+      console.log(`✅ ${check.name} implemented`);
+    } else {
+      console.log(`❌ ${check.name} missing`);
+    }
+  });
+}
+
+verifyTimeouts().then(() => checkTimeoutImplementation()).catch(console.error);
+```
+
+### 7. Integration Test Suite
+
+**Run comprehensive patch tests:**
+```bash
+# Run all combat-related tests
+echo "=== Running Combat Engine Tests ==="
+npm test -- --testPathPattern="combat" --verbose
+
+# Generate coverage report
+echo -e "\n=== Test Coverage Report ==="
+npm test -- --coverage --testPathPattern="combat" --coverageReporters=text-summary
+
+# Check for specific patch tests
+echo -e "\n=== Patch-Specific Test Results ==="
+npm test -- --testNamePattern="Damage Calculation|Resource Validation|AI Target|Buff Management|Turn Timeout" --verbose
+```
+
+### 8. Type Safety Verification
+
+```bash
+# Check for new type definitions
+echo "=== Type Definition Verification ==="
+
+# Check if CombatError interface exists
+grep -q "interface CombatError" src/types/combat.types.ts && \
+  echo "✅ CombatError interface defined" || \
+  echo "❌ CombatError interface missing"
+
+# Check if CombatLog interface exists
+grep -q "interface CombatLog" src/types/combat.types.ts && \
+  echo "✅ CombatLog interface defined" || \
+  echo "❌ CombatLog interface missing"
+
+# Check if CombatSessionConfig exists
+grep -q "interface CombatSessionConfig" src/types/combat.types.ts && \
+  echo "✅ CombatSessionConfig interface defined" || \
+  echo "❌ CombatSessionConfig interface missing"
+```
+
+### 9. Code Quality Verification
+
+```bash
+# Lint the patched files
+echo "=== Code Quality Check ==="
+npm run lint:ts -- src/services/combat.service.ts src/types/combat.types.ts --max-warnings=0
+
+# Check for console.logs or debugging code
+echo -e "\n=== Debug Code Check ==="
+grep -n "console\." src/services/combat.service.ts && \
+  echo "⚠️  Found console statements (remove before production)" || \
+  echo "✅ No console statements found"
+
+# Check for TODO comments
+echo -e "\n=== TODO Comments ==="
+grep -n "TODO" src/services/combat.service.ts | head -5
+```
+
+### 10. Regression Testing
+
+**Create regression test script `/scripts/test-regressions.ts`:**
+```typescript
+import { CombatService } from '../src/services/combat.service';
+import { CombatActionType } from '../src/types/combat.types';
+
+async function testRegressions() {
+  console.log('=== Regression Testing ===\n');
+  
+  const service = new CombatService();
+  
+  // Test 1: Basic combat flow still works
+  console.log('Test 1: Basic combat flow...');
+  try {
+    const session = await service.startCombat('player1', ['enemy1']);
+    
+    const result = await service.processAction(session.sessionId, 'player1', {
+      type: CombatActionType.ATTACK,
+      targetCharId: 'enemy1',
+      timestamp: Date.now()
+    });
+    
+    if ('damage' in result && result.damage > 0) {
+      console.log('✅ Basic attack flow working');
+    } else {
+      console.log('❌ Basic attack flow broken');
+    }
+  } catch (error) {
+    console.log('❌ Basic combat flow error:', error);
+  }
+  
+  // Test 2: Turn order advancement
+  console.log('\nTest 2: Turn order advancement...');
+  const session2 = await service.startCombat('player1', ['enemy1']);
+  const initialTurn = session2.currentTurnIndex;
+  
+  await service.processAction(session2.sessionId, 'player1', {
+    type: CombatActionType.DEFEND,
+    timestamp: Date.now()
+  });
+  
+  if (session2.currentTurnIndex !== initialTurn) {
+    console.log('✅ Turn order advances correctly');
+  } else {
+    console.log('❌ Turn order not advancing');
+  }
+  
+  // Test 3: Combat end detection
+  console.log('\nTest 3: Combat end detection...');
+  const session3 = await service.startCombat('player1', ['enemy1']);
+  const enemy = session3.participants.find(p => p.charId === 'enemy1');
+  
+  if (enemy) {
+    enemy.hp = 1; // Set to low HP
+    
+    await service.processAction(session3.sessionId, 'player1', {
+      type: CombatActionType.ATTACK,
+      targetCharId: 'enemy1',
+      timestamp: Date.now()
+    });
+    
+    if (session3.status === 'completed' && session3.winner === 'player1') {
+      console.log('✅ Combat end detection working');
+    } else {
+      console.log('❌ Combat end detection not working');
+    }
+  }
+}
+
+testRegressions().catch(console.error);
+```
+
+---
+
+## 📊 Generate Patch Audit Report
+
+**Create master audit script `/scripts/run-patch-audit.sh`:**
+```bash
+#!/bin/bash
+
+echo "🔍 Aeturnis Combat Engine Patch Audit"
+echo "===================================="
+echo "Started: $(date)"
+echo ""
+
+# Run all verification scripts
+echo "1. Mathematical Logic Verification"
+echo "----------------------------------"
+npx ts-node scripts/verify-combat-math.ts
+echo ""
+
+echo "2. Resource Validation Verification"
+echo "-----------------------------------"
+npx ts-node scripts/verify-resource-checks.ts
+echo ""
+
+echo "3. AI Enhancement Verification"
+echo "------------------------------"
+npx ts-node scripts/verify-ai-improvements.ts
+echo ""
+
+echo "4. Buff/Debuff Mechanics Verification"
+echo "-------------------------------------"
+npx ts-node scripts/verify-buff-mechanics.ts
+echo ""
+
+echo "5. Timeout Implementation Check"
+echo "-------------------------------"
+npx ts-node scripts/verify-timeouts.ts
+echo ""
+
+echo "6. Regression Testing"
+echo "--------------------"
+npx ts-node scripts/test-regressions.ts
+echo ""
+
+echo "7. Test Suite Results"
+echo "--------------------"
+npm test -- --testPathPattern="combat" --silent --json > test-results.json
+if [ $? -eq 0 ]; then
+  echo "✅ All tests passed"
+else
+  echo "❌ Some tests failed"
+fi
+
+echo ""
+echo "===================================="
+echo "Audit completed: $(date)"
+```
+
+Make executable and run:
+```bash
+chmod +x scripts/run-patch-audit.sh
+./scripts/run-patch-audit.sh > patch-audit-report.txt
+```
+
+---
+
+## ✅ Success Criteria
+
+The patch is successfully implemented when:
+
+1. **Mathematics**: No negative damage possible (always ≥ 1)
+2. **Resources**: Actions blocked when insufficient resources
+3. **AI Variety**: Targets multiple enemies with different strategies
+4. **Buffs**: Defensive buffs expire after 1 turn, no stacking
+5. **Timeouts**: Turn timeout forces defend, max turns enforced
+6. **Logs**: Combat logs properly structured with timestamps
+7. **Tests**: All patch-specific tests pass
+8. **Coverage**: Combat service maintains ≥80% coverage
+9. **Quality**: 0 TypeScript errors, 0 ESLint warnings
+10. **Regression**: Existing functionality still works
+
+---
+
+## 🚨 Common Issues & Fixes
+
+### Issue: "Cannot find module" errors
+```bash
+# Rebuild the project
+npm run build
+```
+
+### Issue: Test timeouts
+```bash
+# Increase Jest timeout
+npm test -- --testTimeout=10000
+```
+
+### Issue: Private method access in tests
+```typescript
+// Temporarily make methods public for testing
+// Or use: (service as any).privateMethod()
+```
+
+---
+
+### 📝 Final Checklist
+
+- [ ] All verification scripts run without errors
+- [ ] Test coverage ≥ 80%
+- [ ] No TypeScript compilation errors
+- [ ] No ESLint warnings
+- [ ] All patch features verified working
+- [ ] No regressions in existing functionality
+- [ ] Combat logs properly implemented
+- [ ] Resource validation prevents invalid actions
+- [ ] AI shows varied behavior
+- [ ] Timeouts properly enforced
