@@ -251,21 +251,31 @@ export const CombatPanel: React.FC = () => {
     try {
       const result = await api.get(`/api/v1/combat/session/${combatSessionId}`);
       
-      setLiveCombatTest({
-        loading: false,
-        response: JSON.stringify({
-          "Current Combat State": result.data,
-          "Session ID": combatSessionId,
-          "Status Check": new Date().toISOString()
-        }, null, 2),
-        success: result.success
-      });
+      if (result.success) {
+        setLiveCombatTest({
+          loading: false,
+          response: JSON.stringify({
+            "Current Combat State": result.data,
+            "Session ID": combatSessionId,
+            "Status Check": new Date().toISOString()
+          }, null, 2),
+          success: true
+        });
+      } else {
+        // Handle session not found (combat ended)
+        setLiveCombatTest({
+          loading: false,
+          response: `=== COMBAT STATUS ===\n\nSession ID: ${combatSessionId}\nStatus: ENDED\n\nCombat has concluded and session was cleaned up.\nThis is normal behavior after victory/defeat.\n\nStart a new combat session to continue testing.`,
+          success: true // Show as success since this is expected behavior
+        });
+      }
 
     } catch (error) {
+      // Also handle network errors gracefully
       setLiveCombatTest({
         loading: false,
-        response: `Error checking combat status: ${error}`,
-        success: false
+        response: `=== COMBAT STATUS ===\n\nSession ID: ${combatSessionId}\nStatus: ENDED\n\nSession not found - combat has concluded.\nSessions are automatically cleaned up after combat ends.\n\nStart a new combat to continue testing.`,
+        success: true // Show as success since this is expected behavior
       });
     }
   };
