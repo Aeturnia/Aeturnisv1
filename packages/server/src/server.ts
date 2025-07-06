@@ -10,7 +10,7 @@ config();
 
 const PORT = parseInt(process.env.PORT || '5000', 10);
 const HOST = process.env.HOST || '0.0.0.0';
-const SOCKET_PORT = parseInt(process.env.SOCKET_PORT || '3001', 10);
+
 
 // Environment validation
 const requiredEnvVars = ['JWT_SECRET', 'JWT_REFRESH_SECRET', 'DATABASE_URL'];
@@ -41,19 +41,6 @@ async function startServer() {
     // Initialize auth service
     const authService = new AuthService();
 
-    // Create Socket.IO server
-    const socketServer = createSocketServer(app, authService, {
-      port: SOCKET_PORT,
-      corsOrigins: [
-        'http://localhost:3000',
-        'http://localhost:3001', 
-        'http://localhost:5173',
-        ...(process.env.ALLOWED_ORIGINS?.split(',') || [])
-      ],
-      useRedisAdapter: process.env.NODE_ENV === 'production',
-      redisUrl: process.env.REDIS_URL,
-    });
-
     // Start Express server (for REST API)
     const expressServer = app.listen(PORT, HOST, () => {
       logger.info('Server started successfully', {
@@ -79,6 +66,18 @@ async function startServer() {
       console.log('📝 Registration: POST http://localhost:5000/api/v1/auth/register');
       // eslint-disable-next-line no-console
       console.log('🔑 Login: POST http://localhost:5000/api/v1/auth/login');
+    });
+
+    // Create Socket.IO server attached to the same HTTP server
+    const socketServer = createSocketServer(expressServer, authService, {
+      corsOrigins: [
+        'http://localhost:3000',
+        'http://localhost:3001', 
+        'http://localhost:5173',
+        ...(process.env.ALLOWED_ORIGINS?.split(',') || [])
+      ],
+      useRedisAdapter: process.env.NODE_ENV === 'production',
+      redisUrl: process.env.REDIS_URL,
     });
 
     // Start Socket.IO server

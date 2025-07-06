@@ -1,6 +1,6 @@
 import { Server } from 'socket.io';
-import { createServer, Server as HttpServer } from 'http';
-import { Express } from 'express';
+import { Server as HttpServer } from 'http';
+
 import { logger } from '../utils/logger';
 import { AuthService } from '../services/AuthService';
 import { RealtimeService } from '../services/RealtimeService';
@@ -47,7 +47,7 @@ export class SocketServer {
   private redisAdapter?: SocketRedisAdapter;
   private config: Required<SocketServerConfig>;
 
-  constructor(app: Express, authService: AuthService, config: SocketServerConfig = {}) {
+  constructor(httpServer: HttpServer, authService: AuthService, config: SocketServerConfig = {}) {
     this.config = {
       port: config.port || 3001,
       corsOrigins: config.corsOrigins || ['http://localhost:3000', 'http://localhost:3001'],
@@ -60,7 +60,7 @@ export class SocketServer {
     };
 
     this.authService = authService;
-    this.httpServer = createServer(app);
+    this.httpServer = httpServer;
     
     // Initialize Socket.IO server
     this.io = new Server<ClientToServerEvents, ServerToClientEvents>(this.httpServer, {
@@ -241,26 +241,15 @@ export class SocketServer {
       // Setup Redis adapter first
       await this.setupRedisAdapter();
 
-      // Start HTTP server
-      await new Promise<void>((resolve, reject) => {
-        this.httpServer.listen(this.config.port, '0.0.0.0', (error?: Error) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve();
-          }
-        });
-      });
-
+      // Socket.IO is already attached to the HTTP server that Express is using
       logger.info('Socket.IO server started successfully', {
-        port: this.config.port,
         corsOrigins: this.config.corsOrigins,
         redisEnabled: this.config.useRedisAdapter,
         service: 'socket-server',
       });
 
       // eslint-disable-next-line no-console
-      console.log(`🔌 Socket.IO server running on port ${this.config.port}`);
+      console.log('🔌 Socket.IO server running on same port as Express (5000)');
       // eslint-disable-next-line no-console
       console.log(`🌐 CORS origins: ${this.config.corsOrigins.join(', ')}`);
       // eslint-disable-next-line no-console
@@ -269,7 +258,6 @@ export class SocketServer {
     } catch (error) {
       logger.error('Failed to start Socket.IO server', {
         error: error instanceof Error ? error.message : 'Unknown error',
-        port: this.config.port,
         service: 'socket-server',
       });
       throw error;
@@ -357,9 +345,9 @@ export class SocketServer {
 
 // Factory function to create Socket server
 export function createSocketServer(
-  app: Express, 
+  httpServer: HttpServer, 
   authService: AuthService, 
   config?: SocketServerConfig
 ): SocketServer {
-  return new SocketServer(app, authService, config);
+  return new SocketServer(httpServer, authService, config);
 }

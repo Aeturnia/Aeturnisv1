@@ -11,11 +11,9 @@ export class SocketService {
   }
 
   private init() {
-    // Initialize Socket.IO client connection to port 3001
-    // Use current domain with port 3001 for Replit compatibility
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const hostname = window.location.hostname;
-    const socketUrl = `${protocol}//${hostname}:3001`;
+    // Initialize Socket.IO client connection to same port as Express (5000)
+    // Use same origin as the current page
+    const socketUrl = window.location.origin;
     
     console.log('Connecting Socket.IO to:', socketUrl);
     
