@@ -27,11 +27,9 @@ export const NPCPanel: React.FC = () => {
     if (selectedZone) {
       fetchNPCsInZone();
     }
-  }, [selectedZone, isAuthenticated]);
+  }, [selectedZone]);
 
   const fetchNPCsInZone = async () => {
-    if (!isAuthenticated) return;
-    
     try {
       const result = await api.get(`/api/v1/npcs/zone/${selectedZone}`);
       if (result.success && result.data?.npcs) {
@@ -66,8 +64,6 @@ export const NPCPanel: React.FC = () => {
   };
 
   const startInteraction = async (npcId: string) => {
-    if (!isAuthenticated) return;
-    
     setNpcTest({ loading: true, response: '', success: false });
     
     try {
@@ -96,7 +92,7 @@ export const NPCPanel: React.FC = () => {
   };
 
   const advanceDialogue = async (choice: number) => {
-    if (!selectedNpc || !isAuthenticated) return;
+    if (!selectedNpc) return;
     
     setNpcTest({ loading: true, response: '', success: false });
     
@@ -126,7 +122,7 @@ export const NPCPanel: React.FC = () => {
 
   const filteredNPCs = npcs.filter(npc => {
     if (npcTypeFilter === 'all') return true;
-    return npc.type === npcTypeFilter;
+    return npc.npcType === npcTypeFilter;
   });
 
   const zones = [
