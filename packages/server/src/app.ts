@@ -24,6 +24,7 @@ import { deathRoutes } from './routes/death.routes';
 import { lootRoutes } from './routes/loot.routes';
 import monsterRoutes from './routes/monster.routes';
 import npcRoutes from './routes/npc.routes';
+import { debugRoutes } from './routes/debug.routes';
 
 // Services
 // import { shutdownServices } from './services/index';
@@ -108,6 +109,9 @@ export const createApp = () => {
   // API routes
   app.use('/api/v1/auth', authLimiter, authRoutes);
   app.use('/api/v1/sessions', generalLimiter, sessionRoutes);
+  
+  // Debug routes for ServiceProvider troubleshooting
+  app.use('/api/debug', debugRoutes);
   app.use('/api/v1/characters', generalLimiter, characterRoutes);
   app.use('/api/v1/currency', generalLimiter, currencyRoutes);
   app.use('/api/v1/bank', generalLimiter, bankRoutes);

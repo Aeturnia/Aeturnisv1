@@ -1,13 +1,19 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/asyncHandler';
-import { ServiceProvider, IMonsterService } from '../providers';
+import { ServiceProvider, IMonsterService, globalServices } from '../providers';
 
 const router = Router();
 
 // Get monsters in a specific zone
 router.get('/zone/:zoneId', asyncHandler(async (req, res) => {
   const { zoneId } = req.params;
-  const monsterService = ServiceProvider.getInstance().get<IMonsterService>('MonsterService');
+  
+  // Debug ServiceProvider state
+  const registeredServices = Array.from(globalServices.keys());
+  console.log('Debug Monster Route - Registered services:', registeredServices);
+  console.log('Debug Monster Route - Direct globalServices size:', globalServices.size);
+  
+  const monsterService = globalServices.get('MonsterService') as IMonsterService;
   
   try {
     const monsters = await monsterService.getMonstersInZone(zoneId);

@@ -8,7 +8,13 @@ const router = Router();
 // Get NPCs in a specific zone
 router.get('/zone/:zoneId', asyncHandler(async (req, res) => {
   const { zoneId } = req.params;
-  const npcService = ServiceProvider.getInstance().get<INPCService>('NPCService');
+  
+  // Debug ServiceProvider state
+  const provider = ServiceProvider.getInstance();
+  const registeredServices = provider.getRegisteredServices();
+  console.log('Debug NPC Route - Registered services:', registeredServices);
+  
+  const npcService = provider.get<INPCService>('NPCService');
   
   try {
     const npcs = await npcService.getNPCsInZone(zoneId);

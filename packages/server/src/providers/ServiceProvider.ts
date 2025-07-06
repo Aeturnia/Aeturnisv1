@@ -1,83 +1,103 @@
 import { logger } from '../utils/logger';
 
+// Global service registry - exported for direct access
+export const globalServices = new Map<string, any>();
+
 /**
  * Service Provider Registry
- * Singleton pattern for managing service instances across the application
+ * Static-only implementation for managing service instances across the application
  */
 export class ServiceProvider {
-  private static instance: ServiceProvider;
-  private services = new Map<string, any>();
-
   /**
-   * Private constructor to enforce singleton pattern
+   * Get the singleton instance (backward compatibility)
    */
-  private constructor() {
-    logger.info('ServiceProvider initialized');
-  }
-
-  /**
-   * Get the singleton instance of ServiceProvider
-   * @returns The ServiceProvider instance
-   */
-  static getInstance(): ServiceProvider {
-    if (!ServiceProvider.instance) {
-      ServiceProvider.instance = new ServiceProvider();
-    }
-    return ServiceProvider.instance;
+  static getInstance(): typeof ServiceProvider {
+    return ServiceProvider;
   }
 
   /**
    * Register a service with the provider
-   * @param name - The service name/identifier
-   * @param service - The service instance
    */
-  register<T>(name: string, service: T): void {
-    if (this.services.has(name)) {
-      logger.warn(`Service ${name} is being overwritten`);
-    }
-    this.services.set(name, service);
-    logger.info(`Service registered: ${name}`);
+  static register<T>(name: string, service: T): void {
+    globalServices.set(name, service);
+    logger.info(`Service registered: ${name} (total: ${globalServices.size})`);
   }
 
   /**
    * Get a service from the provider
-   * @param name - The service name/identifier
-   * @returns The service instance
-   * @throws Error if service is not registered
    */
-  get<T>(name: string): T {
-    const service = this.services.get(name);
+  static get<T>(name: string): T {
+    const service = globalServices.get(name);
     if (!service) {
-      const error = `Service ${name} not registered. Available services: ${Array.from(this.services.keys()).join(', ')}`;
-      logger.error(error);
-      throw new Error(error);
+      const availableServices = Array.from(globalServices.keys()).join(', ');
+      logger.error(`Service ${name} not registered. Available services: ${availableServices}`);
+      throw new Error(`Service ${name} not registered. Available services: ${availableServices}`);
     }
     return service as T;
   }
 
   /**
-   * Check if a service is registered
-   * @param name - The service name/identifier
-   * @returns Whether the service is registered
+   * Get list of registered service names
    */
-  has(name: string): boolean {
-    return this.services.has(name);
+  static getRegisteredServices(): string[] {
+    return Array.from(globalServices.keys());
+  }
+
+  /**
+   * Get the number of registered services
+   */
+  static getServiceCount(): number {
+    return globalServices.size;
+  }
+
+  /**
+   * Check if a service is registered
+   */
+  static isRegistered(name: string): boolean {
+    return globalServices.has(name);
+  }
+
+  /**
+   * Check if a service is registered (alias)
+   */
+  static has(name: string): boolean {
+    return globalServices.has(name);
   }
 
   /**
    * Clear all registered services
-   * Useful for testing
    */
-  clear(): void {
-    this.services.clear();
+  static clear(): void {
+    globalServices.clear();
     logger.info('All services cleared from ServiceProvider');
   }
 
-  /**
-   * Get list of all registered service names
-   * @returns Array of service names
-   */
+  // Instance methods for backward compatibility
+  register<T>(name: string, service: T): void {
+    ServiceProvider.register(name, service);
+  }
+
+  get<T>(name: string): T {
+    return ServiceProvider.get<T>(name);
+  }
+
   getRegisteredServices(): string[] {
-    return Array.from(this.services.keys());
+    return ServiceProvider.getRegisteredServices();
+  }
+
+  getServiceCount(): number {
+    return ServiceProvider.getServiceCount();
+  }
+
+  isRegistered(name: string): boolean {
+    return ServiceProvider.isRegistered(name);
+  }
+
+  has(name: string): boolean {
+    return ServiceProvider.has(name);
+  }
+
+  clear(): void {
+    ServiceProvider.clear();
   }
 }

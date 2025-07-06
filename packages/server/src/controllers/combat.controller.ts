@@ -1,7 +1,5 @@
 import { Request, Response } from 'express';
 import { ServiceProvider, ICombatService } from '../providers';
-import { ResourceService } from '../services/ResourceService';
-import { testMonsterService } from '../services/TestMonsterService';
 import { CombatStartRequest, CombatActionRequest, CombatActionType } from '../types/combat.types';
 
 // Extend Request type for authenticated requests
@@ -13,8 +11,7 @@ interface AuthRequest extends Request {
   };
 }
 
-// Note: ResourceService doesn't have a service provider interface yet
-const resourceService = new ResourceService();
+// All services now use ServiceProvider pattern
 
 /**
  * Get mock player stats for testing interface
