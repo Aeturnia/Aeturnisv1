@@ -820,35 +820,35 @@ Types: attack, defend, skill, general usage
                 <button 
                   className="button" 
                   onClick={startLiveCombatTest}
-                  disabled={combatEngineTest.loading || !authToken}
+                  disabled={liveCombatTest.loading}
                 >
                   Start Combat
                 </button>
                 <button 
                   className="button" 
                   onClick={() => performCombatAction('attack')}
-                  disabled={combatEngineTest.loading || !authToken || !combatSessionId}
+                  disabled={liveCombatTest.loading || !combatSessionId}
                 >
                   Attack
                 </button>
                 <button 
                   className="button" 
                   onClick={() => performCombatAction('defend')}
-                  disabled={combatEngineTest.loading || !authToken || !combatSessionId}
+                  disabled={liveCombatTest.loading || !combatSessionId}
                 >
                   Defend
                 </button>
                 <button 
                   className="button" 
                   onClick={() => performCombatAction('flee')}
-                  disabled={combatEngineTest.loading || !authToken || !combatSessionId}
+                  disabled={liveCombatTest.loading || !combatSessionId}
                 >
                   Flee
                 </button>
                 <button 
                   className="button" 
                   onClick={checkCombatStatus}
-                  disabled={combatEngineTest.loading || !authToken || !combatSessionId}
+                  disabled={liveCombatTest.loading || !combatSessionId}
                 >
                   Check Status
                 </button>
@@ -857,6 +857,14 @@ Types: attack, defend, skill, general usage
             
             <div className={`response ${combatEngineTest.success ? 'success' : 'error'}`}>
               {combatEngineTest.loading ? 'Loading...' : combatEngineTest.response || 'Select a test to validate Combat Engine v2.0 features'}
+            </div>
+          </div>
+
+          <div className="test-panel wide-panel">
+            <h3 className="test-title">🔥 Live Combat Results</h3>
+            <p>Combat Session ID: {combatSessionId || 'No active session'}</p>
+            <div className={`response ${liveCombatTest.success ? 'success' : 'error'}`}>
+              {liveCombatTest.loading ? 'Loading...' : liveCombatTest.response || 'Start a combat session to see live combat results here'}
             </div>
           </div>
 
