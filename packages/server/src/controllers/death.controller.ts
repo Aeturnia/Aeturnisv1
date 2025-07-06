@@ -168,8 +168,8 @@ export const testDeathSystem = async (req: Request, res: Response): Promise<Resp
         mockCharacterId: '550e8400-e29b-41d4-a716-446655440000',
         supportedDeathReasons: ['combat', 'fall_damage', 'environmental', 'admin'],
         penalties: {
-          experienceLoss: '10%',
-          goldLoss: '5%',
+          experienceLoss: '80%',
+          goldLoss: '100%',
           durabilityDamage: '15%',
           respawnCooldown: '30 seconds'
         }
@@ -215,10 +215,10 @@ export const testCharacterDeath = async (req: Request, res: Response): Promise<R
       success: true,
       deathAt: new Date().toISOString(),
       penalties: {
-        xpLoss: 500,
-        xpLossPercentage: 10,
+        xpLoss: 4000,
+        xpLossPercentage: 80,
         durabilityDamage: [],
-        goldLoss: 50
+        goldLoss: 1000
       }
     };
 
