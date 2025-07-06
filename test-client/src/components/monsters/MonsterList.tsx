@@ -35,7 +35,7 @@ export const MonsterList: React.FC<MonsterListProps> = ({
     return '#9e9e9e';
   };
 
-  const states = ['alive', 'dead', 'spawning', 'despawning'];
+  const states = ['alive', 'dead', 'spawning', 'respawning'];
 
   return (
     <div className="monster-list">

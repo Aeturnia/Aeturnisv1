@@ -129,12 +129,17 @@ router.patch('/:monsterId/state', asyncHandler(async (req, res) => {
 router.delete('/:monsterId', asyncHandler(async (req, res) => {
   const { monsterId } = req.params;
   
-  // Simulate monster deletion
+  // Update mock data to remove the monster
+  mockMonsters = mockMonsters.filter(m => m.id !== monsterId);
+  
+  // Simulate monster deletion with detailed response
   res.json({
     success: true,
     data: {
       deletedMonsterId: monsterId,
-      message: `Monster ${monsterId} removed from zone`
+      message: `Monster ${monsterId} has been killed and removed from zone`,
+      action: 'killed',
+      timestamp: new Date().toISOString()
     }
   });
 }));
@@ -162,22 +167,31 @@ router.patch('/:monsterId/state', asyncHandler(async (req, res) => {
     });
   }
   
-  // Mock updated monster data
-  const mockUpdatedMonster = {
-    id: monsterId,
-    name: 'Forest Goblin',
-    level: 5,
-    position: { x: 110, y: 0, z: 95 },
-    state: finalState,
-    targetId: targetId || null,
-    stats: { hp: 45, maxHp: 45, attack: 12, defense: 8, speed: 10 }
-  };
-  
-  res.json({ 
-    success: true, 
-    data: mockUpdatedMonster,
-    message: 'Monster state updated (mock data)' 
-  });
+  // Update the actual mock monster in the array
+  const monsterIndex = mockMonsters.findIndex(m => m.id === monsterId);
+  if (monsterIndex !== -1) {
+    mockMonsters[monsterIndex] = {
+      ...mockMonsters[monsterIndex],
+      state: finalState
+    };
+    
+    res.json({ 
+      success: true, 
+      data: {
+        monsterId: monsterId,
+        oldState: 'alive', // For demo purposes
+        newState: finalState,
+        updatedMonster: mockMonsters[monsterIndex],
+        timestamp: new Date().toISOString()
+      },
+      message: `Monster ${monsterId} state changed to ${finalState}` 
+    });
+  } else {
+    res.status(404).json({
+      success: false,
+      message: `Monster ${monsterId} not found`
+    });
+  }
 }));
 
 // Get monster types (MOCK DATA FOR TESTING)

@@ -100,21 +100,46 @@ export const MonsterPanel: React.FC = () => {
       let result;
       if (action === 'kill') {
         result = await api.delete(`/api/v1/monsters/${monsterId}`);
+        
+        // Immediately update UI by removing the monster
+        if (result?.success) {
+          setMonsters(prevMonsters => prevMonsters.filter(m => m.id !== monsterId));
+        }
       } else if (action === 'updateState') {
         result = await api.patch(`/api/v1/monsters/${monsterId}/state`, { 
           state: data?.state || 'alive' 
         });
+        
+        // Immediately update UI with new state
+        if (result?.success) {
+          setMonsters(prevMonsters => 
+            prevMonsters.map(m => 
+              m.id === monsterId 
+                ? { ...m, state: data?.state || 'alive' }
+                : m
+            )
+          );
+        }
       }
       
       if (result) {
         setMonsterTest({
           loading: false,
-          response: JSON.stringify(result, null, 2),
+          response: JSON.stringify({
+            action: action,
+            monsterId: monsterId,
+            success: result.success,
+            result: result.data || result,
+            timestamp: new Date().toISOString()
+          }, null, 2),
           success: result.success
         });
         
+        // Also refresh from server to ensure data consistency
         if (result.success) {
-          fetchMonstersInZone(); // Refresh monster list
+          setTimeout(() => {
+            fetchMonstersInZone();
+          }, 500);
         }
       }
     } catch (error) {
