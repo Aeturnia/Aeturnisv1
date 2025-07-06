@@ -180,9 +180,14 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
     
     if (!session) {
       console.log('Session not found');
-      return res.status(404).json({
+      // Check if this is because the player is dead (session ended)
+      // In a real implementation, we'd check character death status from database
+      // For testing, we assume session not found after combat = player is dead
+      return res.status(400).json({
         success: false,
-        message: 'Combat session not found'
+        message: '💀 You cannot fight while dead! Please respawn first before entering combat.',
+        combatStatus: 'player_dead',
+        hint: 'Use the Death & Respawn System to revive your character'
       });
     }
     
