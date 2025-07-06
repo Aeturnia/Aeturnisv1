@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(for file in *.ts)",
+      "Bash(do echo -e \"\\n=== $file ===\")",
+      "Bash(awk:*)",
+      "Bash(done)",
+      "Bash(ls:*)"
+    ],
+    "deny": []
+  }
+}

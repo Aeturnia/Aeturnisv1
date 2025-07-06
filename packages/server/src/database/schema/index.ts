@@ -555,6 +555,203 @@ export const itemSetBonusesRelations = relations(itemSetBonuses, ({ one }) => ({
   }),
 }));
 
+// =============================================================================
+// MONSTER & NPC SYSTEM
+// =============================================================================
+
+// Monster Types table
+export const monsterTypes = pgTable('monster_types', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 100 }).notNull().unique(),
+  displayName: varchar('display_name', { length: 100 }).notNull(),
+  level: integer('level').notNull(),
+  baseHp: integer('base_hp').notNull(),
+  baseAttack: integer('base_attack').notNull(),
+  baseDefense: integer('base_defense').notNull(),
+  experienceValue: integer('experience_value').notNull(),
+  lootTableId: integer('loot_table_id').references(() => lootTables.id),
+  aiBehavior: varchar('ai_behavior', { length: 50 }).notNull().default('aggressive'), // aggressive, defensive, neutral
+  metadata: jsonb('metadata').default({}).$type<Record<string, unknown>>(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => {
+  return {
+    nameIdx: index('idx_monster_types_name').on(table.name),
+    levelIdx: index('idx_monster_types_level').on(table.level),
+    behaviorIdx: index('idx_monster_types_behavior').on(table.aiBehavior),
+  };
+});
+
+// Zones table (referenced by monsters and NPCs)
+export const zones = pgTable('zones', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 100 }).notNull().unique(),
+  displayName: varchar('display_name', { length: 100 }).notNull(),
+  level: integer('level').notNull().default(1),
+  maxPlayers: integer('max_players').notNull().default(100),
+  description: text('description'),
+  metadata: jsonb('metadata').default({}).$type<Record<string, unknown>>(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => {
+  return {
+    nameIdx: index('idx_zones_name').on(table.name),
+    levelIdx: index('idx_zones_level').on(table.level),
+  };
+});
+
+// Spawn Points table
+export const spawnPoints = pgTable('spawn_points', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  zoneId: uuid('zone_id').notNull().references(() => zones.id),
+  position: jsonb('position').notNull().$type<{x: number, y: number, z: number}>(),
+  monsterTypeId: uuid('monster_type_id').notNull().references(() => monsterTypes.id),
+  respawnTime: integer('respawn_time').notNull().default(300), // seconds
+  maxSpawns: integer('max_spawns').notNull().default(1),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => {
+  return {
+    zoneIdx: index('idx_spawn_points_zone').on(table.zoneId),
+    monsterTypeIdx: index('idx_spawn_points_monster_type').on(table.monsterTypeId),
+    activeIdx: index('idx_spawn_points_active').on(table.isActive),
+  };
+});
+
+// Monsters table
+export const monsters = pgTable('monsters', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  monsterTypeId: uuid('monster_type_id').notNull().references(() => monsterTypes.id),
+  zoneId: uuid('zone_id').notNull().references(() => zones.id),
+  position: jsonb('position').notNull().$type<{x: number, y: number, z: number}>(),
+  currentHp: integer('current_hp').notNull(),
+  maxHp: integer('max_hp').notNull(),
+  state: varchar('state', { length: 20 }).notNull().default('idle'), // idle, patrol, combat, flee
+  aggroRadius: integer('aggro_radius').notNull().default(10),
+  targetId: uuid('target_id'), // current target character_id
+  spawnPointId: uuid('spawn_point_id').references(() => spawnPoints.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  killedAt: timestamp('killed_at', { withTimezone: true }),
+  isDeleted: boolean('is_deleted').notNull().default(false),
+}, (table) => {
+  return {
+    zoneIdx: index('idx_monsters_zone').on(table.zoneId),
+    stateIdx: index('idx_monsters_state').on(table.state),
+    targetIdx: index('idx_monsters_target').on(table.targetId),
+    spawnPointIdx: index('idx_monsters_spawn_point').on(table.spawnPointId),
+    deletedIdx: index('idx_monsters_deleted').on(table.isDeleted),
+  };
+});
+
+// NPCs table
+export const npcs = pgTable('npcs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  displayName: varchar('display_name', { length: 100 }).notNull(),
+  type: varchar('type', { length: 50 }).notNull(), // merchant, quest_giver, guard, trainer, innkeeper
+  zoneId: uuid('zone_id').notNull().references(() => zones.id),
+  position: jsonb('position').notNull().$type<{x: number, y: number, z: number}>(),
+  dialogueTreeId: uuid('dialogue_tree_id'),
+  isQuestGiver: boolean('is_quest_giver').notNull().default(false),
+  metadata: jsonb('metadata').default({}).$type<Record<string, unknown>>(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  isDeleted: boolean('is_deleted').notNull().default(false),
+}, (table) => {
+  return {
+    nameIdx: index('idx_npcs_name').on(table.name),
+    typeIdx: index('idx_npcs_type').on(table.type),
+    zoneIdx: index('idx_npcs_zone').on(table.zoneId),
+    questGiverIdx: index('idx_npcs_quest_giver').on(table.isQuestGiver),
+    deletedIdx: index('idx_npcs_deleted').on(table.isDeleted),
+  };
+});
+
+// NPC Interactions table
+export const npcInteractions = pgTable('npc_interactions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  npcId: uuid('npc_id').notNull().references(() => npcs.id),
+  characterId: uuid('character_id').notNull().references(() => characters.id),
+  interactionType: varchar('interaction_type', { length: 50 }).notNull(), // talk, trade, quest_start, quest_complete
+  dialogueState: jsonb('dialogue_state').default({}).$type<Record<string, unknown>>(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => {
+  return {
+    npcIdx: index('idx_npc_interactions_npc').on(table.npcId),
+    characterIdx: index('idx_npc_interactions_character').on(table.characterId),
+    typeIdx: index('idx_npc_interactions_type').on(table.interactionType),
+    createdAtIdx: index('idx_npc_interactions_created_at').on(table.createdAt),
+  };
+});
+
+// Monster & NPC Relations
+export const monsterTypesRelations = relations(monsterTypes, ({ many, one }) => ({
+  monsters: many(monsters),
+  spawnPoints: many(spawnPoints),
+  lootTable: one(lootTables, {
+    fields: [monsterTypes.lootTableId],
+    references: [lootTables.id],
+  }),
+}));
+
+export const zonesRelations = relations(zones, ({ many }) => ({
+  monsters: many(monsters),
+  npcs: many(npcs),
+  spawnPoints: many(spawnPoints),
+}));
+
+export const spawnPointsRelations = relations(spawnPoints, ({ one, many }) => ({
+  zone: one(zones, {
+    fields: [spawnPoints.zoneId],
+    references: [zones.id],
+  }),
+  monsterType: one(monsterTypes, {
+    fields: [spawnPoints.monsterTypeId],
+    references: [monsterTypes.id],
+  }),
+  monsters: many(monsters),
+}));
+
+export const monstersRelations = relations(monsters, ({ one }) => ({
+  monsterType: one(monsterTypes, {
+    fields: [monsters.monsterTypeId],
+    references: [monsterTypes.id],
+  }),
+  zone: one(zones, {
+    fields: [monsters.zoneId],
+    references: [zones.id],
+  }),
+  spawnPoint: one(spawnPoints, {
+    fields: [monsters.spawnPointId],
+    references: [spawnPoints.id],
+  }),
+  targetCharacter: one(characters, {
+    fields: [monsters.targetId],
+    references: [characters.id],
+  }),
+}));
+
+export const npcsRelations = relations(npcs, ({ one, many }) => ({
+  zone: one(zones, {
+    fields: [npcs.zoneId],
+    references: [zones.id],
+  }),
+  interactions: many(npcInteractions),
+}));
+
+export const npcInteractionsRelations = relations(npcInteractions, ({ one }) => ({
+  npc: one(npcs, {
+    fields: [npcInteractions.npcId],
+    references: [npcs.id],
+  }),
+  character: one(characters, {
+    fields: [npcInteractions.characterId],
+    references: [characters.id],
+  }),
+}));
+
 // Update characters relations to include equipment and inventory
 export const charactersRelationsUpdated = relations(characters, ({ one, many }) => ({
   account: one(users, {
