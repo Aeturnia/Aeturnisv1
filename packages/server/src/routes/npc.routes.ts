@@ -85,12 +85,12 @@ router.post('/:npcId/interact', asyncHandler(async (req, res) => {
 // Advance dialogue with an NPC
 router.post('/:npcId/dialogue/advance', asyncHandler(async (req, res) => {
   const { npcId } = req.params;
-  const { characterId, choiceId } = req.body;
+  const { characterId, choice } = req.body;
   
-  if (!characterId || !choiceId) {
+  if (!characterId || choice === undefined) {
     return res.status(400).json({
       success: false,
-      error: 'Character ID and choice ID are required'
+      error: 'Character ID and choice are required'
     });
   }
   
