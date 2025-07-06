@@ -7,7 +7,10 @@ import {
   CombatParticipant,
   CombatActionType,
   CombatStartRequest,
-  CombatEndResult
+  CombatEndResult,
+  CombatError,
+  CombatLog,
+  CombatSessionConfig
 } from '../types/combat.types';
 import { ResourcePool, ResourceUpdate } from '../types/resources.types';
 import { ResourceService } from './ResourceService';
@@ -16,12 +19,55 @@ import { testMonsterService } from './TestMonsterService';
 export class CombatService {
   private resourceService: ResourceService;
   
-  // In-memory session storage for mocking
+  // Session storage with config
   private sessions: Map<string, CombatSession> = new Map();
+  private sessionConfigs: Map<string, CombatSessionConfig> = new Map();
+  private turnTimers: Map<string, NodeJS.Timeout> = new Map();
   private participantToSession: Map<string, string> = new Map();
+
+  // Default configuration
+  private defaultConfig: CombatSessionConfig = {
+    turnTimeoutSeconds: 30,
+    maxTurns: 100,
+    enableAIVariety: true
+  };
 
   constructor() {
     this.resourceService = new ResourceService();
+  }
+
+  /**
+   * Validate resource requirements before action
+   */
+  private validateResourceRequirements(
+    actor: CombatParticipant, 
+    action: CombatAction
+  ): CombatError | null {
+    switch (action.type) {
+      case CombatActionType.ATTACK:
+        if (actor.stamina < 5) {
+          return { 
+            error: 'Not enough stamina to attack (requires 5)', 
+            code: 'INSUFFICIENT_RESOURCES' 
+          };
+        }
+        break;
+        
+      case CombatActionType.USE_SKILL:
+        if (actor.mana < 10) {
+          return { 
+            error: 'Not enough mana to use skill (requires 10)', 
+            code: 'INSUFFICIENT_RESOURCES' 
+          };
+        }
+        break;
+        
+      case CombatActionType.USE_ITEM:
+        // TODO: Validate item exists in inventory
+        break;
+    }
+    
+    return null;
   }
 
   /**
@@ -72,31 +118,52 @@ export class CombatService {
   }
 
   /**
-   * Process a combat action
+   * Updated processAction with resource validation
    */
   async processAction(
     sessionId: string, 
     userId: string, 
     action: CombatAction
-  ): Promise<CombatResult> {
+  ): Promise<CombatResult | CombatError> {
     const session = this.sessions.get(sessionId);
     if (!session) {
-      throw new Error('Combat session not found');
+      return { error: 'Combat session not found', code: 'INVALID_ACTION' };
+    }
+
+    const config = this.sessionConfigs.get(sessionId) || this.defaultConfig;
+    
+    // Check max turns
+    if (session.roundNumber > config.maxTurns) {
+      session.status = 'completed';
+      session.endTime = Date.now();
+      return { 
+        error: 'Combat exceeded maximum turns', 
+        code: 'COMBAT_TIMEOUT' 
+      };
     }
 
     if (session.status !== 'active') {
-      throw new Error('Combat session is not active');
+      return { error: 'Combat session is not active', code: 'INVALID_ACTION' };
     }
 
     // Allow only player actions (players can act anytime)
     const actor = session.participants.find(p => p.charId === userId && p.team === 'player');
     if (!actor) {
-      throw new Error('Player not found in combat');
+      return { error: 'Player not found in combat', code: 'INVALID_ACTION' };
     }
 
     if (actor.status !== 'active') {
-      throw new Error('Player is not active');
+      return { error: 'Player is not active', code: 'INVALID_ACTION' };
     }
+
+    // FIXED: Validate resources before executing
+    const resourceError = this.validateResourceRequirements(actor, action);
+    if (resourceError) {
+      return resourceError;
+    }
+
+    // Initialize combat log if needed
+    if (!session.combatLog) session.combatLog = [];
 
     // Process the player's action
     const playerResult = await this.executeAction(session, actor, action);
@@ -168,40 +235,49 @@ export class CombatService {
           throw new Error('Target not found');
         }
 
-        // Calculate damage (mock formula)
+        // Calculate and apply damage
         damage = this.calculateDamage(actor, target);
-        
-        // Apply damage to target
         target.hp = Math.max(0, target.hp - damage);
+        
         if (target.hp === 0) {
           target.status = 'defeated';
         }
 
-        // Stamina cost for attack
+        // Deduct stamina
+        actor.stamina = Math.max(0, actor.stamina - 5);
         resourceCost.push({
           charId: actor.charId,
           poolType: 'stamina',
-          currentValue: actor.stamina - 5,
+          currentValue: actor.stamina,
           maxValue: actor.maxStamina,
           change: -5,
           reason: 'combat'
         });
-        actor.stamina = Math.max(0, actor.stamina - 5);
 
         message = `${actor.charName} attacks ${target.charName} for ${damage} damage!`;
+        
+        // Add to combat log
+        session.combatLog!.push({
+          message,
+          timestamp: Date.now(),
+          actorId: actor.charId,
+          type: 'damage'
+        });
         break;
 
       case CombatActionType.DEFEND:
-        // Defensive stance - reduces incoming damage next turn
-        // Add a buff (mock implementation)
-        actor.buffs.push({
-          id: uuidv4(),
-          name: 'Defending',
-          duration: 1,
-          modifier: 0.5 // 50% damage reduction
-        });
-        
-        // Restore some stamina when defending (prevents AI from getting stuck)
+        // FIXED: Check if already defending
+        const existingDefendBuff = actor.buffs.find(b => b.name === 'Defending');
+        if (!existingDefendBuff) {
+          actor.buffs.push({
+            id: `defend-${Date.now()}`,
+            name: 'Defending',
+            duration: 1, // Expires after 1 turn
+            modifier: 0.5 // 50% damage reduction
+          });
+        }
+
+        // Regenerate stamina
         const staminaRestore = Math.min(3, actor.maxStamina - actor.stamina);
         if (staminaRestore > 0) {
           actor.stamina += staminaRestore;
@@ -214,16 +290,27 @@ export class CombatService {
             reason: 'defend'
           });
         }
+
+        message = `${actor.charName} takes a defensive stance and recovers ${staminaRestore} stamina`;
         
-        message = `${actor.charName} takes a defensive stance and recovers ${staminaRestore} stamina!`;
+        session.combatLog!.push({
+          message,
+          timestamp: Date.now(),
+          actorId: actor.charId,
+          type: 'buff'
+        });
         break;
 
       case CombatActionType.FLEE:
         actor.status = 'fled';
-        message = `${actor.charName} flees from combat!`;
+        message = `${actor.charName} fled from combat!`;
         
-        // Clean up participant tracking immediately when fleeing
-        this.participantToSession.delete(actor.charId);
+        session.combatLog!.push({
+          message,
+          timestamp: Date.now(),
+          actorId: actor.charId,
+          type: 'action'
+        });
         break;
 
       case CombatActionType.USE_ITEM:
@@ -244,24 +331,33 @@ export class CombatService {
           throw new Error('Skill target not found');
         }
 
+        // Calculate skill damage
         damage = this.calculateSkillDamage(actor, skillTarget);
         skillTarget.hp = Math.max(0, skillTarget.hp - damage);
+        
         if (skillTarget.hp === 0) {
           skillTarget.status = 'defeated';
         }
 
-        // Mana cost for skill
+        // Deduct mana
+        actor.mana = Math.max(0, actor.mana - 10);
         resourceCost.push({
           charId: actor.charId,
           poolType: 'mana',
-          currentValue: actor.mana - 10,
+          currentValue: actor.mana,
           maxValue: actor.maxMana,
           change: -10,
           reason: 'combat'
         });
-        actor.mana = Math.max(0, actor.mana - 10);
 
         message = `${actor.charName} casts a skill on ${skillTarget.charName} for ${damage} damage!`;
+        
+        session.combatLog!.push({
+          message,
+          timestamp: Date.now(),
+          actorId: actor.charId,
+          type: 'damage'
+        });
         break;
 
       case CombatActionType.PASS:
@@ -511,14 +607,16 @@ export class CombatService {
   }
 
   /**
-   * Calculate attack damage (mock formula)
+   * Fixed damage calculation with proper defense clamping
    */
   private calculateDamage(attacker: CombatParticipant, target: CombatParticipant): number {
     const baseAttack = 25; // Mock attack stat
     const targetDefense = 20; // Mock defense stat
     const randomFactor = 0.8 + Math.random() * 0.4; // 80-120% damage variance
     
-    let damage = Math.floor((baseAttack - targetDefense * 0.5) * randomFactor);
+    // FIXED: Clamp base damage BEFORE applying random factor
+    const baseDamage = Math.max(0, baseAttack - targetDefense * 0.5);
+    let damage = Math.floor(baseDamage * randomFactor);
     
     // Apply defender buffs (defending stance)
     const defendBuff = target.buffs.find(b => b.name === 'Defending');
@@ -530,13 +628,16 @@ export class CombatService {
   }
 
   /**
-   * Calculate skill damage (mock formula)
+   * Fixed skill damage to consider defense
    */
   private calculateSkillDamage(caster: CombatParticipant, target: CombatParticipant): number {
     const baseSkillDamage = 35; // Higher than normal attack
+    const targetDefense = 20; // Mock defense stat
     const randomFactor = 0.9 + Math.random() * 0.2; // 90-110% damage variance
     
-    return Math.floor(baseSkillDamage * randomFactor);
+    // FIXED: Skills now consider defense (but less than normal attacks)
+    const baseDamage = Math.max(0, baseSkillDamage - targetDefense * 0.25);
+    return Math.floor(baseDamage * randomFactor);
   }
 
   /**
@@ -606,8 +707,8 @@ export class CombatService {
     // Check if actor has been defending too much (anti-stuck logic)
     const recentDefends = session.combatLog
       ? session.combatLog.filter(log => 
-          log.includes(actor.charName) && 
-          log.includes('defensive stance') &&
+          log.actorId === actor.charId && 
+          log.message.includes('defensive stance') &&
           Date.now() - log.timestamp < 30000 // Last 30 seconds
         ).length
       : 0;

@@ -15,6 +15,24 @@ export interface CombatAction {
   timestamp: number;
 }
 
+export interface CombatError {
+  error: string;
+  code: 'INSUFFICIENT_RESOURCES' | 'INVALID_ACTION' | 'COMBAT_TIMEOUT';
+}
+
+export interface CombatSessionConfig {
+  turnTimeoutSeconds: number;
+  maxTurns: number;
+  enableAIVariety: boolean;
+}
+
+export interface CombatLog {
+  message: string;
+  timestamp: number;
+  actorId: string;
+  type: 'action' | 'damage' | 'buff' | 'system';
+}
+
 export interface CombatSession {
   sessionId: string;
   participants: CombatParticipant[];
@@ -26,6 +44,7 @@ export interface CombatSession {
   endTime?: number;
   winner?: string; // charId or 'draw'
   endMessage?: string; // Win/loss/flee message
+  combatLog?: CombatLog[];
 }
 
 export interface CombatParticipant {
