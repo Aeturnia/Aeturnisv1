@@ -24,6 +24,7 @@ function App() {
   const [characterTest, setCharacterTest] = useState<TestState>({ loading: false, response: '', success: false });
   const [equipmentTest, setEquipmentTest] = useState<TestState>({ loading: false, response: '', success: false });
   const [combatEngineTest, setCombatEngineTest] = useState<TestState>({ loading: false, response: '', success: false });
+  const [liveCombatTest, setLiveCombatTest] = useState<TestState>({ loading: false, response: '', success: false });
   const [combatSessionId, setCombatSessionId] = useState<string>('');
   const [testMonsters, setTestMonsters] = useState<any[]>([]);
   const [selectedMonster, setSelectedMonster] = useState<string>('');
