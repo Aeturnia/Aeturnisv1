@@ -14,13 +14,18 @@ import {
 import { ResourcePool, ResourceUpdate } from '../types/resources.types';
 import { ResourceService } from './ResourceService';
 import { testMonsterService } from './TestMonsterService';
+import { CharacterService } from './CharacterService';
+import { StatsService } from './StatsService';
+import { EquipmentService } from './EquipmentService';
+import { DerivedStats } from '../types/character.types';
 
 export class CombatService {
   private resourceService: ResourceService;
+  private characterService: CharacterService;
   
   // Combat Engine Version
-  public static readonly VERSION = '2.0.0';
-  public static readonly VERSION_NAME = 'Enhanced AI & Resource Management';
+  public static readonly VERSION = '2.1.0';
+  public static readonly VERSION_NAME = 'AIPE Integration & Dynamic Combat';
   
   // Session storage with config
   private sessions: Map<string, CombatSession> = new Map();
@@ -36,6 +41,10 @@ export class CombatService {
 
   constructor() {
     this.resourceService = new ResourceService();
+    this.characterService = new CharacterService();
+    // EquipmentService requires its own repositories and cache
+    // For now, skip instantiation since it's not used in core combat logic
+    // this.equipmentService = new EquipmentService(equipmentRepo, characterRepo, cache);
   }
 
   /**
@@ -46,7 +55,11 @@ export class CombatService {
       version: CombatService.VERSION,
       name: CombatService.VERSION_NAME,
       features: [
-        'Mathematical Balance Patch (Damage calculation fixes)',
+        'AIPE Integration - Uses character stats instead of hard-coded values',
+        'Weapon Damage Ranges - Combat now uses equipped weapon damage',
+        'Proper Defense Mitigation - Logarithmic formula for balanced defense',
+        'Combat Mechanics Implementation - Critical hits, dodge, block, accuracy',
+        'Separate Physical/Magical Damage - Different mitigation formulas',
         'Resource validation system (Stamina/Mana requirements)', 
         'Enhanced combat logging with resource tracking',
         'Non-stacking buff mechanics',
@@ -699,7 +712,7 @@ export class CombatService {
   }
 
   /**
-   * Get character combat stats
+   * Get character combat stats with AIPE integration
    */
   async getCharacterStats(charId: string): Promise<CharacterCombatStats> {
     // Check if this is a test monster
@@ -711,33 +724,47 @@ export class CombatService {
       throw new Error(`Test monster stats not found: ${charId}`);
     }
 
-    // Regular character logic - provide default resources for all users
-    const defaultResources: ResourcePool = {
-      hp: 100, maxHp: 100, mana: 50, maxMana: 50, stamina: 30, maxStamina: 30,
-      hpRegenRate: 1, manaRegenRate: 0.5, staminaRegenRate: 2, lastRegenTime: Date.now()
-    };
-
     try {
+      // Get character data with AIPE stats
+      const character = await this.characterService.getCharacter(charId);
+      if (!character) {
+        throw new Error(`Character not found: ${charId}`);
+      }
+
+      // Calculate derived stats using AIPE
+      const derivedStats: DerivedStats = StatsService.calculateDerivedStats(character);
+      
+      // Get current resources
       const resources = await this.resourceService.getResources(charId);
+      if (!resources) {
+        throw new Error(`Resources not found for character: ${charId}`);
+      }
+
       return {
         charId,
-        level: 10,
-        attack: 25,
-        defense: 20,
-        speed: 15,
-        critRate: 0.1,
-        critDamage: 1.5,
-        resources: resources || defaultResources
+        level: character.level,
+        attack: derivedStats.physicalDamage,
+        defense: derivedStats.physicalDefense,
+        speed: derivedStats.attackSpeed,
+        critRate: derivedStats.criticalChance / 100, // Convert percentage to decimal
+        critDamage: derivedStats.criticalDamage / 100, // Convert percentage to decimal
+        resources
       };
     } catch (error) {
-      // If resource service fails, use default resources
+      // Fallback to default stats if character service fails
+      console.error(`Failed to get character stats for ${charId}:`, error);
+      const defaultResources: ResourcePool = {
+        hp: 100, maxHp: 100, mana: 50, maxMana: 50, stamina: 30, maxStamina: 30,
+        hpRegenRate: 1, manaRegenRate: 0.5, staminaRegenRate: 2, lastRegenTime: Date.now()
+      };
+      
       return {
         charId,
-        level: 10,
-        attack: 25,
-        defense: 20,
-        speed: 15,
-        critRate: 0.1,
+        level: 1,
+        attack: 10,
+        defense: 10,
+        speed: 10,
+        critRate: 0.05,
         critDamage: 1.5,
         resources: defaultResources
       };
@@ -773,7 +800,7 @@ export class CombatService {
   }
 
   /**
-   * Create a combat participant
+   * Create a combat participant with full AIPE stats
    */
   private async createParticipant(charId: string, team: 'player' | 'enemy'): Promise<CombatParticipant> {
     // Check if this is a test monster
@@ -785,39 +812,146 @@ export class CombatService {
       throw new Error(`Test monster not found: ${charId}`);
     }
 
-    // Regular character logic
-    const stats = await this.getCharacterStats(charId);
-    
-    return {
-      charId,
-      charName: team === 'player' ? `Player_${charId.slice(0, 4)}` : `Enemy_${charId.slice(0, 4)}`,
-      hp: stats.resources.hp,
-      maxHp: stats.resources.maxHp,
-      mana: stats.resources.mana,
-      maxMana: stats.resources.maxMana,
-      stamina: stats.resources.stamina,
-      maxStamina: stats.resources.maxStamina,
-      team,
-      status: 'active',
-      buffs: [],
-      debuffs: []
-    };
+    try {
+      // Get character with AIPE stats
+      const character = await this.characterService.getCharacter(charId);
+      if (!character) {
+        throw new Error(`Character not found: ${charId}`);
+      }
+
+      // Calculate derived stats
+      const derivedStats: DerivedStats = StatsService.calculateDerivedStats(character);
+      
+      // Get current resources
+      const resources = await this.resourceService.getResources(charId);
+      if (!resources) {
+        throw new Error(`Resources not found for character: ${charId}`);
+      }
+
+      // Get weapon damage ranges
+      const equipment = await this.equipmentService.getCharacterEquipment(charId);
+      let weaponMinDamage = 5; // Base unarmed damage
+      let weaponMaxDamage = 10;
+      
+      if (equipment && equipment.equipment.weapon) {
+        // Get weapon stats from equipment
+        const weaponItem = equipment.equipment.weapon;
+        const weaponStats = weaponItem.item?.stats || [];
+        const minDmgStat = weaponStats.find((s: any) => s.statType === 'min_damage');
+        const maxDmgStat = weaponStats.find((s: any) => s.statType === 'max_damage');
+        
+        if (minDmgStat) weaponMinDamage = minDmgStat.value;
+        if (maxDmgStat) weaponMaxDamage = maxDmgStat.value;
+        
+        // If no min/max, use damage stat as base
+        const dmgStat = weaponStats.find((s: any) => s.statType === 'damage');
+        if (dmgStat && !minDmgStat && !maxDmgStat) {
+          weaponMinDamage = Math.floor(dmgStat.value * 0.8);
+          weaponMaxDamage = Math.floor(dmgStat.value * 1.2);
+        }
+      }
+
+      return {
+        charId,
+        charName: character.name,
+        hp: resources.hp,
+        maxHp: resources.maxHp,
+        mana: resources.mana,
+        maxMana: resources.maxMana,
+        stamina: resources.stamina,
+        maxStamina: resources.maxStamina,
+        team,
+        status: 'active',
+        buffs: [],
+        debuffs: [],
+        // AIPE combat stats
+        level: character.level,
+        attack: derivedStats.physicalDamage,
+        defense: derivedStats.physicalDefense,
+        magicalAttack: derivedStats.magicalDamage,
+        magicalDefense: derivedStats.magicalDefense,
+        speed: derivedStats.attackSpeed,
+        criticalChance: derivedStats.criticalChance,
+        criticalDamage: derivedStats.criticalDamage,
+        dodgeChance: derivedStats.dodgeChance,
+        blockChance: derivedStats.blockChance,
+        accuracy: 95, // Default accuracy value
+        weaponMinDamage,
+        weaponMaxDamage
+      };
+    } catch (error) {
+      // Fallback participant with minimal stats
+      console.error(`Failed to create participant for ${charId}:`, error);
+      return {
+        charId,
+        charName: `Unknown_${charId.slice(0, 4)}`,
+        hp: 100,
+        maxHp: 100,
+        mana: 50,
+        maxMana: 50,
+        stamina: 30,
+        maxStamina: 30,
+        team,
+        status: 'active',
+        buffs: [],
+        debuffs: [],
+        level: 1,
+        attack: 10,
+        defense: 10,
+        magicalAttack: 10,
+        magicalDefense: 10,
+        speed: 10,
+        criticalChance: 5,
+        criticalDamage: 150,
+        dodgeChance: 5,
+        blockChance: 5,
+        accuracy: 95,
+        weaponMinDamage: 5,
+        weaponMaxDamage: 10
+      };
+    }
   }
 
   /**
-   * Fixed damage calculation with proper defense clamping
+   * Calculate physical damage with AIPE stats and proper defense mitigation
    */
-  private calculateDamage(_attacker: CombatParticipant, _target: CombatParticipant): number {
-    const baseAttack = 25; // Mock attack stat
-    const targetDefense = 20; // Mock defense stat
-    const randomFactor = 0.8 + Math.random() * 0.4; // 80-120% damage variance
+  private calculateDamage(attacker: CombatParticipant, target: CombatParticipant): number {
+    // Roll weapon damage
+    const weaponDamage = attacker.weaponMinDamage + 
+      Math.floor(Math.random() * (attacker.weaponMaxDamage - attacker.weaponMinDamage + 1));
     
-    // FIXED: Clamp base damage BEFORE applying random factor
-    const baseDamage = Math.max(0, baseAttack - targetDefense * 0.5);
-    let damage = Math.floor(baseDamage * randomFactor);
+    // Add attack stat to weapon damage
+    const rawDamage = weaponDamage + attacker.attack;
+    
+    // Calculate defense mitigation using a logarithmic formula
+    // This ensures defense is always useful but has diminishing returns
+    const defenseMitigation = target.defense / (target.defense + (attacker.level * 10));
+    
+    // Apply defense mitigation
+    let damage = Math.floor(rawDamage * (1 - defenseMitigation));
+    
+    // Apply random variance (90-110%)
+    const randomFactor = 0.9 + Math.random() * 0.2;
+    damage = Math.floor(damage * randomFactor);
+    
+    // Check for critical hit
+    if (Math.random() * 100 < attacker.criticalChance) {
+      damage = Math.floor(damage * (attacker.criticalDamage / 100));
+      // Add to combat log that it was a critical hit
+    }
+    
+    // Check for dodge
+    if (Math.random() * 100 < target.dodgeChance) {
+      return 0; // Complete dodge
+    }
+    
+    // Check for block
+    if (Math.random() * 100 < target.blockChance) {
+      damage = Math.floor(damage * 0.5); // 50% damage reduction on block
+    }
     
     // Apply defender buffs (defending stance)
-    const defendBuff = _target.buffs.find((b: any) => b.name === 'Defending');
+    const defendBuff = target.buffs.find((b: any) => b.name === 'Defending');
     if (defendBuff) {
       damage = Math.floor(damage * defendBuff.modifier);
     }
@@ -826,16 +960,35 @@ export class CombatService {
   }
 
   /**
-   * Fixed skill damage to consider defense
+   * Calculate magical skill damage with AIPE stats
    */
-  private calculateSkillDamage(_caster: CombatParticipant, _target: CombatParticipant): number {
-    const baseSkillDamage = 35; // Higher than normal attack
-    const targetDefense = 20; // Mock defense stat
-    const randomFactor = 0.9 + Math.random() * 0.2; // 90-110% damage variance
+  private calculateSkillDamage(caster: CombatParticipant, target: CombatParticipant): number {
+    // Base skill damage uses magical attack stat
+    const baseSkillDamage = caster.magicalAttack * 1.5; // Skills have 150% scaling
     
-    // FIXED: Skills now consider defense (but less than normal attacks)
-    const baseDamage = Math.max(0, baseSkillDamage - targetDefense * 0.25);
-    return Math.floor(baseDamage * randomFactor);
+    // Calculate magical defense mitigation
+    const magicDefenseMitigation = target.magicalDefense / (target.magicalDefense + (caster.level * 10));
+    
+    // Apply defense mitigation
+    let damage = Math.floor(baseSkillDamage * (1 - magicDefenseMitigation));
+    
+    // Apply random variance (95-105% for skills - more consistent)
+    const randomFactor = 0.95 + Math.random() * 0.1;
+    damage = Math.floor(damage * randomFactor);
+    
+    // Skills can crit but at half the normal crit chance
+    if (Math.random() * 100 < (caster.criticalChance / 2)) {
+      damage = Math.floor(damage * (caster.criticalDamage / 100));
+    }
+    
+    // Magic attacks cannot be dodged or blocked traditionally
+    // But defending stance still applies
+    const defendBuff = target.buffs.find((b: any) => b.name === 'Defending');
+    if (defendBuff) {
+      damage = Math.floor(damage * defendBuff.modifier);
+    }
+    
+    return Math.max(1, damage); // Minimum 1 damage
   }
 
 

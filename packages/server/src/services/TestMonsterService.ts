@@ -154,7 +154,21 @@ export class TestMonsterService {
       team: 'enemy',
       status: 'active',
       buffs: [],
-      debuffs: []
+      debuffs: [],
+      // AIPE combat stats for test monsters
+      level: monster.level,
+      attack: monster.attack,
+      defense: monster.defense,
+      magicalAttack: monster.attack, // Same as physical for simplicity
+      magicalDefense: monster.defense,
+      speed: monster.speed,
+      criticalChance: monster.critRate * 100, // Convert to percentage
+      criticalDamage: monster.critDamage * 100, // Convert to percentage
+      dodgeChance: 0, // Test monsters don't dodge
+      blockChance: 0, // Test monsters don't block
+      accuracy: 100, // Test monsters always hit
+      weaponMinDamage: Math.floor(monster.attack * 0.8),
+      weaponMaxDamage: Math.floor(monster.attack * 1.2)
     };
   }
 
