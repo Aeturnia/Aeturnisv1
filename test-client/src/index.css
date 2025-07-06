@@ -501,7 +501,7 @@ body {
   border-radius: 6px;
   font-size: 0.9rem;
   font-weight: 500;
-  cursor: pointer !important;
+  cursor: pointer;
   transition: all 0.2s;
   background: var(--primary-color);
   color: white;
@@ -514,11 +514,11 @@ body {
 
 .test-button:disabled {
   opacity: 0.5;
-  cursor: not-allowed !important;
+  cursor: not-allowed;
 }
 
 .test-button:not(:disabled) {
-  cursor: pointer !important;
+  cursor: pointer;
 }
 
 .test-button.loading {

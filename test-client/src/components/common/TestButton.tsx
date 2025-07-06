@@ -38,7 +38,6 @@ export const TestButton: React.FC<TestButtonProps> = ({
     variantClasses[variant],
     sizeClasses[size],
     loading ? 'loading' : '',
-    disabled ? 'disabled' : '',
     className,
   ].filter(Boolean).join(' ');
 
