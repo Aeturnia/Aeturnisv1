@@ -301,10 +301,7 @@ export const CombatPanel: React.FC = () => {
               Start Combat
             </TestButton>
             
-            {/* Debug info */}
-            <div style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.5rem' }}>
-              Debug: monsters={testMonsters.length}, selected="{selectedMonster}", disabled={!selectedMonster ? 'true' : 'false'}
-            </div>
+
             
             <TestButton
               onClick={() => performCombatAction('attack')}
