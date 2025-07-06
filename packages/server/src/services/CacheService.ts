@@ -2,25 +2,49 @@ import { Redis } from 'ioredis';
 import { CacheConfig } from '../types/cache.types';
 
 export class CacheService {
-  private redis: Redis;
+  private redis: Redis | null = null;
   private namespace: string = 'aeturnis';
+  private useRedis: boolean;
+  private memoryCache: Map<string, { value: string; expiry?: number }> = new Map();
   
   constructor(config: CacheConfig) {
-    this.redis = new Redis({
-      host: config.host,
-      port: config.port,
-      password: config.password,
-      retryStrategy: (times) => Math.min(times * 50, 2000),
-      connectTimeout: 10000,
-      enableOfflineQueue: true
-    });
+    // Only connect to Redis if explicitly enabled via environment variable
+    this.useRedis = process.env.ENABLE_REDIS === 'true';
+    
+    if (this.useRedis) {
+      this.redis = new Redis({
+        host: config.host,
+        port: config.port,
+        password: config.password,
+        retryStrategy: (times) => Math.min(times * 50, 2000),
+        connectTimeout: 10000,
+        enableOfflineQueue: true,
+        lazyConnect: true // Don't connect immediately
+      });
+    } else {
+      console.log('CacheService: Using in-memory cache (Redis disabled)');
+    }
   }
 
   async get<T>(key: string): Promise<T | null> {
     try {
       const fullKey = `${this.namespace}:${key}`;
-      const value = await this.redis.get(fullKey);
-      return value ? JSON.parse(value) : null;
+      
+      if (this.useRedis && this.redis) {
+        const value = await this.redis.get(fullKey);
+        return value ? JSON.parse(value) : null;
+      } else {
+        // Use in-memory cache
+        const cached = this.memoryCache.get(fullKey);
+        if (cached) {
+          if (!cached.expiry || cached.expiry > Date.now()) {
+            return JSON.parse(cached.value);
+          } else {
+            this.memoryCache.delete(fullKey);
+          }
+        }
+        return null;
+      }
     } catch (error) {
       console.error(`Cache GET error for key ${key}:`, error);
       return null;
@@ -32,21 +56,36 @@ export class CacheService {
       const fullKey = `${this.namespace}:${key}`;
       const serialized = JSON.stringify(value);
       
-      if (ttlSeconds) {
-        await this.redis.setex(fullKey, ttlSeconds, serialized);
+      if (this.useRedis && this.redis) {
+        if (ttlSeconds) {
+          await this.redis.setex(fullKey, ttlSeconds, serialized);
+        } else {
+          await this.redis.set(fullKey, serialized);
+        }
       } else {
-        await this.redis.set(fullKey, serialized);
+        // Use in-memory cache
+        const expiry = ttlSeconds ? Date.now() + (ttlSeconds * 1000) : undefined;
+        this.memoryCache.set(fullKey, { value: serialized, expiry });
       }
     } catch (error) {
       console.error(`Cache SET error for key ${key}:`, error);
-      throw new Error('Cache write failed');
+      // Don't throw error for cache failures in development
+      if (this.useRedis) {
+        throw new Error('Cache write failed');
+      }
     }
   }
 
   async delete(key: string): Promise<void> {
     try {
       const fullKey = `${this.namespace}:${key}`;
-      await this.redis.del(fullKey);
+      
+      if (this.useRedis && this.redis) {
+        await this.redis.del(fullKey);
+      } else {
+        // Use in-memory cache
+        this.memoryCache.delete(fullKey);
+      }
     } catch (error) {
       console.error(`Cache DELETE error for key ${key}:`, error);
     }
