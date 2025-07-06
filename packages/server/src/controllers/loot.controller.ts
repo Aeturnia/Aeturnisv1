@@ -378,40 +378,77 @@ export const generateLoot = async (req: Request, res: Response): Promise<Respons
 
 /**
  * Get loot table for testing
- * GET /api/v1/loot/loot-table
+ * GET /api/v1/loot/table/:tableId
  */
 export const getLootTable = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const mockLootTable = {
-      tableId: 'goblin_loot_table',
-      enemyType: 'goblin',
-      levelRange: [1, 10],
-      dropRates: {
-        common: 0.7,
-        uncommon: 0.2,
-        rare: 0.08,
-        epic: 0.02,
-        legendary: 0.001
+    const { tableId } = req.params;
+    
+    // Mock different loot tables based on tableId
+    const mockLootTables: Record<string, any> = {
+      'basic_monster_loot': {
+        tableId: 'basic_monster_loot',
+        name: 'Basic Monster Loot Table',
+        enemyType: 'basic_monsters',
+        levelRange: [1, 15],
+        dropRates: {
+          common: 0.65,
+          uncommon: 0.25,
+          rare: 0.08,
+          epic: 0.02,
+          legendary: 0.001
+        },
+        items: [
+          { name: 'Iron Sword', rarity: 'common', dropChance: 0.25 },
+          { name: 'Leather Armor', rarity: 'common', dropChance: 0.2 },
+          { name: 'Health Potion', rarity: 'common', dropChance: 0.5 },
+          { name: 'Magic Scroll', rarity: 'uncommon', dropChance: 0.15 },
+          { name: 'Silver Ring', rarity: 'rare', dropChance: 0.05 },
+          { name: 'Ancient Gem', rarity: 'epic', dropChance: 0.01 }
+        ],
+        goldRange: { min: 10, max: 50 },
+        experienceBase: 75
       },
-      items: [
-        { name: 'Rusty Dagger', rarity: 'common', dropChance: 0.3 },
-        { name: 'Leather Boots', rarity: 'common', dropChance: 0.25 },
-        { name: 'Health Potion', rarity: 'common', dropChance: 0.4 },
-        { name: 'Silver Coin', rarity: 'common', dropChance: 0.8 },
-        { name: 'Goblin Earring', rarity: 'uncommon', dropChance: 0.15 },
-        { name: 'Magic Scroll', rarity: 'rare', dropChance: 0.05 }
-      ],
-      goldRange: { min: 5, max: 25 },
-      experienceBase: 50
+      'goblin_loot_table': {
+        tableId: 'goblin_loot_table',
+        name: 'Goblin Loot Table',
+        enemyType: 'goblin',
+        levelRange: [1, 10],
+        dropRates: {
+          common: 0.7,
+          uncommon: 0.2,
+          rare: 0.08,
+          epic: 0.02,
+          legendary: 0.001
+        },
+        items: [
+          { name: 'Rusty Dagger', rarity: 'common', dropChance: 0.3 },
+          { name: 'Leather Boots', rarity: 'common', dropChance: 0.25 },
+          { name: 'Health Potion', rarity: 'common', dropChance: 0.4 },
+          { name: 'Silver Coin', rarity: 'common', dropChance: 0.8 },
+          { name: 'Goblin Earring', rarity: 'uncommon', dropChance: 0.15 },
+          { name: 'Magic Scroll', rarity: 'rare', dropChance: 0.05 }
+        ],
+        goldRange: { min: 5, max: 25 },
+        experienceBase: 50
+      }
     };
+
+    const lootTable = mockLootTables[tableId] || mockLootTables['basic_monster_loot'];
+
+    logger.info('Loot table retrieved', { 
+      tableId,
+      tableName: lootTable.name,
+      itemCount: lootTable.items.length
+    });
 
     return res.status(200).json({
       success: true,
-      data: mockLootTable,
-      message: 'Loot table retrieved successfully (mock data)'
+      data: lootTable,
+      message: `Loot table '${lootTable.name}' retrieved successfully (mock data)`
     });
   } catch (error) {
-    logger.error('Error getting loot table', { error });
+    logger.error('Error getting loot table', { error, tableId: req.params.tableId });
 
     return res.status(500).json({
       success: false,

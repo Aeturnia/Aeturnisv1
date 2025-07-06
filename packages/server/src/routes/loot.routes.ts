@@ -7,7 +7,7 @@ const router = Router();
 // Test endpoints (no auth required for testing)
 router.get('/test', lootController.testLootSystem);
 router.post('/generate', lootController.generateLoot);
-router.get('/loot-table', lootController.getLootTable);
+router.get('/table/:tableId', lootController.getLootTable);
 router.post('/test-drop', lootController.testItemDrop);
 router.post('/test-claim', lootController.testLootClaim);
 router.post('/test-calculate', lootController.testLootCalculation);
