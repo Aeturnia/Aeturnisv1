@@ -167,40 +167,36 @@ export const CombatPanel: React.FC = () => {
     setLiveCombatTest({ loading: true, response: `Performing ${actionType}...`, success: false });
 
     try {
-      const result = await api.post('/api/v1/combat/action', {
+      const result = await api.post('/api/v1/combat/test-action', {
         sessionId: combatSessionId,
-        action: {
-          type: actionType,
-          playerId: 'player-test-001'
-        }
+        playerId: 'player-test-001',
+        action: actionType
       });
 
-      if (result.success && result.data) {
-        const data = result.data;
-        const combatMessage = data.combatMessage || data.message || '';
+      if (result.success) {
+        const data = result.data || result;
+        const combatMessage = data.combatMessage || data.message || result.message || '';
         const combatStatus = data.combatStatus || data.status || 'ongoing';
         const endMessage = data.endMessage || '';
 
         // Update combat outcome based on response
-        if (combatStatus === 'ended') {
+        if (combatStatus === 'ended' || endMessage) {
           if (combatMessage.toLowerCase().includes('victory') || 
-              combatMessage.toLowerCase().includes('wins')) {
+              combatMessage.toLowerCase().includes('wins') ||
+              endMessage.toLowerCase().includes('victory')) {
             setCombatOutcome('victory');
           } else if (combatMessage.toLowerCase().includes('defeat') || 
                      combatMessage.toLowerCase().includes('killed') ||
-                     combatMessage.toLowerCase().includes('died')) {
+                     combatMessage.toLowerCase().includes('died') ||
+                     endMessage.toLowerCase().includes('defeat')) {
             setCombatOutcome('defeat');
-          } else {
-            setCombatOutcome('ongoing');
           }
-        } else {
-          setCombatOutcome('ongoing');
         }
 
         const formattedResponse = [
           "=== COMBAT ACTION ===",
           "",
-          combatMessage,
+          combatMessage || `${actionType.toUpperCase()} action performed successfully`,
           "",
           `Combat Status: ${combatStatus.toUpperCase()}`,
           endMessage ? `Outcome: ${endMessage}` : "",
@@ -217,7 +213,13 @@ export const CombatPanel: React.FC = () => {
         setLiveCombatTest({
           loading: false,
           response: formattedResponse,
-          success: result.success
+          success: true
+        });
+      } else {
+        setLiveCombatTest({
+          loading: false,
+          response: JSON.stringify(result, null, 2),
+          success: false
         });
       }
 
@@ -338,7 +340,7 @@ export const CombatPanel: React.FC = () => {
               onClick={() => performCombatAction('attack')}
               loading={liveCombatTest.loading}
               variant="danger"
-              disabled={!combatSessionId}
+              disabled={!combatSessionId || liveCombatTest.loading}
             >
               Attack
             </TestButton>
@@ -347,7 +349,7 @@ export const CombatPanel: React.FC = () => {
               onClick={() => performCombatAction('defend')}
               loading={liveCombatTest.loading}
               variant="warning"
-              disabled={!combatSessionId}
+              disabled={!combatSessionId || liveCombatTest.loading}
             >
               Defend
             </TestButton>
@@ -356,7 +358,7 @@ export const CombatPanel: React.FC = () => {
               onClick={() => performCombatAction('flee')}
               loading={liveCombatTest.loading}
               variant="secondary"
-              disabled={!combatSessionId}
+              disabled={!combatSessionId || liveCombatTest.loading}
             >
               Flee
             </TestButton>
