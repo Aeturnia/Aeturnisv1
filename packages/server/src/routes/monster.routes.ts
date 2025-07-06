@@ -99,6 +99,32 @@ router.post('/spawn', asyncHandler(async (req, res) => {
   });
 }));
 
+// PATCH monster state endpoint (for testing)
+router.patch('/:monsterId/state', asyncHandler(async (req, res) => {
+  const { monsterId } = req.params;
+  const { state } = req.body;
+  
+  // Validate state
+  const validStates = ['alive', 'dead', 'spawning', 'respawning'];
+  if (!validStates.includes(state)) {
+    return res.status(400).json({
+      success: false,
+      message: `Invalid state. Must be one of: ${validStates.join(', ')}`
+    });
+  }
+  
+  // Simulate monster state update
+  res.json({
+    success: true,
+    data: {
+      monsterId,
+      oldState: 'alive',
+      newState: state,
+      message: `Monster ${monsterId} state changed to ${state}`
+    }
+  });
+}));
+
 // DELETE monster endpoint (for testing)
 router.delete('/:monsterId', asyncHandler(async (req, res) => {
   const { monsterId } = req.params;
@@ -116,12 +142,23 @@ router.delete('/:monsterId', asyncHandler(async (req, res) => {
 // Update monster state (MOCK FOR TESTING)
 router.patch('/:monsterId/state', asyncHandler(async (req, res) => {
   const { monsterId } = req.params;
-  const { newState, targetId } = req.body;
+  const { state, newState } = req.body;
   
-  if (!newState) {
+  const finalState = state || newState;
+  
+  if (!finalState) {
     return res.status(400).json({
       success: false,
-      error: 'New state is required'
+      error: 'State is required'
+    });
+  }
+  
+  // Validate state
+  const validStates = ['alive', 'dead', 'spawning', 'respawning'];
+  if (!validStates.includes(finalState)) {
+    return res.status(400).json({
+      success: false,
+      error: `Invalid state. Must be one of: ${validStates.join(', ')}`
     });
   }
   
@@ -131,7 +168,7 @@ router.patch('/:monsterId/state', asyncHandler(async (req, res) => {
     name: 'Forest Goblin',
     level: 5,
     position: { x: 110, y: 0, z: 95 },
-    state: newState,
+    state: finalState,
     targetId: targetId || null,
     stats: { hp: 45, maxHp: 45, attack: 12, defense: 8, speed: 10 }
   };

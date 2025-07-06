@@ -15,6 +15,7 @@ router.get('/test-monsters', combatController.getTestMonsters);
 router.post('/test-start', combatController.startTestCombat);
 router.get('/session/:sessionId', combatController.getCombatSession);
 router.post('/action', combatController.performTestAction);
+router.post('/test-action', combatController.performTestAction);
 router.post('/flee/:sessionId', combatController.fleeTestCombat);
 
 // Combat session endpoints (authenticated)
