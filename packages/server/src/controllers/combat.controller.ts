@@ -843,27 +843,25 @@ export const getTestMonsters = async (req: Request, res: Response): Promise<Resp
   try {
     const monsters = testMonsterService.getAllTestMonsters();
     
+    // Return monsters array directly for frontend compatibility
+    const monstersData = monsters.map(monster => ({
+      id: monster.id,
+      name: monster.name,
+      level: monster.level,
+      difficulty: monster.difficulty,
+      description: monster.description,
+      // Flatten stats for frontend compatibility
+      hp: monster.hp,
+      maxHp: monster.maxHp,
+      attack: monster.attack,
+      defense: monster.defense,
+      speed: monster.speed
+    }));
+    
     return res.json({
       success: true,
       message: 'Test monsters retrieved successfully',
-      data: {
-        monsters: monsters.map(monster => ({
-          id: monster.id,
-          name: monster.name,
-          level: monster.level,
-          difficulty: monster.difficulty,
-          description: monster.description,
-          stats: {
-            hp: monster.hp,
-            maxHp: monster.maxHp,
-            attack: monster.attack,
-            defense: monster.defense,
-            speed: monster.speed
-          }
-        })),
-        count: monsters.length,
-        usage: 'Use monster.id in targetIds array when starting combat'
-      }
+      data: monstersData
     });
   } catch (error) {
     return res.status(500).json({

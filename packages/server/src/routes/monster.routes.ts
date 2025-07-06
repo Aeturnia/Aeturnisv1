@@ -47,7 +47,12 @@ router.get('/zone/:zoneId', asyncHandler(async (req, res) => {
   res.json({ 
     success: true, 
     data: { 
-      monsters: mockMonsters,
+      monsters: mockMonsters.map(monster => ({
+        ...monster,
+        // Flatten stats for frontend compatibility
+        hp: monster.stats.hp,
+        maxHp: monster.stats.maxHp
+      })),
       count: mockMonsters.length,
       zone: zoneId,
       message: 'Mock monster data for testing'
@@ -84,8 +89,26 @@ router.post('/spawn', asyncHandler(async (req, res) => {
   res.json({ 
     success: true, 
     data: { 
-      monster: mockSpawnedMonster,
+      monster: {
+        ...mockSpawnedMonster,
+        hp: mockSpawnedMonster.stats.hp,
+        maxHp: mockSpawnedMonster.stats.maxHp
+      },
       message: 'Monster spawned successfully (mock data)' 
+    }
+  });
+}));
+
+// DELETE monster endpoint (for testing)
+router.delete('/:monsterId', asyncHandler(async (req, res) => {
+  const { monsterId } = req.params;
+  
+  // Simulate monster deletion
+  res.json({
+    success: true,
+    data: {
+      deletedMonsterId: monsterId,
+      message: `Monster ${monsterId} removed from zone`
     }
   });
 }));
