@@ -407,9 +407,12 @@ export const startTestCombat = async (req: Request, res: Response): Promise<Resp
 
     const response = {
       success: true,
-      message: 'Test combat session started successfully',
+      message: 'Combat started successfully!',
       data: {
-        session
+        sessionId: session.sessionId,
+        session: session,
+        combatMessage: 'Battle has begun! Choose your action.',
+        status: 'active'
       }
     };
 
