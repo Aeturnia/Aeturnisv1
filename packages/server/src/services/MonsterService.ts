@@ -152,7 +152,7 @@ export class MonsterService {
         };
       }
 
-      const result = await database
+      const result = await db
         .update(monsters)
         .set(updateData)
         .where(eq(monsters.id, monsterId))
@@ -187,7 +187,7 @@ export class MonsterService {
         return cached;
       }
 
-      const result = await database
+      const result = await db
         .select()
         .from(monsterTypes);
 
@@ -214,7 +214,7 @@ export class MonsterService {
         return cached;
       }
 
-      const result = await database
+      const result = await db
         .select()
         .from(spawnPoints)
         .where(eq(spawnPoints.zoneId, zoneId));
@@ -234,7 +234,7 @@ export class MonsterService {
   async processAggro(monsterId: string, characterPosition: Position3D): Promise<boolean> {
     try {
       // Get monster details
-      const monster = await database
+      const monster = await db
         .select()
         .from(monsters)
         .where(eq(monsters.id, monsterId))
@@ -245,7 +245,7 @@ export class MonsterService {
       }
 
       // Get monster type for aggro radius
-      const monsterType = await database
+      const monsterType = await db
         .select()
         .from(monsterTypes)
         .where(eq(monsterTypes.id, monster[0].monsterTypeId))
@@ -289,7 +289,7 @@ export class MonsterService {
         }
       };
 
-      const result = await database
+      const result = await db
         .update(monsters)
         .set(updateData)
         .where(eq(monsters.id, monsterId))
@@ -311,7 +311,7 @@ export class MonsterService {
    */
   async updatePosition(monsterId: string, newPosition: Position3D): Promise<void> {
     try {
-      const result = await database
+      const result = await db
         .update(monsters)
         .set({
           position: newPosition,
@@ -336,7 +336,7 @@ export class MonsterService {
   async processAI(monsterId: string): Promise<void> {
     try {
       // Get monster and type details
-      const monster = await database
+      const monster = await db
         .select()
         .from(monsters)
         .where(eq(monsters.id, monsterId))
@@ -346,7 +346,7 @@ export class MonsterService {
         return;
       }
 
-      const monsterType = await database
+      const monsterType = await db
         .select()
         .from(monsterTypes)
         .where(eq(monsterTypes.id, monster[0].monsterTypeId))

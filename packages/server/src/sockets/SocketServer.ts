@@ -19,6 +19,10 @@ import { CharacterHandler } from './handlers/characterHandler';
 import { CombatHandler } from './handlers/combatHandler';
 import { SocketRedisAdapter, createRedisAdapter } from './adapters/redisAdapter';
 
+// Import event registrations
+import { registerMonsterEvents } from './events/monster.events';
+import { registerNPCEvents } from './events/npc.events';
+
 export interface SocketServerConfig {
   port?: number;
   corsOrigins?: string[];
@@ -182,6 +186,10 @@ export class SocketServer {
       socket.on('combat:action', (payload) => {
         this.combatHandler.handleCombatAction(socket, payload);
       });
+
+      // Register monster and NPC events
+      registerMonsterEvents(this.io, socket);
+      registerNPCEvents(this.io, socket);
 
       // Handle disconnection
       socket.on('disconnect', (reason) => {

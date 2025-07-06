@@ -278,7 +278,7 @@ export class NPCService {
       const result = await db
         .select()
         .from(npcs)
-        .where(eq(npcs.npcType, 'quest_giver'));
+        .where(eq(npcs.type, 'quest_giver'));
 
       await this.cache.set(cacheKey, result, 300); // Cache for 5 minutes
       logger.info(`Found ${result.length} quest-giving NPCs`);
@@ -429,7 +429,7 @@ export class NPCService {
       const result = await db
         .select()
         .from(npcs)
-        .where(eq(npcs.npcType, 'merchant'));
+        .where(eq(npcs.type, 'merchant'));
 
       await this.cache.set(cacheKey, result, 300); // Cache for 5 minutes
       logger.info(`Found ${result.length} merchant NPCs`);
