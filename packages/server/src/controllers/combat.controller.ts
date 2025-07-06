@@ -75,6 +75,138 @@ export const getPlayerStats = async (req: Request, res: Response): Promise<Respo
 };
 
 /**
+ * Get combat session by ID (no auth required for testing)
+ */
+export const getCombatSession = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const { sessionId } = req.params;
+    
+    if (!sessionId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Session ID is required'
+      });
+    }
+
+    const session = await combatService.getSession(sessionId);
+    
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: 'Combat session not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Combat session retrieved successfully',
+      data: {
+        session,
+        plainText: `Combat Status: ${session.status?.toUpperCase() || 'UNKNOWN'}\nRound: ${session.roundNumber || 1}\nCurrent Turn: ${session.participants?.find(p => p.charId === session.turnOrder?.[session.currentTurnIndex || 0])?.charName || 'Unknown'}`
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to get combat session'
+    });
+  }
+};
+
+/**
+ * Perform test combat action (no auth required for testing)
+ */
+export const performTestAction = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const { sessionId, action, targetId } = req.body;
+    
+    if (!sessionId || !action) {
+      return res.status(400).json({
+        success: false,
+        message: 'Session ID and action are required'
+      });
+    }
+
+    // Use mock player ID for testing
+    const actorId = '550e8400-e29b-41d4-a716-446655440000';
+    
+    // Create proper action object
+    const combatAction = {
+      type: action.toUpperCase(),
+      targetId: targetId,
+      timestamp: Date.now()
+    };
+    
+    const result = await combatService.processAction(sessionId, actorId, combatAction);
+    
+    let plainText = '';
+    if ('message' in result && result.message) {
+      plainText = result.message;
+    } else if ('error' in result) {
+      plainText = `Error: ${result.error}`;
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Combat action performed successfully',
+      data: result,
+      plainText
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to perform combat action'
+    });
+  }
+};
+
+/**
+ * Test flee from combat (no auth required for testing)
+ */
+export const fleeTestCombat = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const { sessionId } = req.params;
+    
+    if (!sessionId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Session ID is required'
+      });
+    }
+
+    // Use mock player ID for testing
+    const actorId = '550e8400-e29b-41d4-a716-446655440000';
+    
+    // Create proper flee action object
+    const fleeAction = {
+      type: 'FLEE',
+      timestamp: Date.now()
+    };
+    
+    const result = await combatService.processAction(sessionId, actorId, fleeAction);
+    
+    let plainText = '';
+    if ('message' in result && result.message) {
+      plainText = result.message;
+    } else if ('error' in result) {
+      plainText = `Error: ${result.error}`;
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Flee action performed successfully',
+      data: result,
+      plainText
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to flee from combat'
+    });
+  }
+};
+
+/**
  * Start a new combat session - test version for test monsters (no auth required)
  */
 export const startTestCombat = async (req: Request, res: Response): Promise<Response> => {
