@@ -518,6 +518,19 @@ The expanded monorepo now includes:
 - **Dynamic Naming**: Messages include actual player and enemy names for personalized feedback
 - **Status**: Win/loss combat messaging COMPLETE - Combat endings now provide clear, engaging feedback
 
+### July 06, 2025 - Combat Engine v2.0: Enhanced AI & Resource Management Complete ✅
+- **Combat Engine Versioning**: Implemented version system (v2.0.0 "Enhanced AI & Resource Management") for tracking future updates
+- **Weighted AI Action Selection**: Replaced 100% attack preference with dynamic action weights based on resources, health, and combat state
+- **Smart Target Prioritization**: Added three targeting strategies - aggressive (lowest HP), priority (players first), balanced (weighted random)
+- **Enhanced Resource Logging**: Granular resource change tracking in combat logs for debugging and analytics
+- **Buff/Debuff Cleanup**: Automatic purge of all buffs/debuffs when combat ends (defeat/flee/victory)
+- **Dynamic AI Decision Making**: AI adapts behavior based on stamina (low=defensive), mana (high=skills), health (low=cautious)
+- **Anti-Predictability Features**: Eliminated always-enemies[0] targeting with intelligent target selection algorithms
+- **Combat Log Type Enhancement**: Added 'resource' type to combat log entries for comprehensive action tracking
+- **AI Variety Metrics**: AI now shows 40% attack, 20% skill, 40% defend base weights with dynamic adjustments
+- **Version Info API**: Added getVersionInfo() static method returning engine features and update history
+- **Status**: Combat Engine v2.0 COMPLETE - Advanced AI behavior with realistic tactical decision making operational
+
 ### July 05, 2025 - Anti-Spam Cooldown System & Enhanced Status Messages Complete ✅
 - **3-Second Combat Cooldown**: Implemented user-based cooldown system preventing combat action spam with 3-second delays
 - **Cooldown Middleware**: Created combatActionCooldown middleware with in-memory player tracking and countdown messages

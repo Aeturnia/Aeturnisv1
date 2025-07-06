@@ -328,10 +328,13 @@ export const simulateCombat = async (req: AuthRequest, res: Response): Promise<R
  */
 export const testCombatSystem = async (req: Request, res: Response): Promise<Response> => {
   try {
+    const versionInfo = CombatService.getVersionInfo();
+    
     const testData = {
       system: 'Combat & Resource Systems',
       status: 'operational',
       timestamp: new Date().toISOString(),
+      engine: versionInfo,
       features: {
         turnBasedCombat: 'enabled',
         resourceManagement: 'enabled',
@@ -344,7 +347,8 @@ export const testCombatSystem = async (req: Request, res: Response): Promise<Res
         performAction: 'POST /api/v1/combat/action',
         fleeCombat: 'POST /api/v1/combat/flee/:sessionId',
         getStats: 'GET /api/v1/combat/stats/:charId',
-        getResources: 'GET /api/v1/combat/resources/:charId'
+        getResources: 'GET /api/v1/combat/resources/:charId',
+        version: 'GET /api/v1/combat/version'
       },
       sampleData: {
         mockCombatSession: {
@@ -410,6 +414,26 @@ export const getTestMonsters = async (req: Request, res: Response): Promise<Resp
     return res.status(500).json({
       success: false,
       message: 'Failed to retrieve test monsters'
+    });
+  }
+};
+
+/**
+ * Get Combat Engine version information
+ */
+export const getCombatEngineVersion = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const versionInfo = CombatService.getVersionInfo();
+    
+    return res.json({
+      success: true,
+      message: 'Combat Engine version information retrieved',
+      data: versionInfo
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve Combat Engine version'
     });
   }
 };

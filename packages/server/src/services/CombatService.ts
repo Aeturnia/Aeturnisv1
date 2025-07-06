@@ -19,6 +19,10 @@ import { testMonsterService } from './TestMonsterService';
 export class CombatService {
   private resourceService: ResourceService;
   
+  // Combat Engine Version
+  public static readonly VERSION = '2.0.0';
+  public static readonly VERSION_NAME = 'Enhanced AI & Resource Management';
+  
   // Session storage with config
   private sessions: Map<string, CombatSession> = new Map();
   private sessionConfigs: Map<string, CombatSessionConfig> = new Map();
@@ -34,6 +38,27 @@ export class CombatService {
 
   constructor() {
     this.resourceService = new ResourceService();
+  }
+
+  /**
+   * Get Combat Engine version information
+   */
+  static getVersionInfo() {
+    return {
+      version: CombatService.VERSION,
+      name: CombatService.VERSION_NAME,
+      features: [
+        'Mathematical Balance Patch (Damage calculation fixes)',
+        'Resource validation system (Stamina/Mana requirements)', 
+        'Enhanced combat logging with resource tracking',
+        'Non-stacking buff mechanics',
+        'Weighted AI action selection',
+        'Smart target prioritization',
+        'Anti-defensive loop prevention',
+        'Dynamic resource-based AI decisions'
+      ],
+      lastUpdated: '2025-07-06'
+    };
   }
 
   /**
@@ -251,7 +276,15 @@ export class CombatService {
           currentValue: actor.stamina,
           maxValue: actor.maxStamina,
           change: -5,
-          reason: 'combat'
+          reason: 'attack'
+        });
+
+        // Enhanced resource logging
+        session.combatLog!.push({
+          message: `${actor.charName} stamina: ${actor.stamina}/${actor.maxStamina} (-5)`,
+          timestamp: Date.now(),
+          actorId: actor.charId,
+          type: 'resource'
         });
 
         message = `${actor.charName} attacks ${target.charName} for ${damage} damage!`;
@@ -292,6 +325,14 @@ export class CombatService {
         }
 
         message = `${actor.charName} takes a defensive stance and recovers ${staminaRestore} stamina`;
+        
+        // Enhanced resource logging
+        session.combatLog!.push({
+          message: `${actor.charName} stamina: ${actor.stamina}/${actor.maxStamina} (+${staminaRestore})`,
+          timestamp: Date.now(),
+          actorId: actor.charId,
+          type: 'resource'
+        });
         
         session.combatLog!.push({
           message,
@@ -347,7 +388,15 @@ export class CombatService {
           currentValue: actor.mana,
           maxValue: actor.maxMana,
           change: -10,
-          reason: 'combat'
+          reason: 'skill'
+        });
+
+        // Enhanced resource logging
+        session.combatLog!.push({
+          message: `${actor.charName} mana: ${actor.mana}/${actor.maxMana} (-10)`,
+          timestamp: Date.now(),
+          actorId: actor.charId,
+          type: 'resource'
         });
 
         message = `${actor.charName} casts a skill on ${skillTarget.charName} for ${damage} damage!`;
@@ -480,9 +529,19 @@ export class CombatService {
       // Store the end message in session for retrieval
       session.endMessage = endMessage;
 
-      // Clean up participant tracking for all participants
+      // Clear all buffs and debuffs when combat ends
       session.participants.forEach(p => {
+        p.buffs = [];
+        p.debuffs = [];
         this.participantToSession.delete(p.charId);
+      });
+      
+      // Combat end logging
+      session.combatLog!.push({
+        message: `Combat ended: ${endMessage}`,
+        timestamp: Date.now(),
+        actorId: 'system',
+        type: 'action'
       });
       
       // Also remove the session itself
@@ -689,10 +748,11 @@ export class CombatService {
   }
 
   /**
-   * Enhanced AI action selection with anti-stuck logic
+   * 🔧 v2.0 ENHANCEMENT: Advanced AI with weighted action selection and smart targeting
+   * Prevents defensive loops and provides dynamic, realistic AI behavior
    */
   private chooseAIAction(session: CombatSession, actor: CombatParticipant): CombatAction {
-    // Find targets
+    // Find available targets
     const enemies = session.participants.filter(p => 
       p.team !== actor.team && p.status === 'active'
     );
@@ -704,7 +764,7 @@ export class CombatService {
       };
     }
 
-    // Check if actor has been defending too much (anti-stuck logic)
+    // Anti-stuck logic - check recent defensive actions
     const recentDefends = session.combatLog
       ? session.combatLog.filter(log => 
           log.actorId === actor.charId && 
@@ -713,36 +773,171 @@ export class CombatService {
         ).length
       : 0;
 
-    // If been defending 3+ times recently, force an attack even with low stamina
+    // Force attack if defending too much
     if (recentDefends >= 3) {
+      const target = this.selectTarget(enemies, 'aggressive');
       return {
         type: CombatActionType.ATTACK,
-        targetCharId: enemies[0].charId,
+        targetCharId: target.charId,
         timestamp: Date.now()
       };
     }
 
-    // Normal AI logic with lower stamina threshold
-    if (actor.stamina >= 3) { // Lowered from 5 to 3
-      return {
-        type: CombatActionType.ATTACK,
-        targetCharId: enemies[0].charId,
-        timestamp: Date.now()
-      };
-    }
+    // Calculate action weights based on AI state
+    const actionWeights = this.calculateActionWeights(actor, enemies);
+    const selectedAction = this.selectWeightedAction(actionWeights);
 
-    // 30% chance to attack even with very low stamina (risky behavior)
-    if (Math.random() < 0.3) {
-      return {
-        type: CombatActionType.ATTACK,
-        targetCharId: enemies[0].charId,
-        timestamp: Date.now()
-      };
-    }
+    // Execute selected action with smart targeting
+    switch (selectedAction) {
+      case 'attack':
+        const attackTarget = this.selectTarget(enemies, 'balanced');
+        return {
+          type: CombatActionType.ATTACK,
+          targetCharId: attackTarget.charId,
+          timestamp: Date.now()
+        };
 
-    return {
-      type: CombatActionType.DEFEND,
-      timestamp: Date.now()
+      case 'skill':
+        if (actor.mana >= 10) {
+          const skillTarget = this.selectTarget(enemies, 'priority');
+          return {
+            type: CombatActionType.USE_SKILL,
+            targetCharId: skillTarget.charId,
+            skillId: 'fireball',
+            timestamp: Date.now()
+          };
+        }
+        // Fall back to attack if no mana
+        const fallbackTarget = this.selectTarget(enemies, 'balanced');
+        return {
+          type: CombatActionType.ATTACK,
+          targetCharId: fallbackTarget.charId,
+          timestamp: Date.now()
+        };
+
+      case 'defend':
+      default:
+        return {
+          type: CombatActionType.DEFEND,
+          timestamp: Date.now()
+        };
+    }
+  }
+
+  /**
+   * 🔧 v2.0: Calculate weighted action probabilities based on AI state
+   */
+  private calculateActionWeights(actor: CombatParticipant, enemies: CombatParticipant[]): Record<string, number> {
+    const weights = {
+      attack: 0.4,
+      skill: 0.2,
+      defend: 0.4
     };
+
+    // Adjust weights based on resources
+    if (actor.stamina >= 8) {
+      weights.attack += 0.3; // More aggressive when high stamina
+    } else if (actor.stamina <= 3) {
+      weights.defend += 0.4; // More defensive when low stamina
+      weights.attack -= 0.2;
+    }
+
+    if (actor.mana >= 15) {
+      weights.skill += 0.3; // Use skills when mana is high
+    } else if (actor.mana < 10) {
+      weights.skill = 0; // Can't use skills
+      weights.attack += 0.1;
+    }
+
+    // Adjust based on health
+    const healthPercent = actor.hp / actor.maxHp;
+    if (healthPercent <= 0.3) {
+      weights.defend += 0.3; // Defensive when low health
+      weights.attack -= 0.2;
+    } else if (healthPercent >= 0.8) {
+      weights.attack += 0.2; // Aggressive when healthy
+    }
+
+    // Consider enemy state
+    const lowHealthEnemies = enemies.filter(e => e.hp / e.maxHp <= 0.3);
+    if (lowHealthEnemies.length > 0) {
+      weights.attack += 0.2; // Focus fire on weak enemies
+    }
+
+    return weights;
+  }
+
+  /**
+   * 🔧 v2.0: Select action based on weighted probabilities
+   */
+  private selectWeightedAction(weights: Record<string, number>): string {
+    const totalWeight = Object.values(weights).reduce((sum, weight) => sum + weight, 0);
+    const random = Math.random() * totalWeight;
+    
+    let currentWeight = 0;
+    for (const [action, weight] of Object.entries(weights)) {
+      currentWeight += weight;
+      if (random <= currentWeight) {
+        return action;
+      }
+    }
+    
+    return 'defend'; // Fallback
+  }
+
+  /**
+   * 🔧 v2.0: Smart target selection based on strategy
+   */
+  private selectTarget(enemies: CombatParticipant[], strategy: 'aggressive' | 'balanced' | 'priority'): CombatParticipant {
+    if (enemies.length === 1) {
+      return enemies[0];
+    }
+
+    switch (strategy) {
+      case 'aggressive':
+        // Target lowest health enemy (finish off weak targets)
+        return enemies.reduce((weakest, enemy) => 
+          enemy.hp < weakest.hp ? enemy : weakest
+        );
+
+      case 'priority':
+        // Target highest threat (players first, then high HP enemies)
+        const players = enemies.filter(e => e.team === 'player');
+        if (players.length > 0) {
+          return players.reduce((highest, player) => 
+            player.hp > highest.hp ? player : highest
+          );
+        }
+        return enemies.reduce((highest, enemy) => 
+          enemy.hp > highest.hp ? enemy : highest
+        );
+
+      case 'balanced':
+      default:
+        // Weighted random selection favoring lower health targets
+        const targetWeights = enemies.map(enemy => {
+          const healthPercent = enemy.hp / enemy.maxHp;
+          const isPlayer = enemy.team === 'player';
+          
+          // Lower health = higher weight, players get priority
+          let weight = 1 - healthPercent + 0.5;
+          if (isPlayer) weight += 0.3;
+          
+          return { enemy, weight };
+        });
+
+        const totalWeight = targetWeights.reduce((sum, tw) => sum + tw.weight, 0);
+        const random = Math.random() * totalWeight;
+        
+        let currentWeight = 0;
+        for (const { enemy, weight } of targetWeights) {
+          currentWeight += weight;
+          if (random <= currentWeight) {
+            return enemy;
+          }
+        }
+        
+        return enemies[0]; // Fallback
+    }
   }
 }

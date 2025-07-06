@@ -30,7 +30,7 @@ export interface CombatLog {
   message: string;
   timestamp: number;
   actorId: string;
-  type: 'action' | 'damage' | 'buff' | 'system';
+  type: 'action' | 'damage' | 'buff' | 'system' | 'resource';
 }
 
 export interface CombatSession {
