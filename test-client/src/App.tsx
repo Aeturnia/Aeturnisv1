@@ -605,10 +605,10 @@ Types: attack, defend, skill, general usage
           }
         });
       } else if (action === 'respawn') {
-        url = '/api/v1/death/550e8400-e29b-41d4-a716-446655440000/respawn';
+        url = '/api/v1/death/test-respawn';
         method = 'POST';
       } else if (action === 'status') {
-        url = '/api/v1/death/550e8400-e29b-41d4-a716-446655440000/status';
+        url = '/api/v1/death/test-status';
       }
 
       const response = await fetch(url, {

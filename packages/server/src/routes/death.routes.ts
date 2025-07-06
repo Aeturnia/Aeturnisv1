@@ -8,6 +8,7 @@ const router = Router();
 router.get('/test', deathController.testDeathSystem);
 router.post('/test-death', deathController.testCharacterDeath);
 router.post('/test-respawn', deathController.testCharacterRespawn);
+router.get('/test-status', deathController.testCharacterDeathStatus);
 
 // Authenticated death management endpoints
 router.post('/:characterId', authenticate, deathController.processCharacterDeath);

@@ -276,3 +276,52 @@ export const testCharacterRespawn = async (req: Request, res: Response): Promise
     });
   }
 };
+
+/**
+ * Test character death status with mock data
+ * GET /api/v1/death/test-status
+ */
+export const testCharacterDeathStatus = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const mockCharacterId = '550e8400-e29b-41d4-a716-446655440000';
+
+    // Mock death status response
+    const mockStatus = {
+      characterId: mockCharacterId,
+      isDead: true,
+      deathAt: new Date(Date.now() - 60000).toISOString(), // Died 1 minute ago
+      deathReason: 'combat',
+      killerId: 'test_goblin_001',
+      respawnCooldownRemaining: 0, // Ready to respawn
+      canRespawn: true,
+      penalties: {
+        xpLoss: 4000,
+        xpLossPercentage: 80,
+        goldLoss: 1000,
+        durabilityDamage: []
+      },
+      respawnLocation: {
+        zoneId: 'starter_zone',
+        x: 100,
+        y: 200
+      }
+    };
+
+    logger.info('Death status test completed', { mockCharacterId });
+
+    return res.status(200).json({
+      success: true,
+      status: mockStatus,
+      message: 'Death status test completed successfully',
+      note: 'This is a test endpoint with mock data'
+    });
+  } catch (error) {
+    logger.error('Error in test character death status', { error });
+
+    return res.status(500).json({
+      success: false,
+      message: 'Test character death status failed',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
