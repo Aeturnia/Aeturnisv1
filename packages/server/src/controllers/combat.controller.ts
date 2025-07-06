@@ -132,11 +132,22 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
       targetId
     });
     
-    if (!sessionId || !action) {
-      console.log('Validation failed: missing sessionId or action');
+    if (!sessionId) {
+      console.log('Validation failed: missing sessionId');
       return res.status(400).json({
         success: false,
-        message: 'Session ID and action are required'
+        message: '🆔 Combat session ID is required!',
+        hint: 'Start a combat session first to perform actions'
+      });
+    }
+    
+    if (!action) {
+      console.log('Validation failed: missing action');
+      return res.status(400).json({
+        success: false,
+        message: '⚡ Action is required!',
+        hint: 'Specify what you want to do: attack, defend, flee, etc.',
+        availableActions: ['attack', 'defend', 'flee', 'useItem', 'useSkill', 'pass']
       });
     }
 
@@ -157,10 +168,22 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
       console.log('Invalid action type provided');
       return res.status(400).json({
         success: false,
-        message: `Invalid action type. Valid actions: ${validActions.join(', ')}`
+        message: `⚔️ Invalid combat action! Available actions: ${validActions.join(', ')}`,
+        hint: 'Try: attack, defend, flee, useItem, useSkill, or pass',
+        validActions: validActions
       });
     }
     
+    // Validate target ID for actions that require a target
+    if (['attack', 'useSkill'].includes(actionType) && !targetId) {
+      return res.status(400).json({
+        success: false,
+        message: '🎯 Target required! Please select a target for this action.',
+        hint: 'Attack and skill actions need a target (enemy or ally)',
+        actionType: actionType
+      });
+    }
+
     // Create proper action object with proper enum values
     const combatAction = {
       type: actionType as CombatActionType,
@@ -197,7 +220,61 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
 
     console.log('=== COMBAT ACTION DEBUG END ===');
     
-    // Return the result directly without duplication - message is already in result.message
+    // Handle CombatService errors with helpful messages
+    if ('error' in result) {
+      console.log('Combat service returned error:', result.error, 'Code:', result.code);
+      
+      let userMessage = result.error;
+      let statusCode = 400;
+      let hint = '';
+      
+      switch (result.code) {
+        case 'INVALID_ACTION':
+          if (result.error.includes('not found in combat')) {
+            userMessage = '🚫 You are not participating in this combat session!';
+            hint = 'Join a combat session first or check your session ID';
+          } else if (result.error.includes('not active')) {
+            userMessage = '⏸️ You cannot act right now! Combat may be paused or ended.';
+            hint = 'Wait for your turn or check combat status';
+          } else if (result.error.includes('session is not active')) {
+            userMessage = '🔒 This combat session has ended or is not active.';
+            hint = 'Start a new combat session to continue fighting';
+          }
+          break;
+          
+        case 'COMBAT_TIMEOUT':
+          userMessage = '⏰ Combat has timed out! Maximum turns exceeded.';
+          hint = 'Combat automatically ends after too many rounds';
+          break;
+          
+        case 'INSUFFICIENT_RESOURCES':
+          if (result.error.includes('stamina')) {
+            userMessage = '😴 Not enough stamina! You need to rest or use a lighter action.';
+            hint = 'Try defending (costs less stamina) or wait to recover';
+          } else if (result.error.includes('mana')) {
+            userMessage = '🔮 Not enough mana! You cannot cast this skill right now.';
+            hint = 'Use basic attacks or wait for mana to regenerate';
+          } else {
+            userMessage = `💪 Insufficient resources! ${result.error}`;
+            hint = 'Check your health, mana, and stamina levels';
+          }
+          break;
+          
+        default:
+          userMessage = `⚔️ Combat Error: ${result.error}`;
+          hint = 'Please try again or contact support if this persists';
+      }
+      
+      return res.status(statusCode).json({
+        success: false,
+        message: userMessage,
+        hint: hint,
+        errorCode: result.code,
+        originalError: result.error
+      });
+    }
+    
+    // Return successful result
     return res.status(200).json({
       success: true,
       ...result  // Spread result to include message, combatStatus, etc. at top level
@@ -248,18 +325,41 @@ export const fleeTestCombat = async (req: Request, res: Response): Promise<Respo
     
     const result = await combatService.processAction(sessionId, actorId, fleeAction);
     
-    let plainText = '';
-    if ('message' in result && result.message) {
-      plainText = result.message;
-    } else if ('error' in result) {
-      plainText = `Error: ${result.error}`;
+    // Handle flee-specific errors with helpful messages
+    if ('error' in result) {
+      let userMessage = result.error;
+      let hint = '';
+      
+      switch (result.code) {
+        case 'INVALID_ACTION':
+          if (result.error.includes('not found in combat')) {
+            userMessage = '🏃 You are not in combat! Nothing to flee from.';
+            hint = 'Start a combat session first to use flee action';
+          } else if (result.error.includes('not active')) {
+            userMessage = '🔒 Combat is not active! Cannot flee from inactive combat.';
+            hint = 'Check combat status or start a new combat session';
+          }
+          break;
+        case 'INSUFFICIENT_RESOURCES':
+          userMessage = '😴 Too exhausted to flee! You need stamina to run away.';
+          hint = 'Wait for stamina to recover or try other actions';
+          break;
+        default:
+          userMessage = `🏃 Flee Error: ${result.error}`;
+          hint = 'Try again or check your combat status';
+      }
+      
+      return res.status(400).json({
+        success: false,
+        message: userMessage,
+        hint: hint,
+        errorCode: result.code
+      });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Flee action performed successfully',
-      data: result,
-      plainText
+      ...result  // Spread result to include message, combatStatus, etc.
     });
   } catch (error) {
     return res.status(500).json({
@@ -327,9 +427,28 @@ export const startTestCombat = async (req: Request, res: Response): Promise<Resp
     console.error('Request body at error:', JSON.stringify(req.body, null, 2));
     console.error('=== END START TEST COMBAT ERROR ===');
     
-    return res.status(500).json({
+    let userMessage = 'Failed to start combat session';
+    let statusCode = 500;
+    
+    if (error instanceof Error) {
+      if (error.message.includes('already in combat')) {
+        userMessage = '⚔️ You are already in combat! Finish your current battle first.';
+        statusCode = 409; // Conflict
+      } else if (error.message.includes('invalid target')) {
+        userMessage = '🎯 Invalid target selected! Please choose a valid enemy.';
+        statusCode = 400;
+      } else if (error.message.includes('not enough participants')) {
+        userMessage = '👥 Not enough participants! Combat needs at least 2 characters.';
+        statusCode = 400;
+      } else {
+        userMessage = `🚨 Combat startup error: ${error.message}`;
+      }
+    }
+    
+    return res.status(statusCode).json({
       success: false,
-      message: error instanceof Error ? error.message : 'Failed to start test combat session',
+      message: userMessage,
+      hint: 'Check your combat status and target selection',
       debug: process.env.NODE_ENV === 'development' ? {
         stack: error instanceof Error ? error.stack : undefined,
         body: req.body

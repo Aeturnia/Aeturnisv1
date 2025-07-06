@@ -547,6 +547,16 @@ The expanded monorepo now includes:
 - **CacheService Enhancement**: Modified CacheService to use conditional Redis connections with ENABLE_REDIS environment variable
 - **In-Memory Fallback**: Implemented Map-based in-memory cache with TTL support when Redis is disabled
 - **Lazy Connection**: Redis only connects when explicitly enabled, preventing unnecessary connection attempts
+
+### July 06, 2025 - Comprehensive Combat Error Messages System Complete ✅
+- **Enhanced User Experience**: Replaced generic error messages with specific, helpful combat error messages using emojis and clear language
+- **Input Validation Messages**: Added targeted validation for missing session ID ("🆔 Combat session ID required"), missing action ("⚡ Action required"), and invalid action types ("⚔️ Invalid combat action")
+- **Combat State Error Handling**: Implemented helpful messages for dead players ("💀 You cannot fight while dead"), resource issues ("😴 Not enough stamina", "🔮 Not enough mana"), and combat session problems
+- **CombatService Error Enhancement**: Added comprehensive error code handling with user-friendly messages for INVALID_ACTION, COMBAT_TIMEOUT, and INSUFFICIENT_RESOURCES
+- **Combat Start Validation**: Enhanced start combat errors with messages for already in combat ("⚔️ You are already in combat"), invalid targets ("🎯 Invalid target selected"), and insufficient participants
+- **Flee Action Enhancement**: Added specific flee error messages including "🏃 You are not in combat! Nothing to flee from" and exhaustion warnings
+- **Response Structure**: Each error includes helpful hints, appropriate HTTP status codes, and error codes for frontend integration
+- **Status**: Complete combat error messaging system providing excellent user guidance for all invalid states
 - **Clean Server Logs**: Eliminated all "[ioredis] Unhandled error event" errors from server console
 - **Graceful Fallback**: Application maintains full caching functionality using in-memory storage
 - **Production Optimization**: System properly configured for development (in-memory) and production (Redis) environments
