@@ -36,7 +36,7 @@ function App() {
   // Form states
   const [email, setEmail] = useState('test@example.com');
   const [username, setUsername] = useState('testuser');
-  const [password, setPassword] = useState('TestPass123!');
+  const [password, setPassword] = useState('Test123!@#');
   const [authToken, setAuthToken] = useState('');
 
   useEffect(() => {
