@@ -34,14 +34,14 @@ export const DeathPanel: React.FC = () => {
           source: 'Dragon Fire'
         };
       } else if (action === 'respawn') {
-        url = '/api/v1/death/respawn';
+        url = '/api/v1/death/test-respawn';
         method = 'POST';
         body = {
-          characterId: '550e8400-e29b-41d4-a716-446655440000',
-          spawnPointId: 'town_center'
+          characterId: 'player-test-001',
+          respawnLocationId: 'tutorial_area_spawn'
         };
       } else if (action === 'status') {
-        url = '/api/v1/death/status/550e8400-e29b-41d4-a716-446655440000';
+        url = '/api/v1/death/test-status';
       }
 
       let result;
