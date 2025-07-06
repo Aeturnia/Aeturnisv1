@@ -29,6 +29,9 @@ function App() {
   const [testMonsters, setTestMonsters] = useState<any[]>([]);
   const [selectedMonster, setSelectedMonster] = useState<string>('');
   const [engineVersion, setEngineVersion] = useState<any>(null);
+  const [deathTest, setDeathTest] = useState<TestState>({ loading: false, response: '', success: false });
+  const [lootTest, setLootTest] = useState<TestState>({ loading: false, response: '', success: false });
+  const [combatOutcome, setCombatOutcome] = useState<'victory' | 'defeat' | 'ongoing' | null>(null);
 
   // Form states
   const [email, setEmail] = useState('test@example.com');
@@ -448,6 +451,7 @@ Types: attack, defend, skill, general usage
 
         const data = await response.json();
         setCombatSessionId(''); // Clear session after fleeing
+        setCombatOutcome('defeat'); // Fleeing counts as defeat for loot purposes
         
         setLiveCombatTest({
           loading: false,
@@ -478,12 +482,32 @@ Types: attack, defend, skill, general usage
         const combatMessage = data?.data?.message || data?.plainText || 'No combat message available';
         const combatStatus = data?.data?.combatStatus || 'unknown';
         
+        // Detect combat outcome for Death & Loot flow
+        const endMessage = data?.data?.session?.endMessage || '';
+        if (endMessage.includes('🏆 VICTORY!')) {
+          setCombatOutcome('victory');
+        } else if (endMessage.includes('💀 DEFEAT!')) {
+          setCombatOutcome('defeat');
+        } else if (endMessage.includes('💨 You fled')) {
+          setCombatOutcome('defeat'); // Treat flee as defeat for loot purposes
+        } else if (combatStatus === 'ended') {
+          // Combat ended but unclear outcome - check for victory/defeat keywords
+          if (combatMessage.toLowerCase().includes('victory') || combatMessage.toLowerCase().includes('defeated')) {
+            setCombatOutcome('victory');
+          } else {
+            setCombatOutcome('defeat');
+          }
+        } else {
+          setCombatOutcome('ongoing');
+        }
+
         const formattedResponse = [
           "=== COMBAT ACTION ===",
           "",
           combatMessage,
           "",
           `Combat Status: ${combatStatus.toUpperCase()}`,
+          endMessage ? `Outcome: ${endMessage}` : "",
           "",
           "=== TECHNICAL DETAILS ===",
           "",
@@ -545,6 +569,164 @@ Types: attack, defend, skill, general usage
       setLiveCombatTest({
         loading: false,
         response: `Error checking combat status: ${error}`,
+        success: false
+      });
+    }
+  };
+
+  const testDeathSystem = async (action: 'info' | 'test-death' | 'respawn' | 'status') => {
+    setDeathTest({ loading: true, response: '', success: false });
+    
+    try {
+      let url = '';
+      let method = 'GET';
+      let body = null;
+      
+      if (action === 'info') {
+        url = '/api/v1/death/test';
+      } else if (action === 'test-death') {
+        url = '/api/v1/death/test-death';
+        method = 'POST';
+        body = JSON.stringify({
+          characterId: '550e8400-e29b-41d4-a716-446655440000',
+          reason: 'combat',
+          metadata: { 
+            combatSessionId: combatSessionId || 'test_combat_001',
+            killedBy: selectedMonster || 'test_goblin_001'
+          }
+        });
+      } else if (action === 'respawn') {
+        url = '/api/v1/death/550e8400-e29b-41d4-a716-446655440000/respawn';
+        method = 'POST';
+      } else if (action === 'status') {
+        url = '/api/v1/death/550e8400-e29b-41d4-a716-446655440000/status';
+      }
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken && { 'Authorization': `Bearer ${authToken}` })
+        },
+        ...(body && { body })
+      });
+      
+      const data = await response.json();
+      
+      // Format response for better readability
+      let formattedResponse = '';
+      if (action === 'test-death' && data.message) {
+        formattedResponse = [
+          "=== DEATH SYSTEM TEST ===",
+          "",
+          data.message,
+          "",
+          "📊 Death Penalties Applied:",
+          `• Experience Loss: ${data.penalties?.experienceLoss || '80%'}`,
+          `• Gold Loss: ${data.penalties?.goldLoss || '100%'}`,
+          `• Respawn Cooldown: ${data.penalties?.respawnCooldown || '30 seconds'}`,
+          "",
+          "=== TECHNICAL DETAILS ===",
+          "",
+          JSON.stringify(data, null, 2)
+        ].join('\n');
+      } else {
+        formattedResponse = JSON.stringify(data, null, 2);
+      }
+      
+      setDeathTest({
+        loading: false,
+        response: formattedResponse,
+        success: response.ok
+      });
+    } catch (error) {
+      setDeathTest({
+        loading: false,
+        response: `Error: ${error}`,
+        success: false
+      });
+    }
+  };
+
+  const testLootSystem = async (action: 'info' | 'test-claim' | 'test-calculate' | 'loot-tables' | 'history') => {
+    setLootTest({ loading: true, response: '', success: false });
+    
+    try {
+      let url = '';
+      let method = 'GET';
+      let body = null;
+      
+      if (action === 'info') {
+        url = '/api/v1/loot/test';
+      } else if (action === 'test-claim') {
+        url = '/api/v1/loot/test-claim';
+        method = 'POST';
+        body = JSON.stringify({
+          combatSessionId: combatSessionId || 'test_combat_001',
+          characterId: '550e8400-e29b-41d4-a716-446655440000',
+          defeatedEnemies: [selectedMonster || 'test_goblin_001']
+        });
+      } else if (action === 'test-calculate') {
+        url = '/api/v1/loot/test-calculate';
+        method = 'POST';
+        body = JSON.stringify({
+          lootTableId: 'test_monster_loot',
+          modifiers: {
+            characterLevel: 10,
+            partySize: 1,
+            luckBonus: 0.1,
+            eventModifiers: { victory_bonus: 1.2 }
+          }
+        });
+      } else if (action === 'loot-tables') {
+        url = '/api/v1/loot/tables';
+      } else if (action === 'history') {
+        url = '/api/v1/loot/history/550e8400-e29b-41d4-a716-446655440000';
+      }
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken && { 'Authorization': `Bearer ${authToken}` })
+        },
+        ...(body && { body })
+      });
+      
+      const data = await response.json();
+      
+      // Format response for better readability
+      let formattedResponse = '';
+      if (action === 'test-claim' && data.message) {
+        formattedResponse = [
+          "=== LOOT CLAIM RESULTS ===",
+          "",
+          data.message,
+          "",
+          "🎁 Loot Received:",
+          ...(data.testData?.loot || []).map((item: any) => 
+            `• ${item.quantity}x ${item.itemId} (${item.rarity}) - ${(item.rolledChance * 100).toFixed(1)}% roll`
+          ),
+          data.testData?.experience ? `• Experience: ${data.testData.experience} XP` : '',
+          data.testData?.gold ? `• Gold: ${data.testData.gold} coins` : '',
+          "",
+          "=== TECHNICAL DETAILS ===",
+          "",
+          JSON.stringify(data, null, 2)
+        ].filter(line => line !== '').join('\n');
+      } else {
+        formattedResponse = JSON.stringify(data, null, 2);
+      }
+      
+      setLootTest({
+        loading: false,
+        response: formattedResponse,
+        success: response.ok
+      });
+    } catch (error) {
+      setLootTest({
+        loading: false,
+        response: `Error: ${error}`,
         success: false
       });
     }
@@ -865,6 +1047,155 @@ Types: attack, defend, skill, general usage
             <p>Combat Session ID: {combatSessionId || 'No active session'}</p>
             <div className={`response ${liveCombatTest.success ? 'success' : 'error'}`}>
               {liveCombatTest.loading ? 'Loading...' : liveCombatTest.response || 'Start a combat session to see live combat results here'}
+            </div>
+          </div>
+
+          <div className="test-panel wide-panel">
+            <h3 className="test-title">💀 Death & Respawn System</h3>
+            <div className="engine-info">
+              <div className="info-row">
+                <span className="info-label">Combat Outcome:</span>
+                <span className="info-value">
+                  {combatOutcome === 'defeat' ? '💀 Defeated - Death System Available' : 
+                   combatOutcome === 'victory' ? '🏆 Victorious - No Death Needed' :
+                   combatOutcome === 'ongoing' ? '⚔️ Combat Ongoing' : 
+                   '⚪ No Combat Data'}
+                </span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">Penalties:</span>
+                <span className="info-value">80% XP Loss, 100% Gold Loss, 30s Cooldown</span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">Selected Monster:</span>
+                <span className="info-value">{selectedMonster || 'None selected'}</span>
+              </div>
+            </div>
+            
+            <div className="button-grid">
+              <div className="button-section">
+                <h4>System Info</h4>
+                <button 
+                  className="button" 
+                  onClick={() => testDeathSystem('info')}
+                  disabled={deathTest.loading}
+                >
+                  Death System Info
+                </button>
+                <button 
+                  className="button" 
+                  onClick={() => testDeathSystem('status')}
+                  disabled={deathTest.loading}
+                >
+                  Character Status
+                </button>
+              </div>
+              
+              <div className="button-section">
+                <h4>Death Flow</h4>
+                <button 
+                  className="button" 
+                  onClick={() => testDeathSystem('test-death')}
+                  disabled={deathTest.loading}
+                  style={{
+                    backgroundColor: combatOutcome === 'defeat' ? '#dc3545' : undefined,
+                    border: combatOutcome === 'defeat' ? '2px solid #fff' : undefined
+                  }}
+                >
+                  {combatOutcome === 'defeat' ? '💀 Process Death' : 'Test Death'}
+                </button>
+                <button 
+                  className="button" 
+                  onClick={() => testDeathSystem('respawn')}
+                  disabled={deathTest.loading}
+                >
+                  Test Respawn
+                </button>
+              </div>
+            </div>
+            
+            <div className={`response ${deathTest.success ? 'success' : 'error'}`}>
+              {deathTest.loading ? 'Loading...' : deathTest.response || 'Select a death system test to validate severe penalty mechanics'}
+            </div>
+          </div>
+
+          <div className="test-panel wide-panel">
+            <h3 className="test-title">🎁 Loot & Rewards System</h3>
+            <div className="engine-info">
+              <div className="info-row">
+                <span className="info-label">Combat Outcome:</span>
+                <span className="info-value">
+                  {combatOutcome === 'victory' ? '🏆 Victory - Loot Available!' : 
+                   combatOutcome === 'defeat' ? '💀 Defeat - No Loot' :
+                   combatOutcome === 'ongoing' ? '⚔️ Combat Ongoing' : 
+                   '⚪ No Combat Data'}
+                </span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">Rarity System:</span>
+                <span className="info-value">Common → Uncommon → Rare → Epic → Legendary</span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">Defeated Enemy:</span>
+                <span className="info-value">{selectedMonster || 'None selected'}</span>
+              </div>
+            </div>
+            
+            <div className="button-grid">
+              <div className="button-section">
+                <h4>System Info</h4>
+                <button 
+                  className="button" 
+                  onClick={() => testLootSystem('info')}
+                  disabled={lootTest.loading}
+                >
+                  Loot System Info
+                </button>
+                <button 
+                  className="button" 
+                  onClick={() => testLootSystem('loot-tables')}
+                  disabled={lootTest.loading}
+                >
+                  Loot Tables
+                </button>
+              </div>
+              
+              <div className="button-section">
+                <h4>Loot Flow</h4>
+                <button 
+                  className="button" 
+                  onClick={() => testLootSystem('test-claim')}
+                  disabled={lootTest.loading}
+                  style={{
+                    backgroundColor: combatOutcome === 'victory' ? '#28a745' : undefined,
+                    border: combatOutcome === 'victory' ? '2px solid #fff' : undefined
+                  }}
+                >
+                  {combatOutcome === 'victory' ? '🎁 Claim Victory Loot' : 'Test Loot Claim'}
+                </button>
+                <button 
+                  className="button" 
+                  onClick={() => testLootSystem('test-calculate')}
+                  disabled={lootTest.loading}
+                >
+                  Calculate Drops
+                </button>
+              </div>
+              
+              <div className="button-section">
+                <h4>History</h4>
+                <button 
+                  className="button" 
+                  onClick={() => testLootSystem('history')}
+                  disabled={lootTest.loading}
+                >
+                  Loot History
+                </button>
+              </div>
+            </div>
+            
+            <div className={`response ${lootTest.success ? 'success' : 'error'}`}>
+              {lootTest.loading ? 'Loading...' : lootTest.response || 'Select a loot system test to validate reward mechanics and rarity system'}
             </div>
           </div>
 
