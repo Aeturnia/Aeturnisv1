@@ -364,6 +364,7 @@ Types: attack, defend, skill, general usage
 
   const startLiveCombatTest = async () => {
     setLiveCombatTest({ loading: true, response: 'Starting combat session...', success: false });
+    setCombatOutcome(null); // Reset combat outcome for new session
     
     try {
       // Step 1: Start combat session using test endpoint
@@ -478,24 +479,32 @@ Types: attack, defend, skill, general usage
 
         const data = await response.json();
         
-        // Extract combat message for plain language display
-        const combatMessage = data?.data?.message || data?.plainText || 'No combat message available';
-        const combatStatus = data?.data?.combatStatus || 'unknown';
+        // Extract combat message for plain language display - check multiple possible paths
+        const combatMessage = data?.message || data?.data?.message || data?.plainText || 'No combat message available';
+        const combatStatus = data?.combatStatus || data?.data?.combatStatus || 'unknown';
         
         // Detect combat outcome for Death & Loot flow
-        const endMessage = data?.data?.session?.endMessage || '';
-        if (endMessage.includes('🏆 VICTORY!')) {
+        const endMessage = data?.data?.session?.endMessage || data?.endMessage || combatMessage || '';
+        
+        // Clear outcome detection with multiple checks
+        if (combatMessage.includes('🏆 VICTORY!') || combatMessage.toLowerCase().includes('victory') || endMessage.includes('🏆 VICTORY!')) {
           setCombatOutcome('victory');
-        } else if (endMessage.includes('💀 DEFEAT!')) {
+        } else if (combatMessage.includes('💀 DEFEAT!') || combatMessage.toLowerCase().includes('defeated by') || endMessage.includes('💀 DEFEAT!')) {
           setCombatOutcome('defeat');
-        } else if (endMessage.includes('💨 You fled')) {
+        } else if (combatMessage.includes('💨') || combatMessage.toLowerCase().includes('fled') || endMessage.includes('💨')) {
           setCombatOutcome('defeat'); // Treat flee as defeat for loot purposes
         } else if (combatStatus === 'ended') {
-          // Combat ended but unclear outcome - check for victory/defeat keywords
-          if (combatMessage.toLowerCase().includes('victory') || combatMessage.toLowerCase().includes('defeated')) {
+          // Combat ended but unclear outcome - analyze the message more thoroughly
+          if (combatMessage.toLowerCase().includes('victory') || 
+              combatMessage.toLowerCase().includes('has defeated') ||
+              combatMessage.toLowerCase().includes('wins')) {
             setCombatOutcome('victory');
-          } else {
+          } else if (combatMessage.toLowerCase().includes('defeat') || 
+                     combatMessage.toLowerCase().includes('killed') ||
+                     combatMessage.toLowerCase().includes('died')) {
             setCombatOutcome('defeat');
+          } else {
+            setCombatOutcome('ongoing'); // Default to ongoing if unclear
           }
         } else {
           setCombatOutcome('ongoing');
