@@ -1,48 +1,45 @@
 import { Router } from 'express';
-import { authenticate, AuthRequest, authorize } from '../middleware/auth';
 import { asyncHandler } from '../middleware/asyncHandler';
-import { MonsterService } from '../services/MonsterService';
 
 const router = Router();
-const monsterService = new MonsterService();
+
+// Global mock monsters data for testing
+let mockMonsters = [
+  {
+    id: 'monster-001',
+    name: 'Forest Goblin',
+    level: 5,
+    position: { x: 110, y: 0, z: 95 },
+    state: 'idle',
+    spawnPointId: 'spawn-001',
+    stats: {
+      hp: 45,
+      maxHp: 45,
+      attack: 12,
+      defense: 8,
+      speed: 10
+    }
+  },
+  {
+    id: 'monster-002', 
+    name: 'Cave Orc',
+    level: 8,
+    position: { x: 145, y: 2, z: 80 },
+    state: 'patrolling',
+    spawnPointId: 'spawn-002',
+    stats: {
+      hp: 80,
+      maxHp: 80,
+      attack: 18,
+      defense: 12,
+      speed: 8
+    }
+  }
+];
 
 // Get monsters in a specific zone (MOCK DATA FOR TESTING)
 router.get('/zone/:zoneId', asyncHandler(async (req, res) => {
   const { zoneId } = req.params;
-  
-  // Mock monsters data for testing
-  const mockMonsters = [
-    {
-      id: 'monster-001',
-      name: 'Forest Goblin',
-      level: 5,
-      position: { x: 110, y: 0, z: 95 },
-      state: 'idle',
-      spawnPointId: 'spawn-001',
-      stats: {
-        hp: 45,
-        maxHp: 45,
-        attack: 12,
-        defense: 8,
-        speed: 10
-      }
-    },
-    {
-      id: 'monster-002', 
-      name: 'Cave Orc',
-      level: 8,
-      position: { x: 145, y: 2, z: 80 },
-      state: 'patrolling',
-      spawnPointId: 'spawn-002',
-      stats: {
-        hp: 80,
-        maxHp: 80,
-        attack: 18,
-        defense: 12,
-        speed: 8
-      }
-    }
-  ];
   
   res.json({ 
     success: true, 
@@ -170,6 +167,7 @@ router.patch('/:monsterId/state', asyncHandler(async (req, res) => {
   // Update the actual mock monster in the array
   const monsterIndex = mockMonsters.findIndex(m => m.id === monsterId);
   if (monsterIndex !== -1) {
+    const oldState = mockMonsters[monsterIndex].state;
     mockMonsters[monsterIndex] = {
       ...mockMonsters[monsterIndex],
       state: finalState
@@ -179,7 +177,7 @@ router.patch('/:monsterId/state', asyncHandler(async (req, res) => {
       success: true, 
       data: {
         monsterId: monsterId,
-        oldState: 'alive', // For demo purposes
+        oldState: oldState,
         newState: finalState,
         updatedMonster: mockMonsters[monsterIndex],
         timestamp: new Date().toISOString()
