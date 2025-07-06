@@ -1,65 +1,42 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { ServiceProvider, IMonsterService } from '../providers';
 
 const router = Router();
 
-// Global mock monsters data for testing
-let mockMonsters = [
-  {
-    id: 'monster-001',
-    name: 'Forest Goblin',
-    level: 5,
-    position: { x: 110, y: 0, z: 95 },
-    state: 'idle',
-    spawnPointId: 'spawn-001',
-    stats: {
-      hp: 45,
-      maxHp: 45,
-      attack: 12,
-      defense: 8,
-      speed: 10
-    }
-  },
-  {
-    id: 'monster-002', 
-    name: 'Cave Orc',
-    level: 8,
-    position: { x: 145, y: 2, z: 80 },
-    state: 'patrolling',
-    spawnPointId: 'spawn-002',
-    stats: {
-      hp: 80,
-      maxHp: 80,
-      attack: 18,
-      defense: 12,
-      speed: 8
-    }
-  }
-];
-
-// Get monsters in a specific zone (MOCK DATA FOR TESTING)
+// Get monsters in a specific zone
 router.get('/zone/:zoneId', asyncHandler(async (req, res) => {
   const { zoneId } = req.params;
+  const monsterService = ServiceProvider.getInstance().get<IMonsterService>('MonsterService');
   
-  res.json({ 
-    success: true, 
-    data: { 
-      monsters: mockMonsters.map(monster => ({
-        ...monster,
-        // Flatten stats for frontend compatibility
-        hp: monster.stats.hp,
-        maxHp: monster.stats.maxHp
-      })),
-      count: mockMonsters.length,
-      zone: zoneId,
-      message: 'Mock monster data for testing'
-    }
-  });
+  try {
+    const monsters = await monsterService.getMonstersInZone(zoneId);
+    
+    res.json({ 
+      success: true, 
+      data: { 
+        monsters: monsters.map(monster => ({
+          ...monster,
+          // Flatten stats for frontend compatibility
+          hp: monster.stats?.hp || monster.hp,
+          maxHp: monster.stats?.maxHp || monster.maxHp
+        })),
+        count: monsters.length,
+        zone: zoneId
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch monsters'
+    });
+  }
 }));
 
-// Spawn a monster at a spawn point (MOCK FOR TESTING)
+// Spawn a monster at a spawn point
 router.post('/spawn', asyncHandler(async (req, res) => {
   const { spawnPointId } = req.body;
+  const monsterService = ServiceProvider.getInstance().get<IMonsterService>('MonsterService');
   
   if (!spawnPointId) {
     return res.status(400).json({
@@ -68,42 +45,33 @@ router.post('/spawn', asyncHandler(async (req, res) => {
     });
   }
   
-  // Mock spawned monster data
-  const mockSpawnedMonster = {
-    id: `monster-${Date.now()}`,
-    name: spawnPointId === 'spawn-001' ? 'Spawned Forest Goblin' : 'Spawned Cave Orc',
-    level: spawnPointId === 'spawn-001' ? 5 : 8,
-    position: spawnPointId === 'spawn-001' ? { x: 102, y: 0, z: 98 } : { x: 148, y: 3, z: 77 },
-    state: 'alive',
-    spawnPointId: spawnPointId,
-    stats: spawnPointId === 'spawn-001' ? {
-      hp: 45, maxHp: 45, attack: 12, defense: 8, speed: 10
-    } : {
-      hp: 80, maxHp: 80, attack: 18, defense: 12, speed: 8
-    }
-  };
-  
-  // ADD TO GLOBAL ARRAY - This was missing!
-  mockMonsters.push(mockSpawnedMonster);
-  
-  res.json({ 
-    success: true, 
-    data: { 
-      monster: {
-        ...mockSpawnedMonster,
-        hp: mockSpawnedMonster.stats.hp,
-        maxHp: mockSpawnedMonster.stats.maxHp
-      },
-      totalMonsters: mockMonsters.length,
-      message: `${mockSpawnedMonster.name} spawned successfully!` 
-    }
-  });
+  try {
+    const monster = await monsterService.spawnMonster(spawnPointId);
+    
+    res.json({ 
+      success: true, 
+      data: { 
+        monster: {
+          ...monster,
+          hp: monster.stats?.hp || monster.hp,
+          maxHp: monster.stats?.maxHp || monster.maxHp
+        },
+        message: `${monster.name} spawned successfully!` 
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to spawn monster'
+    });
+  }
 }));
 
-// PATCH monster state endpoint (for testing)
+// Update monster state endpoint
 router.patch('/:monsterId/state', asyncHandler(async (req, res) => {
   const { monsterId } = req.params;
   const { state } = req.body;
+  const monsterService = ServiceProvider.getInstance().get<IMonsterService>('MonsterService');
   
   // Validate state
   const validStates = ['alive', 'dead', 'spawning', 'respawning'];
@@ -114,162 +82,96 @@ router.patch('/:monsterId/state', asyncHandler(async (req, res) => {
     });
   }
   
-  // Simulate monster state update
-  res.json({
-    success: true,
-    data: {
-      monsterId,
-      oldState: 'alive',
-      newState: state,
-      message: `Monster ${monsterId} state changed to ${state}`
-    }
-  });
+  try {
+    const monster = await monsterService.updateMonsterState(monsterId, state);
+    
+    res.json({
+      success: true,
+      data: {
+        monsterId,
+        newState: state,
+        monster,
+        message: `Monster ${monsterId} state changed to ${state}`
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update monster state'
+    });
+  }
 }));
 
-// DELETE monster endpoint (for testing)
+// Delete monster endpoint
 router.delete('/:monsterId', asyncHandler(async (req, res) => {
   const { monsterId } = req.params;
+  const monsterService = ServiceProvider.getInstance().get<IMonsterService>('MonsterService');
   
-  // Update mock data to remove the monster
-  mockMonsters = mockMonsters.filter(m => m.id !== monsterId);
-  
-  // Simulate monster deletion with detailed response
-  res.json({
-    success: true,
-    data: {
-      deletedMonsterId: monsterId,
-      message: `Monster ${monsterId} has been killed and removed from zone`,
-      action: 'killed',
-      timestamp: new Date().toISOString()
-    }
-  });
+  try {
+    await monsterService.killMonster(monsterId);
+    
+    res.json({
+      success: true,
+      data: {
+        deletedMonsterId: monsterId,
+        message: `Monster ${monsterId} has been killed and removed from zone`,
+        action: 'killed',
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to kill monster'
+    });
+  }
 }));
 
-// Update monster state (MOCK FOR TESTING)
-router.patch('/:monsterId/state', asyncHandler(async (req, res) => {
-  const { monsterId } = req.params;
-  const { state, newState } = req.body;
+
+// Get monster types
+router.get('/types', asyncHandler(async (_req, res) => {
+  const monsterService = ServiceProvider.getInstance().get<IMonsterService>('MonsterService');
   
-  const finalState = state || newState;
-  
-  if (!finalState) {
-    return res.status(400).json({
-      success: false,
-      error: 'State is required'
-    });
-  }
-  
-  // Validate state
-  const validStates = ['alive', 'dead', 'spawning', 'respawning'];
-  if (!validStates.includes(finalState)) {
-    return res.status(400).json({
-      success: false,
-      error: `Invalid state. Must be one of: ${validStates.join(', ')}`
-    });
-  }
-  
-  // Update the actual mock monster in the array
-  const monsterIndex = mockMonsters.findIndex(m => m.id === monsterId);
-  if (monsterIndex !== -1) {
-    const oldState = mockMonsters[monsterIndex].state;
-    mockMonsters[monsterIndex] = {
-      ...mockMonsters[monsterIndex],
-      state: finalState
-    };
+  try {
+    const monsterTypes = await monsterService.getMonsterTypes();
     
     res.json({ 
       success: true, 
-      data: {
-        monsterId: monsterId,
-        oldState: oldState,
-        newState: finalState,
-        updatedMonster: mockMonsters[monsterIndex],
-        timestamp: new Date().toISOString()
-      },
-      message: `Monster ${monsterId} state changed to ${finalState}` 
+      data: { 
+        monsterTypes,
+        count: monsterTypes.length
+      }
     });
-  } else {
-    res.status(404).json({
+  } catch (error) {
+    res.status(500).json({
       success: false,
-      message: `Monster ${monsterId} not found`
+      error: error instanceof Error ? error.message : 'Failed to fetch monster types'
     });
   }
 }));
 
-// Get monster types (MOCK DATA FOR TESTING)
-router.get('/types', asyncHandler(async (_req, res) => {
-  // Mock monster types data for testing
-  const mockMonsterTypes = [
-    {
-      id: 'goblin',
-      name: 'Goblin',
-      level: 5,
-      baseStats: { hp: 45, attack: 12, defense: 8, speed: 10 },
-      description: 'Small, aggressive forest creature'
-    },
-    {
-      id: 'orc', 
-      name: 'Orc',
-      level: 8,
-      baseStats: { hp: 80, attack: 18, defense: 12, speed: 8 },
-      description: 'Large, brutish cave dweller'
-    },
-    {
-      id: 'skeleton',
-      name: 'Skeleton',
-      level: 6,
-      baseStats: { hp: 40, attack: 14, defense: 6, speed: 12 },
-      description: 'Undead bones animated by dark magic'
-    }
-  ];
-  
-  res.json({ 
-    success: true, 
-    data: { 
-      monsterTypes: mockMonsterTypes,
-      count: mockMonsterTypes.length,
-      message: 'Mock monster types for testing'
-    }
-  });
-}));
-
-// Get spawn points for a zone (MOCK DATA FOR TESTING)
+// Get spawn points for a zone
 router.get('/spawn-points/:zoneId', asyncHandler(async (req, res) => {
   const { zoneId } = req.params;
+  const monsterService = ServiceProvider.getInstance().get<IMonsterService>('MonsterService');
   
-  // Mock spawn points data for testing
-  const mockSpawnPoints = [
-    {
-      id: 'spawn-001',
-      name: 'Forest Clearing',
-      position: { x: 100, y: 0, z: 100 },
-      maxSpawns: 3,
-      currentSpawns: 1,
-      respawnTime: 30,
-      monsterTypeId: 'goblin',
-      isActive: true
-    },
-    {
-      id: 'spawn-002',
-      name: 'Dark Cave Entrance',
-      position: { x: 150, y: 5, z: 75 },
-      maxSpawns: 2,
-      currentSpawns: 0,
-      respawnTime: 60,
-      monsterTypeId: 'orc', 
-      isActive: true
-    }
-  ];
-  
-  res.json({ 
-    success: true, 
-    data: { 
-      spawnPoints: mockSpawnPoints,
-      count: mockSpawnPoints.length,
-      zone: zoneId,
-      message: 'Mock spawn points data for testing'
-    }
-  });
+  try {
+    const spawnPoints = await monsterService.getSpawnPoints(zoneId);
+    
+    res.json({ 
+      success: true, 
+      data: { 
+        spawnPoints,
+        count: spawnPoints.length,
+        zone: zoneId
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch spawn points'
+    });
+  }
 }));
 
 // Test endpoint for monster system

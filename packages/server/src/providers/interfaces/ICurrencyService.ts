@@ -1,62 +1,19 @@
-/**
- * Currency balance information
- */
-export interface CurrencyBalance {
-  characterId: string;
-  gold: bigint;
-  silver: bigint;
-  copper: bigint;
-  totalInCopper: bigint; // For easy calculations
-  lastUpdated: Date;
-}
+// Import types from the actual service
+import { Transaction, TransactionType, TransactionMetadata } from '../../types/currency';
+
+// Re-export types for convenience
+export { Transaction, TransactionType, TransactionMetadata };
 
 /**
- * Result of a currency transaction
+ * Transaction statistics
  */
-export interface TransactionResult {
-  success: boolean;
-  previousBalance: bigint;
-  newBalance: bigint;
-  amount: bigint;
-  transactionId: string;
-  message: string;
-}
-
-/**
- * Result of a currency transfer between characters
- */
-export interface CurrencyTransferResult {
-  success: boolean;
-  fromBalance: bigint;
-  toBalance: bigint;
-  amount: bigint;
-  fee?: bigint;
-  transactionId: string;
-  message: string;
-}
-
-/**
- * Currency transaction record
- */
-export interface Transaction {
-  id: string;
-  characterId: string;
-  type: 'add' | 'deduct' | 'transfer_in' | 'transfer_out';
-  amount: bigint;
-  source: string; // e.g., 'quest_reward', 'vendor_sale', 'player_trade'
-  description: string;
-  balanceBefore: bigint;
-  balanceAfter: bigint;
-  relatedCharacterId?: string; // For transfers
-  timestamp: Date;
-}
-
-/**
- * Currency exchange rates (for different denominations)
- */
-export interface ExchangeRates {
-  copperToSilver: number; // Default: 100
-  silverToGold: number;   // Default: 100
+export interface TransactionStats {
+  totalTransactions: number;
+  totalEarned: number;
+  totalSpent: number;
+  netGold: number;
+  averageTransaction: number;
+  lastTransaction: Date | null;
 }
 
 /**
@@ -65,41 +22,47 @@ export interface ExchangeRates {
  */
 export interface ICurrencyService {
   /**
-   * Get currency balance for a character
+   * Get gold balance for a character
    * @param characterId - The character to check
-   * @returns Current currency balance
+   * @returns Current gold balance
    */
-  getBalance(characterId: string): Promise<CurrencyBalance>;
+  getBalance(characterId: string): Promise<number>;
 
   /**
-   * Add currency to a character
-   * @param characterId - The character receiving currency
-   * @param amount - Amount to add (in copper)
-   * @param source - Source of the currency
+   * Modify character's balance (core method)
+   * @param characterId - The character
+   * @param amount - Amount to add/subtract (negative for deduction)
+   * @param type - Transaction type
    * @param description - Optional description
-   * @returns Transaction result
+   * @param metadata - Optional metadata
+   * @param relatedCharacterId - Optional related character
+   * @returns Transaction record
    */
-  addCurrency(characterId: string, amount: bigint, source: string, description?: string): Promise<TransactionResult>;
+  modifyBalance(
+    characterId: string,
+    amount: number,
+    type: TransactionType,
+    description?: string,
+    metadata?: TransactionMetadata,
+    relatedCharacterId?: string
+  ): Promise<Transaction>;
 
   /**
-   * Deduct currency from a character
-   * @param characterId - The character losing currency
-   * @param amount - Amount to deduct (in copper)
-   * @param reason - Reason for deduction
+   * Transfer gold between characters
+   * @param fromCharacterId - Sending character
+   * @param toCharacterId - Receiving character
+   * @param amount - Amount to transfer
    * @param description - Optional description
-   * @returns Transaction result
+   * @param fee - Optional transfer fee
+   * @returns Transaction record
    */
-  deductCurrency(characterId: string, amount: bigint, reason: string, description?: string): Promise<TransactionResult>;
-
-  /**
-   * Transfer currency between characters
-   * @param fromId - Sending character
-   * @param toId - Receiving character
-   * @param amount - Amount to transfer (in copper)
-   * @param includeFee - Whether to apply transfer fee
-   * @returns Transfer result
-   */
-  transferCurrency(fromId: string, toId: string, amount: bigint, includeFee?: boolean): Promise<CurrencyTransferResult>;
+  transferGold(
+    fromCharacterId: string,
+    toCharacterId: string,
+    amount: number,
+    description?: string,
+    fee?: number
+  ): Promise<Transaction>;
 
   /**
    * Get transaction history for a character
@@ -111,26 +74,58 @@ export interface ICurrencyService {
   getTransactionHistory(characterId: string, limit?: number, offset?: number): Promise<Transaction[]>;
 
   /**
-   * Check if character can afford an amount
-   * @param characterId - The character to check
-   * @param amount - Amount to check (in copper)
-   * @returns Whether they can afford it
+   * Get transaction statistics for a character
+   * @param characterId - The character to get stats for
+   * @returns Transaction statistics
    */
-  canAfford(characterId: string, amount: bigint): Promise<boolean>;
+  getTransactionStats(characterId: string): Promise<TransactionStats>;
 
   /**
-   * Convert between currency denominations
-   * @param amount - Amount to convert
-   * @param from - Source denomination
-   * @param to - Target denomination
-   * @returns Converted amount
+   * Reward gold to a character
+   * @param characterId - The character to reward
+   * @param amount - Amount to reward
+   * @param source - Source of the reward
+   * @param description - Optional description
+   * @returns Transaction record
    */
-  convertCurrency(amount: bigint, from: 'copper' | 'silver' | 'gold', to: 'copper' | 'silver' | 'gold'): bigint;
+  rewardGold(
+    characterId: string,
+    amount: number,
+    source: string,
+    description?: string
+  ): Promise<Transaction>;
 
   /**
-   * Format currency for display
-   * @param amount - Amount in copper
-   * @returns Formatted string (e.g., "1g 50s 25c")
+   * Process item purchase
+   * @param characterId - The purchasing character
+   * @param itemId - The item being purchased
+   * @param cost - Cost of the item
+   * @param quantity - Quantity being purchased
+   * @param vendorId - Optional vendor ID
+   * @returns Transaction record
    */
-  formatCurrency(amount: bigint): string;
+  purchaseItem(
+    characterId: string,
+    itemId: string,
+    cost: number,
+    quantity?: number,
+    vendorId?: string
+  ): Promise<Transaction>;
+
+  /**
+   * Process item sale
+   * @param characterId - The selling character
+   * @param itemId - The item being sold
+   * @param value - Value of the item
+   * @param quantity - Quantity being sold
+   * @param vendorId - Optional vendor ID
+   * @returns Transaction record
+   */
+  sellItem(
+    characterId: string,
+    itemId: string,
+    value: number,
+    quantity?: number,
+    vendorId?: string
+  ): Promise<Transaction>;
 }

@@ -1,4 +1,24 @@
 import { DamageType } from '@aeturnis/shared';
+import { 
+  CombatSession as ActualCombatSession,
+  CombatAction as ActualCombatAction,
+  CombatResult as ActualCombatResult,
+  CombatStartRequest,
+  CombatEndResult,
+  CharacterCombatStats
+} from '../../types/combat.types';
+import { ResourcePool } from '../../types/resources.types';
+
+// Re-export the actual types for consistency
+export { 
+  ActualCombatSession as CombatSessionNew,
+  ActualCombatAction as CombatActionNew,
+  ActualCombatResult as CombatResultNew,
+  CombatStartRequest,
+  CombatEndResult,
+  CharacterCombatStats,
+  ResourcePool
+};
 
 /**
  * Combat participant (player or monster)
@@ -144,48 +164,117 @@ export interface Skill {
  */
 export interface ICombatService {
   /**
-   * Initiate combat between participants
+   * Start a new combat session
+   * @param initiatorId - The initiator of combat
+   * @param request - Combat start request with targets and type
+   * @returns New combat session
+   */
+  startCombat(initiatorId: string, request: CombatStartRequest): Promise<ActualCombatSession>;
+
+  /**
+   * Process a combat action
+   * @param action - The action to process
+   * @returns Result of the action
+   */
+  processAction(action: ActualCombatAction): Promise<ActualCombatResult>;
+
+  /**
+   * Get a combat session by ID
+   * @param sessionId - The session ID
+   * @returns Combat session or null
+   */
+  getSession(sessionId: string): Promise<ActualCombatSession | null>;
+
+  /**
+   * Validate if a user is part of a combat session
+   * @param sessionId - The session ID
+   * @param userId - The user ID to validate
+   * @returns True if valid participant
+   */
+  validateParticipant(sessionId: string, userId: string): Promise<boolean>;
+
+  /**
+   * Allow a participant to flee from combat
+   * @param sessionId - The session ID
+   * @param userId - The user attempting to flee
+   * @returns Combat result of flee attempt
+   */
+  fleeCombat(sessionId: string, userId: string): Promise<ActualCombatResult>;
+
+  /**
+   * Get combat stats for a character
+   * @param charId - The character ID
+   * @returns Character's combat stats
+   */
+  getCharacterStats(charId: string): Promise<CharacterCombatStats>;
+
+  /**
+   * Get resource pools for a character
+   * @param charId - The character ID
+   * @returns Character's resource pools or null
+   */
+  getCharacterResources(charId: string): Promise<ResourcePool | null>;
+
+  /**
+   * Simulate a complete combat scenario
+   * @param initiatorId - The initiator ID
+   * @param targetIds - Array of target IDs
+   * @returns Combat end result
+   */
+  simulateCombat(initiatorId: string, targetIds: string[]): Promise<CombatEndResult>;
+
+  /**
+   * Force start a combat (bypassing some checks)
+   * @param initiatorId - The initiator ID
+   * @param request - Combat start request
+   * @returns New combat session
+   */
+  forceStartCombat(initiatorId: string, request: CombatStartRequest): Promise<ActualCombatSession>;
+
+  // Legacy methods that some implementations might still support
+  /**
+   * Initiate combat between participants (legacy)
    * @param attackerId - The initiator of combat
    * @param targetId - The target of the attack
    * @returns New combat session
    */
-  initiateCombat(attackerId: string, targetId: string): Promise<CombatSession>;
+  initiateCombat?(attackerId: string, targetId: string): Promise<CombatSession>;
 
   /**
-   * Process a combat action
+   * Process a combat action (legacy)
    * @param sessionId - The combat session ID
    * @param action - The action to process
    * @returns Result of the action
    */
-  processCombatAction(sessionId: string, action: CombatAction): Promise<CombatResult>;
+  processCombatAction?(sessionId: string, action: CombatAction): Promise<CombatResult>;
 
   /**
-   * End a combat session
+   * End a combat session (legacy)
    * @param sessionId - The combat session ID
    * @param outcome - How the combat ended
    */
-  endCombat(sessionId: string, outcome: CombatOutcome): Promise<void>;
+  endCombat?(sessionId: string, outcome: CombatOutcome): Promise<void>;
 
   /**
-   * Calculate damage between combatants
+   * Calculate damage between combatants (legacy)
    * @param attacker - The attacking combatant
    * @param target - The target combatant
    * @param skill - Optional skill being used
    * @returns Calculated damage
    */
-  calculateDamage(attacker: Combatant, target: Combatant, skill?: Skill): Promise<DamageResult>;
+  calculateDamage?(attacker: Combatant, target: Combatant, skill?: Skill): Promise<DamageResult>;
 
   /**
-   * Get active combat session for a participant
+   * Get active combat session for a participant (legacy)
    * @param participantId - The participant to check
    * @returns Active session or null
    */
-  getActiveCombat(participantId: string): Promise<CombatSession | null>;
+  getActiveCombat?(participantId: string): Promise<CombatSession | null>;
 
   /**
-   * Apply status effect to a combatant
+   * Apply status effect to a combatant (legacy)
    * @param combatantId - The combatant to affect
    * @param effect - The effect to apply
    */
-  applyStatusEffect(combatantId: string, effect: StatusEffect): Promise<void>;
+  applyStatusEffect?(combatantId: string, effect: StatusEffect): Promise<void>;
 }

@@ -447,4 +447,287 @@ export class MockCombatService implements ICombatService {
       winner: combatEnded ? actor.id : undefined
     };
   }
+
+  // New interface methods
+
+  async startCombat(initiatorId: string, request: CombatStartRequest): Promise<CombatSessionNew> {
+    logger.info(`MockCombatService: Starting combat - initiator: ${initiatorId}`);
+    
+    const sessionId = `combat_${Date.now()}_${uuidv4()}`;
+    const participants: any[] = [];
+    
+    // Add initiator
+    const initiator = this.mockCombatants.get(initiatorId);
+    if (initiator) {
+      participants.push({
+        charId: initiator.id,
+        charName: initiator.name,
+        hp: initiator.currentHp,
+        maxHp: initiator.maxHp,
+        mana: initiator.currentMp || 50,
+        maxMana: initiator.maxMp || 50,
+        stamina: 100,
+        maxStamina: 100,
+        team: 'player',
+        status: 'active',
+        buffs: [],
+        debuffs: [],
+        level: initiator.level,
+        attack: initiator.stats.attack,
+        defense: initiator.stats.defense,
+        magicalAttack: initiator.stats.attack,
+        magicalDefense: initiator.stats.defense,
+        speed: initiator.stats.speed,
+        criticalChance: initiator.stats.critChance,
+        criticalDamage: initiator.stats.critDamage,
+        dodgeChance: initiator.stats.evasion,
+        blockChance: 0.1,
+        accuracy: initiator.stats.accuracy,
+        weaponMinDamage: 10,
+        weaponMaxDamage: 20
+      });
+    }
+    
+    // Add targets
+    for (const targetId of request.targetIds) {
+      const target = this.mockCombatants.get(targetId);
+      if (target) {
+        participants.push({
+          charId: target.id,
+          charName: target.name,
+          hp: target.currentHp,
+          maxHp: target.maxHp,
+          mana: target.currentMp || 50,
+          maxMana: target.maxMp || 50,
+          stamina: 100,
+          maxStamina: 100,
+          team: target.type === 'monster' ? 'enemy' : 'neutral',
+          status: 'active',
+          buffs: [],
+          debuffs: [],
+          level: target.level,
+          attack: target.stats.attack,
+          defense: target.stats.defense,
+          magicalAttack: target.stats.attack,
+          magicalDefense: target.stats.defense,
+          speed: target.stats.speed,
+          criticalChance: target.stats.critChance,
+          criticalDamage: target.stats.critDamage,
+          dodgeChance: target.stats.evasion,
+          blockChance: 0.1,
+          accuracy: target.stats.accuracy,
+          weaponMinDamage: 5,
+          weaponMaxDamage: 15
+        });
+      }
+    }
+    
+    const session: CombatSessionNew = {
+      sessionId,
+      participants,
+      turnOrder: participants.map(p => p.charId),
+      currentTurnIndex: 0,
+      roundNumber: 1,
+      status: 'active',
+      startTime: Date.now(),
+      combatLog: []
+    };
+    
+    // Store session
+    this.combatSessions.set(sessionId, {
+      id: sessionId,
+      participants: participants.map(p => this.mockCombatants.get(p.charId)!),
+      currentTurn: 0,
+      turnOrder: session.turnOrder,
+      rounds: [],
+      state: 'active',
+      startedAt: new Date(session.startTime)
+    });
+    
+    // Map participants to session
+    for (const participant of participants) {
+      this.participantSessions.set(participant.charId, sessionId);
+    }
+    
+    return session;
+  }
+
+  async processAction(action: CombatActionNew): Promise<CombatResultNew> {
+    logger.info(`MockCombatService: Processing action - type: ${action.type}`);
+    
+    // Find session from action timestamp or mock session
+    const sessions = Array.from(this.combatSessions.values());
+    const session = sessions[0]; // Use first session for mock
+    
+    if (!session) {
+      return {
+        sessionId: 'mock',
+        action,
+        actorId: 'unknown',
+        message: 'No active combat session',
+        combatStatus: 'ended'
+      };
+    }
+    
+    const result: CombatResultNew = {
+      sessionId: session.id,
+      action,
+      actorId: session.turnOrder[session.currentTurn % session.turnOrder.length],
+      message: `${action.type} action processed`,
+      damage: action.type === 'attack' ? Math.floor(Math.random() * 20 + 10) : undefined
+    };
+    
+    return result;
+  }
+
+  async getSession(sessionId: string): Promise<CombatSessionNew | null> {
+    const session = this.combatSessions.get(sessionId);
+    if (!session) return null;
+    
+    return {
+      sessionId: session.id,
+      participants: session.participants.map(p => ({
+        charId: p.id,
+        charName: p.name,
+        hp: p.currentHp,
+        maxHp: p.maxHp,
+        mana: p.currentMp || 50,
+        maxMana: p.maxMp || 50,
+        stamina: 100,
+        maxStamina: 100,
+        team: p.type === 'player' ? 'player' : 'enemy',
+        status: 'active',
+        buffs: [],
+        debuffs: [],
+        level: p.level,
+        attack: p.stats.attack,
+        defense: p.stats.defense,
+        magicalAttack: p.stats.attack,
+        magicalDefense: p.stats.defense,
+        speed: p.stats.speed,
+        criticalChance: p.stats.critChance,
+        criticalDamage: p.stats.critDamage,
+        dodgeChance: p.stats.evasion,
+        blockChance: 0.1,
+        accuracy: p.stats.accuracy,
+        weaponMinDamage: 10,
+        weaponMaxDamage: 20
+      })),
+      turnOrder: session.turnOrder,
+      currentTurnIndex: session.currentTurn,
+      roundNumber: 1,
+      status: session.state as any,
+      startTime: session.startedAt.getTime()
+    };
+  }
+
+  async validateParticipant(sessionId: string, userId: string): Promise<boolean> {
+    const session = this.combatSessions.get(sessionId);
+    if (!session) return false;
+    
+    return session.participants.some(p => p.id === userId);
+  }
+
+  async fleeCombat(sessionId: string, userId: string): Promise<CombatResultNew> {
+    logger.info(`MockCombatService: ${userId} attempting to flee from ${sessionId}`);
+    
+    const session = this.combatSessions.get(sessionId);
+    if (!session) {
+      return {
+        sessionId,
+        action: { type: 'flee' as any, timestamp: Date.now() },
+        actorId: userId,
+        message: 'Combat session not found',
+        combatStatus: 'ended'
+      };
+    }
+    
+    // 70% chance to flee successfully
+    const fleeSuccess = Math.random() < 0.7;
+    
+    if (fleeSuccess) {
+      // Remove participant from session
+      session.participants = session.participants.filter(p => p.id !== userId);
+      this.participantSessions.delete(userId);
+      
+      return {
+        sessionId,
+        action: { type: 'flee' as any, timestamp: Date.now() },
+        actorId: userId,
+        message: 'Successfully fled from combat!',
+        combatStatus: session.participants.length <= 1 ? 'ended' : 'active'
+      };
+    } else {
+      return {
+        sessionId,
+        action: { type: 'flee' as any, timestamp: Date.now() },
+        actorId: userId,
+        message: 'Failed to flee from combat!',
+        damage: Math.floor(Math.random() * 10 + 5), // Take some damage for failed flee
+        combatStatus: 'active'
+      };
+    }
+  }
+
+  async getCharacterStats(charId: string): Promise<CharacterCombatStats> {
+    const combatant = this.mockCombatants.get(charId);
+    
+    return {
+      charId,
+      level: combatant?.level || 1,
+      attack: combatant?.stats.attack || 10,
+      defense: combatant?.stats.defense || 10,
+      speed: combatant?.stats.speed || 10,
+      critRate: combatant?.stats.critChance || 0.1,
+      critDamage: combatant?.stats.critDamage || 1.5,
+      resources: {
+        hp: combatant?.currentHp || 100,
+        maxHp: combatant?.maxHp || 100,
+        mana: combatant?.currentMp || 50,
+        maxMana: combatant?.maxMp || 50,
+        stamina: 100,
+        maxStamina: 100
+      }
+    };
+  }
+
+  async getCharacterResources(charId: string): Promise<ResourcePool | null> {
+    const combatant = this.mockCombatants.get(charId);
+    if (!combatant) return null;
+    
+    return {
+      hp: combatant.currentHp,
+      maxHp: combatant.maxHp,
+      mana: combatant.currentMp || 50,
+      maxMana: combatant.maxMp || 50,
+      stamina: 100,
+      maxStamina: 100
+    };
+  }
+
+  async simulateCombat(initiatorId: string, targetIds: string[]): Promise<CombatEndResult> {
+    logger.info(`MockCombatService: Simulating combat between ${initiatorId} and ${targetIds}`);
+    
+    // Simple simulation - initiator wins 60% of the time
+    const initiatorWins = Math.random() < 0.6;
+    const duration = Math.floor(Math.random() * 30 + 10); // 10-40 turns
+    
+    return {
+      sessionId: `sim_${Date.now()}`,
+      winner: initiatorWins ? initiatorId : targetIds[0],
+      loser: initiatorWins ? targetIds[0] : initiatorId,
+      rewards: initiatorWins ? [
+        { type: 'gold', amount: 100 },
+        { type: 'experience', amount: 500 }
+      ] : [],
+      experience: initiatorWins ? 500 : 100,
+      duration
+    };
+  }
+
+  async forceStartCombat(initiatorId: string, request: CombatStartRequest): Promise<CombatSessionNew> {
+    logger.info(`MockCombatService: Force starting combat - initiator: ${initiatorId}`);
+    // Same as startCombat but bypasses any checks
+    return this.startCombat(initiatorId, request);
+  }
 }

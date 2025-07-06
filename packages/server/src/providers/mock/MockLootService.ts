@@ -1,4 +1,17 @@
-import { ILootService, LootSource, LootTable, LootItem, DropRates, ClaimResult, Distribution } from '../interfaces/ILootService';
+import { 
+  ILootService, 
+  LootSource, 
+  LootTable, 
+  LootItem, 
+  DropRates, 
+  ClaimResult, 
+  Distribution,
+  ILootDrop,
+  IDropModifierInput,
+  ILootClaimRequest,
+  ILootClaimResponse,
+  LootHistoryEntry
+} from '../interfaces/ILootService';
 import { ItemRarity } from '@aeturnis/shared';
 import { logger } from '../../utils/logger';
 
@@ -40,6 +53,22 @@ export class MockLootService implements ILootService {
   
   // Mock loot claim history
   private claimHistory: Map<string, LootTable[]> = new Map();
+  
+  // Mock loot history
+  private lootHistory: Map<string, LootHistoryEntry[]> = new Map();
+  
+  // Mock loot tables for testing
+  private mockLootTables: Map<string, any> = new Map([
+    ['test_monster_loot', {
+      id: 'test_monster_loot',
+      name: 'Test Monster Loot Table',
+      items: [
+        { itemId: 'item_001', dropRate: 0.5, minQty: 1, maxQty: 1, rarity: ItemRarity.COMMON },
+        { itemId: 'item_101', dropRate: 0.2, minQty: 1, maxQty: 1, rarity: ItemRarity.UNCOMMON },
+        { itemId: 'item_201', dropRate: 0.05, minQty: 1, maxQty: 1, rarity: ItemRarity.RARE }
+      ]
+    }]
+  ]);
 
   constructor() {
     logger.info('MockLootService initialized');
@@ -112,7 +141,8 @@ export class MockLootService implements ILootService {
     };
   }
 
-  async claimLoot(characterId: string, lootId: string): Promise<ClaimResult> {
+  // Legacy claimLoot method (for backward compatibility)
+  async claimLootLegacy(characterId: string, lootId: string): Promise<ClaimResult> {
     logger.info(`MockLootService: Character ${characterId} claiming loot ${lootId}`);
     
     const lootTable = this.lootTables.get(lootId);
@@ -246,5 +276,123 @@ export class MockLootService implements ILootService {
     if (!items || items.length === 0) return null;
     
     return items[Math.floor(Math.random() * items.length)];
+  }
+
+  // New interface methods implementation
+
+  async calculateLootDrops(
+    lootTableName: string,
+    modifiers: IDropModifierInput
+  ): Promise<ILootDrop[]> {
+    logger.info(`MockLootService: Calculating loot drops for ${lootTableName}`);
+    
+    const lootTable = this.mockLootTables.get(lootTableName);
+    if (!lootTable) {
+      logger.warn(`Loot table ${lootTableName} not found`);
+      return [];
+    }
+    
+    const drops: ILootDrop[] = [];
+    
+    // Apply modifiers to drop rates
+    const partyBonus = modifiers.partySize ? 1 + (modifiers.partySize - 1) * 0.1 : 1;
+    const luckBonus = 1 + (modifiers.luckBonus || 0);
+    
+    for (const item of lootTable.items) {
+      const modifiedDropRate = item.dropRate * partyBonus * luckBonus;
+      const roll = this.seededRandom(modifiers.seed || Math.random().toString());
+      
+      if (roll <= modifiedDropRate) {
+        const quantity = item.minQty + Math.floor(Math.random() * (item.maxQty - item.minQty + 1));
+        drops.push({
+          itemId: item.itemId,
+          quantity,
+          rarity: item.rarity,
+          rolledChance: roll,
+          guaranteed: false
+        });
+      }
+    }
+    
+    return drops;
+  }
+
+  async claimLoot(
+    sessionId: string,
+    claimRequest: ILootClaimRequest
+  ): Promise<ILootClaimResponse> {
+    logger.info(`MockLootService: Claiming loot for session ${sessionId}`);
+    
+    // Generate mock loot for the session
+    const drops = await this.calculateLootDrops('test_monster_loot', {
+      characterLevel: 10,
+      partySize: 1,
+      seed: sessionId
+    });
+    
+    // Calculate gold and experience
+    const gold = 100 + Math.floor(Math.random() * 200);
+    const experience = 500 + Math.floor(Math.random() * 500);
+    
+    // Store in history
+    const historyEntry: LootHistoryEntry = {
+      id: `history_${Date.now()}`,
+      characterId: claimRequest.characterId,
+      sessionId,
+      loot: drops,
+      gold,
+      experience,
+      claimedAt: new Date()
+    };
+    
+    const characterHistory = this.lootHistory.get(claimRequest.characterId) || [];
+    characterHistory.unshift(historyEntry);
+    this.lootHistory.set(claimRequest.characterId, characterHistory);
+    
+    return {
+      loot: drops,
+      gold,
+      experience
+    };
+  }
+
+  async getLootHistory(characterId: string, limit: number = 50): Promise<LootHistoryEntry[]> {
+    logger.info(`MockLootService: Getting loot history for ${characterId}`);
+    
+    const history = this.lootHistory.get(characterId) || [];
+    return history.slice(0, limit);
+  }
+
+  async createTestLootTable(): Promise<string> {
+    logger.info('MockLootService: Creating test loot table');
+    
+    const tableId = `test_table_${Date.now()}`;
+    this.mockLootTables.set(tableId, {
+      id: tableId,
+      name: 'Test Loot Table',
+      items: [
+        { itemId: 'item_001', dropRate: 0.8, minQty: 1, maxQty: 3, rarity: ItemRarity.COMMON },
+        { itemId: 'item_101', dropRate: 0.3, minQty: 1, maxQty: 1, rarity: ItemRarity.UNCOMMON },
+        { itemId: 'item_201', dropRate: 0.1, minQty: 1, maxQty: 1, rarity: ItemRarity.RARE },
+        { itemId: 'item_301', dropRate: 0.01, minQty: 1, maxQty: 1, rarity: ItemRarity.EPIC }
+      ]
+    });
+    
+    return tableId;
+  }
+
+  async getAllLootTables(): Promise<LootTable[]> {
+    logger.info('MockLootService: Getting all loot tables');
+    
+    return Array.from(this.lootTables.values());
+  }
+
+  private seededRandom(seed: string): number {
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+      hash = hash & hash;
+    }
+    return Math.abs(hash) / 2147483647;
   }
 }

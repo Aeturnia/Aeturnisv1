@@ -3,6 +3,7 @@ import { AuthService } from './services/AuthService';
 import { createSocketServer } from './sockets/SocketServer';
 import { checkDatabaseConnection } from './database/config';
 import { logger } from './utils/logger';
+import { initializeProviders } from './providers';
 
 // Initialize environment variables
 import { config } from 'dotenv';
@@ -34,6 +35,15 @@ async function startServer() {
       logger.error('Failed to connect to database', { service: 'aeturnis-api' });
       process.exit(1);
     }
+
+    // Initialize Service Providers
+    logger.info('Initializing service providers...', { service: 'aeturnis-api' });
+    const useMocks = process.env.USE_MOCKS === 'true';
+    await initializeProviders(useMocks);
+    logger.info(`Service providers initialized with ${useMocks ? 'MOCK' : 'REAL'} services`, { 
+      service: 'aeturnis-api',
+      useMocks 
+    });
 
     // Create Express app
     const app = createApp();

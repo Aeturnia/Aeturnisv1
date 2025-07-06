@@ -1,15 +1,8 @@
 import { Request, Response } from 'express';
-import { DeathService } from '../services/death.service';
-import { DeathRepository } from '../repositories/death.repository';
-import { CacheService } from '../services/CacheService';
+import { ServiceProvider, IDeathService } from '../providers';
 import { IDeathRequest, IDeathStatusResponse } from '../types/death';
 import { ValidationError, NotFoundError } from '../utils/errors';
 import { logger } from '../utils/logger';
-
-// Initialize services
-const cacheService = new CacheService();
-const deathRepository = new DeathRepository();
-const deathService = new DeathService(deathRepository, cacheService);
 
 /**
  * Process character death
@@ -19,6 +12,7 @@ export const processCharacterDeath = async (req: Request, res: Response): Promis
   try {
     const { characterId } = req.params;
     const deathRequest: IDeathRequest = req.body;
+    const deathService = ServiceProvider.getInstance().get<IDeathService>('DeathService');
 
     if (!characterId) {
       return res.status(400).json({
@@ -66,6 +60,7 @@ export const processCharacterDeath = async (req: Request, res: Response): Promis
 export const processCharacterRespawn = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { characterId } = req.params;
+    const deathService = ServiceProvider.getInstance().get<IDeathService>('DeathService');
 
     if (!characterId) {
       return res.status(400).json({
@@ -110,6 +105,7 @@ export const processCharacterRespawn = async (req: Request, res: Response): Prom
 export const getCharacterDeathStatus = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { characterId } = req.params;
+    const deathService = ServiceProvider.getInstance().get<IDeathService>('DeathService');
 
     if (!characterId) {
       return res.status(400).json({

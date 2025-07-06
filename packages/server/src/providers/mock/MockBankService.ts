@@ -7,7 +7,10 @@ import {
   WithdrawResult, 
   TransferResult, 
   ExpansionResult, 
-  BankTransaction 
+  BankTransaction,
+  PersonalBank,
+  SharedBank,
+  BankTransferRequest
 } from '../interfaces/IBankService';
 import { logger } from '../../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
@@ -228,7 +231,7 @@ export class MockBankService implements IBankService {
     };
   }
 
-  async expandBankSlots(characterId: string, bankType: BankType): Promise<ExpansionResult> {
+  private async expandBankSlotsOriginal(characterId: string, bankType: BankType): Promise<ExpansionResult> {
     logger.info(`MockBankService: Expanding ${bankType} bank for ${characterId}`);
     
     const bank = await this.getBankContents(characterId, bankType);
@@ -352,5 +355,169 @@ export class MockBankService implements IBankService {
     };
     
     this.transactions.push(transaction);
+  }
+
+  // New required methods from actual implementation
+
+  async getPersonalBank(characterId: string): Promise<PersonalBank> {
+    logger.info(`MockBankService: Getting personal bank for ${characterId}`);
+    
+    const bank = await this.getBankContents(characterId, BankType.PERSONAL);
+    
+    return {
+      characterId,
+      slots: bank.slots,
+      maxSlots: bank.totalSlots
+    };
+  }
+
+  async getSharedBank(userId: string): Promise<SharedBank> {
+    logger.info(`MockBankService: Getting shared bank for user ${userId}`);
+    
+    // For mock, use userId as characterId
+    const bank = await this.getBankContents(userId, BankType.SHARED);
+    
+    return {
+      userId,
+      slots: bank.slots,
+      lastAccessedBy: userId,
+      lastAccessedAt: bank.lastAccessed
+    };
+  }
+
+  async addItemToBank(
+    characterId: string,
+    slot: number,
+    itemId: number,
+    quantity: number = 1,
+    bankType: 'personal' | 'shared' = 'personal'
+  ): Promise<void> {
+    logger.info(`MockBankService: Adding item ${itemId} to ${bankType} bank slot ${slot}`);
+    
+    const type = bankType === 'personal' ? BankType.PERSONAL : BankType.SHARED;
+    const bank = await this.getBankContents(characterId, type);
+    
+    if (slot >= bank.totalSlots) {
+      throw new Error('Invalid slot index');
+    }
+    
+    // Update the slot
+    bank.slots[slot] = {
+      slotIndex: slot,
+      itemId: `item_${itemId}`,
+      quantity,
+      isEmpty: false
+    };
+    
+    // Update used slots count
+    bank.usedSlots = bank.slots.filter(s => !s.isEmpty).length;
+    
+    this.saveBank(characterId, type, bank);
+    this.recordTransaction(characterId, type, 'deposit', `item_${itemId}`, undefined, quantity);
+  }
+
+  async removeItemFromBank(
+    characterId: string,
+    slot: number,
+    quantity?: number,
+    bankType: 'personal' | 'shared' = 'personal'
+  ): Promise<{ itemId: number; removedQuantity: number }> {
+    logger.info(`MockBankService: Removing item from ${bankType} bank slot ${slot}`);
+    
+    const type = bankType === 'personal' ? BankType.PERSONAL : BankType.SHARED;
+    const bank = await this.getBankContents(characterId, type);
+    
+    if (slot >= bank.totalSlots || bank.slots[slot].isEmpty) {
+      throw new Error('Invalid slot or slot is empty');
+    }
+    
+    const slotData = bank.slots[slot];
+    const itemIdNum = parseInt(slotData.itemId!.replace('item_', ''));
+    const removedQuantity = quantity || slotData.quantity || 1;
+    
+    if (removedQuantity >= (slotData.quantity || 1)) {
+      // Remove entire item
+      bank.slots[slot] = {
+        slotIndex: slot,
+        isEmpty: true
+      };
+    } else {
+      // Reduce quantity
+      bank.slots[slot].quantity = (slotData.quantity || 1) - removedQuantity;
+    }
+    
+    // Update used slots count
+    bank.usedSlots = bank.slots.filter(s => !s.isEmpty).length;
+    
+    this.saveBank(characterId, type, bank);
+    this.recordTransaction(characterId, type, 'withdraw', slotData.itemId, undefined, removedQuantity);
+    
+    return {
+      itemId: itemIdNum,
+      removedQuantity
+    };
+  }
+
+  async transferItem(
+    characterId: string,
+    userId: string,
+    request: BankTransferRequest
+  ): Promise<void> {
+    logger.info(`MockBankService: Transferring item between banks`);
+    
+    // Remove from source
+    const removed = await this.removeItemFromBank(
+      characterId,
+      request.fromSlot,
+      request.quantity,
+      request.fromBankType
+    );
+    
+    // Add to destination
+    await this.addItemToBank(
+      request.toBankType === 'shared' ? userId : characterId,
+      request.toSlot,
+      removed.itemId,
+      removed.removedQuantity,
+      request.toBankType
+    );
+  }
+
+  // Overloaded expandBankSlots methods
+  async expandBankSlots(characterId: string, bankType: BankType): Promise<ExpansionResult>;
+  async expandBankSlots(characterId: string, additionalSlots: number): Promise<{ newTotalSlots: number; cost: bigint }>;
+  async expandBankSlots(
+    characterId: string,
+    bankTypeOrSlots: BankType | number
+  ): Promise<ExpansionResult | { newTotalSlots: number; cost: bigint }> {
+    if (typeof bankTypeOrSlots === 'number') {
+      // New signature: expandBankSlots(characterId, additionalSlots)
+      const additionalSlots = bankTypeOrSlots;
+      logger.info(`MockBankService: Expanding bank slots by ${additionalSlots}`);
+      
+      const bank = await this.getBankContents(characterId, BankType.PERSONAL);
+      const newTotalSlots = bank.totalSlots + additionalSlots;
+      const cost = BigInt(additionalSlots * 1000); // 1000 gold per slot
+      
+      // Expand the slots
+      for (let i = bank.totalSlots; i < newTotalSlots; i++) {
+        bank.slots.push({
+          slotIndex: i,
+          isEmpty: true
+        });
+      }
+      
+      bank.totalSlots = newTotalSlots;
+      this.saveBank(characterId, BankType.PERSONAL, bank);
+      
+      return {
+        newTotalSlots,
+        cost
+      };
+    } else {
+      // Original signature: expandBankSlots(characterId, bankType)
+      // Delegate to the original method
+      return this.expandBankSlotsOriginal(characterId, bankTypeOrSlots);
+    }
   }
 }

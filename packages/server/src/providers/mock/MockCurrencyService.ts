@@ -1,9 +1,9 @@
 import { 
   ICurrencyService, 
-  CurrencyBalance, 
-  TransactionResult, 
-  CurrencyTransferResult, 
-  Transaction 
+  Transaction,
+  TransactionType,
+  TransactionMetadata,
+  TransactionStats
 } from '../interfaces/ICurrencyService';
 import { logger } from '../../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
@@ -13,18 +13,11 @@ import { v4 as uuidv4 } from 'uuid';
  * Uses in-memory storage for currency data
  */
 export class MockCurrencyService implements ICurrencyService {
-  // Mock character balances: characterId -> balance in copper
-  private balances: Map<string, bigint> = new Map();
+  // Mock character balances: characterId -> gold amount
+  private balances: Map<string, number> = new Map();
   
   // Mock transaction history
   private transactions: Transaction[] = [];
-  
-  // Currency conversion rates (standard MMO rates)
-  private readonly COPPER_TO_SILVER = 100;
-  private readonly SILVER_TO_GOLD = 100;
-  
-  // Transfer fee percentage
-  private readonly TRANSFER_FEE_PERCENT = 5;
 
   constructor() {
     logger.info('MockCurrencyService initialized');
@@ -32,209 +25,96 @@ export class MockCurrencyService implements ICurrencyService {
   }
 
   private initializeMockData(): void {
-    // Initialize test characters with some currency
-    this.balances.set('player-test-001', BigInt(1500000)); // 150 gold
-    this.balances.set('player-test-002', BigInt(500000));  // 50 gold
-    this.balances.set('550e8400-e29b-41d4-a716-446655440000', BigInt(1000000)); // 100 gold
+    // Initialize test characters with some gold
+    this.balances.set('player-test-001', 15000); // 15,000 gold
+    this.balances.set('player-test-002', 5000);  // 5,000 gold
+    this.balances.set('550e8400-e29b-41d4-a716-446655440000', 10000); // 10,000 gold
   }
 
-  async getBalance(characterId: string): Promise<CurrencyBalance> {
+  async getBalance(characterId: string): Promise<number> {
     logger.info(`MockCurrencyService: Getting balance for character ${characterId}`);
     
-    const totalInCopper = this.balances.get(characterId) || BigInt(0);
-    
-    // Convert to gold, silver, copper
-    const gold = totalInCopper / BigInt(this.COPPER_TO_SILVER * this.SILVER_TO_GOLD);
-    const remainderAfterGold = totalInCopper % BigInt(this.COPPER_TO_SILVER * this.SILVER_TO_GOLD);
-    const silver = remainderAfterGold / BigInt(this.COPPER_TO_SILVER);
-    const copper = remainderAfterGold % BigInt(this.COPPER_TO_SILVER);
-    
-    return {
-      characterId,
-      gold,
-      silver,
-      copper,
-      totalInCopper,
-      lastUpdated: new Date()
-    };
+    return this.balances.get(characterId) || 0;
   }
 
-  async addCurrency(characterId: string, amount: bigint, source: string, description?: string): Promise<TransactionResult> {
-    logger.info(`MockCurrencyService: Adding ${amount} copper to character ${characterId} from ${source}`);
+  async modifyBalance(
+    characterId: string,
+    amount: number,
+    type: TransactionType,
+    description?: string,
+    metadata?: TransactionMetadata,
+    relatedCharacterId?: string
+  ): Promise<Transaction> {
+    logger.info(`MockCurrencyService: Modifying balance for ${characterId} by ${amount}`);
     
-    if (amount <= BigInt(0)) {
-      return {
-        success: false,
-        previousBalance: this.balances.get(characterId) || BigInt(0),
-        newBalance: this.balances.get(characterId) || BigInt(0),
-        amount: BigInt(0),
-        transactionId: '',
-        message: 'Amount must be positive'
-      };
+    const balanceBefore = this.balances.get(characterId) || 0;
+    const balanceAfter = balanceBefore + amount;
+    
+    if (balanceAfter < 0) {
+      throw new Error('Insufficient funds');
     }
     
-    const previousBalance = this.balances.get(characterId) || BigInt(0);
-    const newBalance = previousBalance + amount;
+    // Update balance
+    this.balances.set(characterId, balanceAfter);
     
-    this.balances.set(characterId, newBalance);
-    
+    // Create transaction record
     const transaction: Transaction = {
       id: uuidv4(),
       characterId,
-      type: 'add',
+      type,
       amount,
-      source,
-      description: description || `Currency added from ${source}`,
-      balanceBefore: previousBalance,
-      balanceAfter: newBalance,
-      timestamp: new Date()
+      balanceBefore,
+      balanceAfter,
+      relatedCharacterId,
+      description: description || `${type} transaction`,
+      metadata,
+      createdAt: new Date()
     };
     
     this.transactions.push(transaction);
     
-    return {
-      success: true,
-      previousBalance,
-      newBalance,
-      amount,
-      transactionId: transaction.id,
-      message: `Added ${this.formatCurrency(amount)} from ${source}`
-    };
+    return transaction;
   }
 
-  async deductCurrency(characterId: string, amount: bigint, reason: string, description?: string): Promise<TransactionResult> {
-    logger.info(`MockCurrencyService: Deducting ${amount} copper from character ${characterId} for ${reason}`);
+  async transferGold(
+    fromCharacterId: string,
+    toCharacterId: string,
+    amount: number,
+    description?: string,
+    fee?: number
+  ): Promise<Transaction> {
+    logger.info(`MockCurrencyService: Transferring ${amount} gold from ${fromCharacterId} to ${toCharacterId}`);
     
-    if (amount <= BigInt(0)) {
-      return {
-        success: false,
-        previousBalance: this.balances.get(characterId) || BigInt(0),
-        newBalance: this.balances.get(characterId) || BigInt(0),
-        amount: BigInt(0),
-        transactionId: '',
-        message: 'Amount must be positive'
-      };
-    }
+    const actualFee = fee || Math.floor(amount * 0.05); // 5% default fee
+    const totalDeduction = amount + actualFee;
     
-    const previousBalance = this.balances.get(characterId) || BigInt(0);
-    
-    if (previousBalance < amount) {
-      return {
-        success: false,
-        previousBalance,
-        newBalance: previousBalance,
-        amount,
-        transactionId: '',
-        message: 'Insufficient funds'
-      };
-    }
-    
-    const newBalance = previousBalance - amount;
-    this.balances.set(characterId, newBalance);
-    
-    const transaction: Transaction = {
-      id: uuidv4(),
-      characterId,
-      type: 'deduct',
-      amount,
-      source: reason,
-      description: description || `Currency spent on ${reason}`,
-      balanceBefore: previousBalance,
-      balanceAfter: newBalance,
-      timestamp: new Date()
-    };
-    
-    this.transactions.push(transaction);
-    
-    return {
-      success: true,
-      previousBalance,
-      newBalance,
-      amount,
-      transactionId: transaction.id,
-      message: `Spent ${this.formatCurrency(amount)} on ${reason}`
-    };
-  }
-
-  async transferCurrency(fromId: string, toId: string, amount: bigint, includeFee: boolean = true): Promise<CurrencyTransferResult> {
-    logger.info(`MockCurrencyService: Transferring ${amount} copper from ${fromId} to ${toId}`);
-    
-    if (amount <= BigInt(0)) {
-      return {
-        success: false,
-        fromBalance: this.balances.get(fromId) || BigInt(0),
-        toBalance: this.balances.get(toId) || BigInt(0),
-        amount: BigInt(0),
-        transactionId: '',
-        message: 'Amount must be positive'
-      };
-    }
-    
-    const fromBalance = this.balances.get(fromId) || BigInt(0);
-    const fee = includeFee ? (amount * BigInt(this.TRANSFER_FEE_PERCENT)) / BigInt(100) : BigInt(0);
-    const totalDeduction = amount + fee;
-    
-    if (fromBalance < totalDeduction) {
-      return {
-        success: false,
-        fromBalance,
-        toBalance: this.balances.get(toId) || BigInt(0),
-        amount,
-        fee,
-        transactionId: '',
-        message: 'Insufficient funds (including transfer fee)'
-      };
+    // Check if sender has enough funds
+    const senderBalance = this.balances.get(fromCharacterId) || 0;
+    if (senderBalance < totalDeduction) {
+      throw new Error('Insufficient funds for transfer');
     }
     
     // Deduct from sender
-    const newFromBalance = fromBalance - totalDeduction;
-    this.balances.set(fromId, newFromBalance);
+    await this.modifyBalance(
+      fromCharacterId,
+      -totalDeduction,
+      'transfer',
+      description || `Transfer to ${toCharacterId}`,
+      { fee: actualFee, recipient: toCharacterId },
+      toCharacterId
+    );
     
-    // Add to receiver
-    const toBalance = this.balances.get(toId) || BigInt(0);
-    const newToBalance = toBalance + amount;
-    this.balances.set(toId, newToBalance);
-    
-    // Record transactions
-    const transactionId = uuidv4();
-    
-    // Sender transaction
-    this.transactions.push({
-      id: transactionId + '_out',
-      characterId: fromId,
-      type: 'transfer_out',
-      amount: totalDeduction,
-      source: 'player_transfer',
-      description: `Transfer to character ${toId}`,
-      balanceBefore: fromBalance,
-      balanceAfter: newFromBalance,
-      relatedCharacterId: toId,
-      timestamp: new Date()
-    });
-    
-    // Receiver transaction
-    this.transactions.push({
-      id: transactionId + '_in',
-      characterId: toId,
-      type: 'transfer_in',
+    // Add to recipient (without fee)
+    const receiverTransaction = await this.modifyBalance(
+      toCharacterId,
       amount,
-      source: 'player_transfer',
-      description: `Transfer from character ${fromId}`,
-      balanceBefore: toBalance,
-      balanceAfter: newToBalance,
-      relatedCharacterId: fromId,
-      timestamp: new Date()
-    });
+      'transfer',
+      description || `Transfer from ${fromCharacterId}`,
+      { sender: fromCharacterId },
+      fromCharacterId
+    );
     
-    return {
-      success: true,
-      fromBalance: newFromBalance,
-      toBalance: newToBalance,
-      amount,
-      fee,
-      transactionId,
-      message: `Transferred ${this.formatCurrency(amount)} successfully`
-    };
+    return receiverTransaction;
   }
 
   async getTransactionHistory(characterId: string, limit: number = 50, offset: number = 0): Promise<Transaction[]> {
@@ -242,66 +122,98 @@ export class MockCurrencyService implements ICurrencyService {
     
     const characterTransactions = this.transactions
       .filter(t => t.characterId === characterId)
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(offset, offset + limit);
     
-    return characterTransactions.slice(offset, offset + limit);
+    return characterTransactions;
   }
 
-  async canAfford(characterId: string, amount: bigint): Promise<boolean> {
-    logger.info(`MockCurrencyService: Checking if ${characterId} can afford ${amount}`);
+  async getTransactionStats(characterId: string): Promise<TransactionStats> {
+    logger.info(`MockCurrencyService: Getting transaction stats for ${characterId}`);
     
-    const balance = this.balances.get(characterId) || BigInt(0);
-    return balance >= amount;
+    const characterTransactions = this.transactions.filter(t => t.characterId === characterId);
+    
+    const totalEarned = characterTransactions
+      .filter(t => t.amount > 0)
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    const totalSpent = Math.abs(characterTransactions
+      .filter(t => t.amount < 0)
+      .reduce((sum, t) => sum + t.amount, 0));
+    
+    const netGold = totalEarned - totalSpent;
+    const averageTransaction = characterTransactions.length > 0 
+      ? characterTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0) / characterTransactions.length
+      : 0;
+    
+    const lastTransaction = characterTransactions.length > 0
+      ? characterTransactions.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0].createdAt
+      : null;
+    
+    return {
+      totalTransactions: characterTransactions.length,
+      totalEarned,
+      totalSpent,
+      netGold,
+      averageTransaction,
+      lastTransaction
+    };
   }
 
-  convertCurrency(amount: bigint, from: 'copper' | 'silver' | 'gold', to: 'copper' | 'silver' | 'gold'): bigint {
-    // First convert to copper
-    let copper = amount;
-    switch (from) {
-      case 'silver':
-        copper = amount * BigInt(this.COPPER_TO_SILVER);
-        break;
-      case 'gold':
-        copper = amount * BigInt(this.COPPER_TO_SILVER * this.SILVER_TO_GOLD);
-        break;
-    }
+  async rewardGold(
+    characterId: string,
+    amount: number,
+    source: string,
+    description?: string
+  ): Promise<Transaction> {
+    logger.info(`MockCurrencyService: Rewarding ${amount} gold to ${characterId} from ${source}`);
     
-    // Then convert to target currency
-    switch (to) {
-      case 'copper':
-        return copper;
-      case 'silver':
-        return copper / BigInt(this.COPPER_TO_SILVER);
-      case 'gold':
-        return copper / BigInt(this.COPPER_TO_SILVER * this.SILVER_TO_GOLD);
-      default:
-        return copper;
-    }
+    return await this.modifyBalance(
+      characterId,
+      amount,
+      'reward',
+      description || `Reward from ${source}`,
+      { source }
+    );
   }
 
-  formatCurrency(amount: bigint): string {
-    const gold = amount / BigInt(this.COPPER_TO_SILVER * this.SILVER_TO_GOLD);
-    const remainderAfterGold = amount % BigInt(this.COPPER_TO_SILVER * this.SILVER_TO_GOLD);
-    const silver = remainderAfterGold / BigInt(this.COPPER_TO_SILVER);
-    const copper = remainderAfterGold % BigInt(this.COPPER_TO_SILVER);
+  async purchaseItem(
+    characterId: string,
+    itemId: string,
+    cost: number,
+    quantity: number = 1,
+    vendorId?: string
+  ): Promise<Transaction> {
+    logger.info(`MockCurrencyService: ${characterId} purchasing ${quantity}x ${itemId} for ${cost} gold`);
     
-    const parts: string[] = [];
-    if (gold > 0) parts.push(`${gold}g`);
-    if (silver > 0) parts.push(`${silver}s`);
-    if (copper > 0 || parts.length === 0) parts.push(`${copper}c`);
+    const totalCost = cost * quantity;
     
-    return parts.join(' ');
+    return await this.modifyBalance(
+      characterId,
+      -totalCost,
+      'purchase',
+      `Purchased ${quantity}x ${itemId}`,
+      { itemId, quantity, unitCost: cost, vendor: vendorId }
+    );
   }
-  
-  // Helper method for testing - set balance directly
-  async setBalance(characterId: string, amount: bigint): Promise<void> {
-    logger.info(`MockCurrencyService: Setting balance for ${characterId} to ${amount}`);
-    this.balances.set(characterId, amount);
-  }
-  
-  // Helper method for testing - create test transaction
-  async createTestReward(characterId: string, source: string = 'quest_reward'): Promise<TransactionResult> {
-    const amount = BigInt(Math.floor(Math.random() * 10000) + 1000); // 10-110 silver
-    return this.addCurrency(characterId, amount, source, 'Test quest completion reward');
+
+  async sellItem(
+    characterId: string,
+    itemId: string,
+    value: number,
+    quantity: number = 1,
+    vendorId?: string
+  ): Promise<Transaction> {
+    logger.info(`MockCurrencyService: ${characterId} selling ${quantity}x ${itemId} for ${value} gold`);
+    
+    const totalValue = value * quantity;
+    
+    return await this.modifyBalance(
+      characterId,
+      totalValue,
+      'sale',
+      `Sold ${quantity}x ${itemId}`,
+      { itemId, quantity, unitValue: value, vendor: vendorId }
+    );
   }
 }

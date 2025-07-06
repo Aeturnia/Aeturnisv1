@@ -1,4 +1,13 @@
 import { ItemRarity } from '@aeturnis/shared';
+import { 
+  ILootDrop, 
+  IDropModifierInput, 
+  ILootClaimRequest, 
+  ILootClaimResponse 
+} from '../../types/loot';
+
+// Re-export types that are used by the interface
+export { ILootDrop, IDropModifierInput, ILootClaimRequest, ILootClaimResponse };
 
 /**
  * Source of loot generation
@@ -66,52 +75,79 @@ export interface Distribution {
 }
 
 /**
+ * Loot history entry
+ */
+export interface LootHistoryEntry {
+  id: string;
+  characterId: string;
+  sessionId: string;
+  loot: ILootDrop[];
+  gold: number;
+  experience: number;
+  claimedAt: Date;
+}
+
+/**
  * Interface for Loot-related operations
  * Handles loot generation, distribution, and claiming
  */
 export interface ILootService {
   /**
-   * Generate loot from a source
+   * Calculate and generate loot drops from a loot table
+   * @param lootTableName - Name of the loot table
+   * @param modifiers - Drop rate modifiers
+   * @returns Array of loot drops
+   */
+  calculateLootDrops(
+    lootTableName: string,
+    modifiers: IDropModifierInput
+  ): Promise<ILootDrop[]>;
+
+  /**
+   * Claim loot from a combat session
+   * @param sessionId - The combat session ID
+   * @param claimRequest - The claim request containing characterId
+   * @returns Loot claim response with items, gold, and experience
+   */
+  claimLoot(
+    sessionId: string,
+    claimRequest: ILootClaimRequest
+  ): Promise<ILootClaimResponse>;
+
+  /**
+   * Get loot history for a character
+   * @param characterId - The character ID
+   * @param limit - Maximum number of entries to return
+   * @returns Array of loot history entries
+   */
+  getLootHistory(characterId: string, limit?: number): Promise<LootHistoryEntry[]>;
+
+  /**
+   * Create a test loot table for development/testing
+   * @returns The created loot table ID
+   */
+  createTestLootTable(): Promise<string>;
+
+  /**
+   * Get all available loot tables
+   * @returns Array of loot tables
+   */
+  getAllLootTables?(): Promise<LootTable[]>;
+
+  // Legacy methods that some implementations might still support
+  /**
+   * Generate loot from a source (legacy)
    * @param source - The loot source (monster, chest, etc.)
    * @param killer - The character who killed/opened the source
    * @returns Generated loot table
    */
-  generateLoot(source: LootSource, killer: any): Promise<LootTable>;
+  generateLoot?(source: LootSource, killer: any): Promise<LootTable>;
 
   /**
-   * Calculate drop rates based on various factors
+   * Calculate drop rates based on various factors (legacy)
    * @param monsterId - The monster being killed
    * @param characterLevel - The character's level
    * @returns Calculated drop rates
    */
-  calculateDropRates(monsterId: string, characterLevel: number): Promise<DropRates>;
-
-  /**
-   * Claim loot from a loot table
-   * @param characterId - The character claiming the loot
-   * @param lootId - The loot table ID
-   * @returns Result of the claim attempt
-   */
-  claimLoot(characterId: string, lootId: string): Promise<ClaimResult>;
-
-  /**
-   * Distribute loot among party members
-   * @param loot - The loot table to distribute
-   * @param party - Array of party members
-   * @returns Distribution assignments
-   */
-  distributeLoot(loot: LootTable, party: any[]): Promise<Distribution>;
-
-  /**
-   * Get active loot tables for a character
-   * @param characterId - The character to check
-   * @returns Array of available loot tables
-   */
-  getActiveLoot(characterId: string): Promise<LootTable[]>;
-
-  /**
-   * Force expire a loot table
-   * @param lootId - The loot table to expire
-   */
-  expireLoot(lootId: string): Promise<void>;
+  calculateDropRates?(monsterId: string, characterLevel: number): Promise<DropRates>;
 }
