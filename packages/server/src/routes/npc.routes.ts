@@ -6,23 +6,49 @@ import { NPCService } from '../services/NPCService';
 const router = Router();
 const npcService = new NPCService();
 
-// Get NPCs in a specific zone
-router.get('/zone/:zoneId', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
+// Get NPCs in a specific zone (MOCK DATA FOR TESTING)
+router.get('/zone/:zoneId', asyncHandler(async (req, res) => {
   const { zoneId } = req.params;
   
-  const npcs = await npcService.getNPCsInZone(zoneId);
+  // Mock NPCs data for testing
+  const mockNPCs = [
+    {
+      id: 'npc-001',
+      name: 'Tutorial Guide',
+      level: 1,
+      position: { x: 95, y: 0, z: 105 },
+      npcType: 'guide',
+      dialogue: 'Welcome to Aeturnis Online! I can help you get started.',
+      isInteractable: true,
+      questGiver: true,
+      shopkeeper: false
+    },
+    {
+      id: 'npc-002', 
+      name: 'Village Merchant',
+      level: 5,
+      position: { x: 120, y: 0, z: 85 },
+      npcType: 'merchant',
+      dialogue: 'Looking to buy some gear? I have the finest equipment!',
+      isInteractable: true,
+      questGiver: false,
+      shopkeeper: true
+    }
+  ];
   
   res.json({ 
     success: true, 
     data: { 
-      npcs,
-      count: npcs.length 
+      npcs: mockNPCs,
+      count: mockNPCs.length,
+      zone: zoneId,
+      message: 'Mock NPC data for testing'
     }
   });
 }));
 
-// Start interaction with an NPC
-router.post('/:npcId/interact', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
+// Start interaction with an NPC (MOCK DATA FOR TESTING)
+router.post('/:npcId/interact', asyncHandler(async (req, res) => {
   const { npcId } = req.params;
   const { characterId } = req.body;
   
@@ -33,11 +59,26 @@ router.post('/:npcId/interact', authenticate, asyncHandler<AuthRequest>(async (r
     });
   }
   
-  const interaction = await npcService.startInteraction(npcId, characterId);
+  // Mock dialogue response based on NPC
+  const mockDialogue = {
+    npcId,
+    characterId,
+    dialogueNodeId: 'greeting',
+    text: npcId === 'npc-001' ? 
+      'Welcome, brave adventurer! This is the tutorial area. Would you like me to explain the basics?' :
+      'Welcome to my shop! I have potions, weapons, and armor. What interests you?',
+    choices: [
+      { id: 'quest', text: 'Tell me about quests' },
+      { id: 'shop', text: 'Show me your wares' }, 
+      { id: 'goodbye', text: 'Goodbye' }
+    ],
+    timestamp: new Date().toISOString()
+  };
   
   res.json({ 
     success: true, 
-    data: interaction
+    data: mockDialogue,
+    message: 'NPC interaction started (mock data)'
   });
 }));
 
