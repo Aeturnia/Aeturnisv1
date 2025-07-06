@@ -63,15 +63,20 @@ export class MockLootService implements ILootService {
       id: 'test_monster_loot',
       name: 'Test Monster Loot Table',
       items: [
-        { itemId: 'item_001', dropRate: 0.5, minQty: 1, maxQty: 1, rarity: ItemRarity.COMMON },
-        { itemId: 'item_101', dropRate: 0.2, minQty: 1, maxQty: 1, rarity: ItemRarity.UNCOMMON },
-        { itemId: 'item_201', dropRate: 0.05, minQty: 1, maxQty: 1, rarity: ItemRarity.RARE }
+        { itemId: 'item_001', dropRate: 0.5, minQty: 1, maxQty: 1, rarity: 'common' },
+        { itemId: 'item_101', dropRate: 0.2, minQty: 1, maxQty: 1, rarity: 'uncommon' },
+        { itemId: 'item_201', dropRate: 0.05, minQty: 1, maxQty: 1, rarity: 'rare' }
       ]
     }]
   ]);
 
   constructor() {
-    logger.info('MockLootService initialized');
+    try {
+      logger.info('MockLootService initialized');
+    } catch (error) {
+      logger.error('MockLootService initialization failed:', error);
+      throw error;
+    }
   }
 
   async generateLoot(source: LootSource, killer: any): Promise<LootTable> {
@@ -91,7 +96,7 @@ export class MockLootService implements ILootService {
         items.push({
           itemId: item.id,
           quantity: rarity === 'common' ? Math.floor(Math.random() * 3) + 1 : 1,
-          rarity: rarity as ItemRarity,
+          rarity: rarity as any,
           isBound: rarity === 'legendary' || rarity === 'epic',
           rollValue: Math.floor(Math.random() * 100)
         });
