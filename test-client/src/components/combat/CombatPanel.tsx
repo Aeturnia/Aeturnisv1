@@ -31,29 +31,43 @@ export const CombatPanel: React.FC = () => {
     try {
       const result = await api.get('/api/v1/combat/test-monsters');
       console.log('Monsters API result:', result);
-      if (result.success && result.data) {
-        console.log('Setting monsters:', result.data);
-        setTestMonsters(result.data);
-        if (result.data.length > 0) {
-          console.log('Setting selected monster to:', result.data[0].id);
-          setSelectedMonster(result.data[0].id);
+      console.log('Full API response:', JSON.stringify(result, null, 2));
+      
+      if (result && result.success && result.data) {
+        // Ensure we're getting an array
+        const monstersData = Array.isArray(result.data) ? result.data : [];
+        console.log('Setting monsters:', monstersData);
+        console.log('Is array?', Array.isArray(monstersData));
+        setTestMonsters(monstersData);
+        
+        if (monstersData.length > 0) {
+          console.log('Setting selected monster to:', monstersData[0].id);
+          setSelectedMonster(monstersData[0].id);
         }
       } else {
         console.error('Monster fetch failed:', result);
-        // Add fallback debugging
-        console.log('Full API response:', JSON.stringify(result, null, 2));
+        setTestMonsters([]);
       }
     } catch (error) {
       console.error('Failed to fetch test monsters:', error);
-      console.log('Error details:', error);
+      setTestMonsters([]);
     }
   };
 
   const fetchEngineVersion = async () => {
     try {
       const result = await api.get('/api/v1/combat/test');
-      if (result.success && result.data) {
-        setEngineVersion(result.data);
+      console.log('Engine version API result:', result);
+      console.log('Full engine response:', JSON.stringify(result, null, 2));
+      
+      if (result && result.success && result.data) {
+        // Ensure features is always an array
+        const engineData = {
+          ...result.data,
+          features: Array.isArray(result.data.features) ? result.data.features : []
+        };
+        console.log('Setting engine version:', engineData);
+        setEngineVersion(engineData);
       }
     } catch (error) {
       console.error('Failed to fetch engine version:', error);
@@ -82,7 +96,7 @@ export const CombatPanel: React.FC = () => {
   const startCombat = async () => {
     // Auto-select first monster if none selected
     let monsterToFight = selectedMonster;
-    if (!monsterToFight && testMonsters.length > 0) {
+    if (!monsterToFight && Array.isArray(testMonsters) && testMonsters.length > 0) {
       monsterToFight = testMonsters[0].id;
       setSelectedMonster(monsterToFight);
     }
@@ -118,7 +132,7 @@ export const CombatPanel: React.FC = () => {
           response: JSON.stringify({
             "Combat Started": true,
             "Session ID": result.data.sessionId,
-            "Selected Monster": testMonsters.find(m => m.id === monsterToFight)?.name || monsterToFight,
+            "Selected Monster": Array.isArray(testMonsters) ? testMonsters.find(m => m.id === monsterToFight)?.name || monsterToFight : monsterToFight,
             "Note": combatSessionId ? "Previous combat session ended, new session started" : "New combat session started",
             "Combat Data": result.data
           }, null, 2),
@@ -259,7 +273,7 @@ export const CombatPanel: React.FC = () => {
         {engineVersion && (
           <div className="engine-info">
             <h4>Engine Version: {engineVersion.version || 'v2.0.0'}</h4>
-            {engineVersion.features && (
+            {engineVersion.features && Array.isArray(engineVersion.features) && engineVersion.features.length > 0 && (
               <ul>
                 {engineVersion.features.map((feature: string, index: number) => (
                   <li key={index}>{feature}</li>
@@ -292,7 +306,7 @@ export const CombatPanel: React.FC = () => {
         <div className="test-section">
           <h3>Live Combat {combatSessionId && <span style={{color: '#4caf50'}}>(Active Session)</span>}</h3>
           
-          {testMonsters.length > 0 && (
+          {Array.isArray(testMonsters) && testMonsters.length > 0 && (
             <div className="monster-selection">
               <label>Select Monster:</label>
               <select 
