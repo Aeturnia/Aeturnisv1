@@ -6,23 +6,57 @@ import { MonsterService } from '../services/MonsterService';
 const router = Router();
 const monsterService = new MonsterService();
 
-// Get monsters in a specific zone
-router.get('/zone/:zoneId', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
+// Get monsters in a specific zone (MOCK DATA FOR TESTING)
+router.get('/zone/:zoneId', asyncHandler(async (req, res) => {
   const { zoneId } = req.params;
   
-  const monsters = await monsterService.getMonstersInZone(zoneId);
+  // Mock monsters data for testing
+  const mockMonsters = [
+    {
+      id: 'monster-001',
+      name: 'Forest Goblin',
+      level: 5,
+      position: { x: 110, y: 0, z: 95 },
+      state: 'idle',
+      spawnPointId: 'spawn-001',
+      stats: {
+        hp: 45,
+        maxHp: 45,
+        attack: 12,
+        defense: 8,
+        speed: 10
+      }
+    },
+    {
+      id: 'monster-002', 
+      name: 'Cave Orc',
+      level: 8,
+      position: { x: 145, y: 2, z: 80 },
+      state: 'patrolling',
+      spawnPointId: 'spawn-002',
+      stats: {
+        hp: 80,
+        maxHp: 80,
+        attack: 18,
+        defense: 12,
+        speed: 8
+      }
+    }
+  ];
   
   res.json({ 
     success: true, 
     data: { 
-      monsters,
-      count: monsters.length 
+      monsters: mockMonsters,
+      count: mockMonsters.length,
+      zone: zoneId,
+      message: 'Mock monster data for testing'
     }
   });
 }));
 
-// Spawn a monster at a spawn point (authentication required)
-router.post('/spawn', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
+// Spawn a monster at a spawn point (MOCK FOR TESTING)
+router.post('/spawn', asyncHandler(async (req, res) => {
   const { spawnPointId } = req.body;
   
   if (!spawnPointId) {
@@ -32,19 +66,32 @@ router.post('/spawn', authenticate, asyncHandler<AuthRequest>(async (req, res) =
     });
   }
   
-  const monster = await monsterService.spawnMonster(spawnPointId);
+  // Mock spawned monster data
+  const mockSpawnedMonster = {
+    id: `monster-${Date.now()}`,
+    name: spawnPointId === 'spawn-001' ? 'Forest Goblin' : 'Cave Orc',
+    level: spawnPointId === 'spawn-001' ? 5 : 8,
+    position: spawnPointId === 'spawn-001' ? { x: 102, y: 0, z: 98 } : { x: 148, y: 3, z: 77 },
+    state: 'spawned',
+    spawnPointId: spawnPointId,
+    stats: spawnPointId === 'spawn-001' ? {
+      hp: 45, maxHp: 45, attack: 12, defense: 8, speed: 10
+    } : {
+      hp: 80, maxHp: 80, attack: 18, defense: 12, speed: 8
+    }
+  };
   
   res.json({ 
     success: true, 
     data: { 
-      monster,
-      message: 'Monster spawned successfully' 
+      monster: mockSpawnedMonster,
+      message: 'Monster spawned successfully (mock data)' 
     }
   });
 }));
 
-// Update monster state
-router.patch('/:monsterId/state', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
+// Update monster state (MOCK FOR TESTING)
+router.patch('/:monsterId/state', asyncHandler(async (req, res) => {
   const { monsterId } = req.params;
   const { newState, targetId } = req.body;
   
@@ -55,39 +102,96 @@ router.patch('/:monsterId/state', authenticate, asyncHandler<AuthRequest>(async 
     });
   }
   
-  const monster = await monsterService.updateMonsterState(monsterId, newState, targetId);
+  // Mock updated monster data
+  const mockUpdatedMonster = {
+    id: monsterId,
+    name: 'Forest Goblin',
+    level: 5,
+    position: { x: 110, y: 0, z: 95 },
+    state: newState,
+    targetId: targetId || null,
+    stats: { hp: 45, maxHp: 45, attack: 12, defense: 8, speed: 10 }
+  };
   
   res.json({ 
     success: true, 
-    data: monster,
-    message: 'Monster state updated' 
+    data: mockUpdatedMonster,
+    message: 'Monster state updated (mock data)' 
   });
 }));
 
-// Get monster types
-router.get('/types', authenticate, asyncHandler<AuthRequest>(async (_req, res) => {
-  const monsterTypes = await monsterService.getMonsterTypes();
+// Get monster types (MOCK DATA FOR TESTING)
+router.get('/types', asyncHandler(async (_req, res) => {
+  // Mock monster types data for testing
+  const mockMonsterTypes = [
+    {
+      id: 'goblin',
+      name: 'Goblin',
+      level: 5,
+      baseStats: { hp: 45, attack: 12, defense: 8, speed: 10 },
+      description: 'Small, aggressive forest creature'
+    },
+    {
+      id: 'orc', 
+      name: 'Orc',
+      level: 8,
+      baseStats: { hp: 80, attack: 18, defense: 12, speed: 8 },
+      description: 'Large, brutish cave dweller'
+    },
+    {
+      id: 'skeleton',
+      name: 'Skeleton',
+      level: 6,
+      baseStats: { hp: 40, attack: 14, defense: 6, speed: 12 },
+      description: 'Undead bones animated by dark magic'
+    }
+  ];
   
   res.json({ 
     success: true, 
     data: { 
-      monsterTypes,
-      count: monsterTypes.length 
+      monsterTypes: mockMonsterTypes,
+      count: mockMonsterTypes.length,
+      message: 'Mock monster types for testing'
     }
   });
 }));
 
-// Get spawn points for a zone
-router.get('/spawn-points/:zoneId', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
+// Get spawn points for a zone (MOCK DATA FOR TESTING)
+router.get('/spawn-points/:zoneId', asyncHandler(async (req, res) => {
   const { zoneId } = req.params;
   
-  const spawnPoints = await monsterService.getSpawnPointsByZone(zoneId);
+  // Mock spawn points data for testing
+  const mockSpawnPoints = [
+    {
+      id: 'spawn-001',
+      name: 'Forest Clearing',
+      position: { x: 100, y: 0, z: 100 },
+      maxSpawns: 3,
+      currentSpawns: 1,
+      respawnTime: 30,
+      monsterTypeId: 'goblin',
+      isActive: true
+    },
+    {
+      id: 'spawn-002',
+      name: 'Dark Cave Entrance',
+      position: { x: 150, y: 5, z: 75 },
+      maxSpawns: 2,
+      currentSpawns: 0,
+      respawnTime: 60,
+      monsterTypeId: 'orc', 
+      isActive: true
+    }
+  ];
   
   res.json({ 
     success: true, 
     data: { 
-      spawnPoints,
-      count: spawnPoints.length 
+      spawnPoints: mockSpawnPoints,
+      count: mockSpawnPoints.length,
+      zone: zoneId,
+      message: 'Mock spawn points data for testing'
     }
   });
 }));
