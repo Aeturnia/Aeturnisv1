@@ -429,7 +429,7 @@ The expanded monorepo now includes:
 - **Database Integration Working**: Characters table operational with 40+ columns, infinite progression mechanics, and Redis caching
 - **Name Validation System**: Advanced character name validation working correctly with forbidden word detection
 - **Complete Type System**: Character races (6), classes (6), genders (3) with full TypeScript definitions and validation
-- **Stats Calculation Engine**: Infinite scaling progression system with base stats, tiers, bonus stats, and paragon points fully operational
+- **Aeturnis Infinite Progression Engine (AIPE)**: Infinite scaling progression system with base stats, tiers, bonus stats, and paragon points fully operational
 - **Production-Ready Architecture**: Character service layer, repository pattern, and caching integration all functional
 - **Character System Score**: 98% complete - Core functionality fully operational and tested
 - **Status**: Character & Stats Foundation system COMPLETE - Backend API operational, frontend integration ready, minor browser console warnings remain
@@ -585,6 +585,14 @@ The expanded monorepo now includes:
 - **No Authentication Required**: Test endpoints bypass JWT authentication for easier development testing
 - **Server Successfully Running**: All combat functionality restored and operational on port 5000
 - **Status**: Live Combat testing FULLY FUNCTIONAL - Attack, Defend, Flee, and Check Status buttons operational
+
+### July 06, 2025 - Aeturnis Infinite Progression Engine (AIPE) Documentation Complete ✅
+- **Comprehensive Documentation Created**: Generated complete 400+ line documentation for the Aeturnis Infinite Progression Engine (AIPE)
+- **Engine Rebranding**: Officially renamed stat calculation engine to "Aeturnis Infinite Progression Engine (AIPE)"
+- **Technical Specifications**: Documented all formulas, algorithms, race/class scaling, and progression mechanics
+- **Production Architecture**: Detailed database integration, API endpoints, and performance considerations
+- **Mathematical Foundation**: Complete infinite scaling formulas with soft caps and logarithmic balancing
+- **Status**: AIPE documentation serves as comprehensive reference for infinite character progression system
 
 ### July 05, 2025 - Anti-Spam Cooldown System & Enhanced Status Messages Complete ✅
 - **3-Second Combat Cooldown**: Implemented user-based cooldown system preventing combat action spam with 3-second delays
