@@ -71,10 +71,10 @@ router.post('/spawn', asyncHandler(async (req, res) => {
   // Mock spawned monster data
   const mockSpawnedMonster = {
     id: `monster-${Date.now()}`,
-    name: spawnPointId === 'spawn-001' ? 'Forest Goblin' : 'Cave Orc',
+    name: spawnPointId === 'spawn-001' ? 'Spawned Forest Goblin' : 'Spawned Cave Orc',
     level: spawnPointId === 'spawn-001' ? 5 : 8,
     position: spawnPointId === 'spawn-001' ? { x: 102, y: 0, z: 98 } : { x: 148, y: 3, z: 77 },
-    state: 'spawned',
+    state: 'alive',
     spawnPointId: spawnPointId,
     stats: spawnPointId === 'spawn-001' ? {
       hp: 45, maxHp: 45, attack: 12, defense: 8, speed: 10
@@ -82,6 +82,9 @@ router.post('/spawn', asyncHandler(async (req, res) => {
       hp: 80, maxHp: 80, attack: 18, defense: 12, speed: 8
     }
   };
+  
+  // ADD TO GLOBAL ARRAY - This was missing!
+  mockMonsters.push(mockSpawnedMonster);
   
   res.json({ 
     success: true, 
@@ -91,7 +94,8 @@ router.post('/spawn', asyncHandler(async (req, res) => {
         hp: mockSpawnedMonster.stats.hp,
         maxHp: mockSpawnedMonster.stats.maxHp
       },
-      message: 'Monster spawned successfully (mock data)' 
+      totalMonsters: mockMonsters.length,
+      message: `${mockSpawnedMonster.name} spawned successfully!` 
     }
   });
 }));
