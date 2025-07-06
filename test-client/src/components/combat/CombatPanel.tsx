@@ -120,7 +120,7 @@ export const CombatPanel: React.FC = () => {
     setCombatOutcome('ongoing');
 
     try {
-      const result = await api.post('/api/v1/combat/start', {
+      const result = await api.post('/api/v1/combat/test-start', {
         playerId: 'player-test-001',
         enemyId: monsterToFight
       });

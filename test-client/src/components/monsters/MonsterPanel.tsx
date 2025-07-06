@@ -94,8 +94,6 @@ export const MonsterPanel: React.FC = () => {
   };
 
   const handleMonsterAction = async (monsterId: string, action: string, data?: any) => {
-    if (!isAuthenticated) return;
-    
     setMonsterTest({ loading: true, response: '', success: false });
     
     try {
@@ -103,7 +101,9 @@ export const MonsterPanel: React.FC = () => {
       if (action === 'kill') {
         result = await api.delete(`/api/v1/monsters/${monsterId}`);
       } else if (action === 'updateState') {
-        result = await api.patch(`/api/v1/monsters/${monsterId}/state`, { state: data.state });
+        result = await api.patch(`/api/v1/monsters/${monsterId}/state`, { 
+          state: data?.state || 'alive' 
+        });
       }
       
       if (result) {
@@ -196,7 +196,11 @@ export const MonsterPanel: React.FC = () => {
       <div className="grid-container">
         <div className="test-section">
           <MonsterList
-            monsters={monsters}
+            monsters={monsters.map(monster => ({
+              ...monster,
+              currentHp: monster.hp || monster.stats?.hp || 0,
+              maxHp: monster.maxHp || monster.stats?.maxHp || 1
+            }))}
             onAction={handleMonsterAction}
             loading={monsterTest.loading}
             isAuthenticated={isAuthenticated}
