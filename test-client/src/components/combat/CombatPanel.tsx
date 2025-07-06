@@ -167,11 +167,15 @@ export const CombatPanel: React.FC = () => {
     setLiveCombatTest({ loading: true, response: `Performing ${actionType}...`, success: false });
 
     try {
-      const result = await api.post('/api/v1/combat/test-action', {
+      const requestPayload = {
         sessionId: combatSessionId,
-        playerId: 'player-test-001',
-        action: actionType
-      });
+        action: actionType,
+        ...(actionType === 'attack' && { targetId: 'test_goblin_001' }) // Provide targetId for attack actions
+      };
+      
+      console.log('Sending combat action:', requestPayload);
+      
+      const result = await api.post('/api/v1/combat/test-action', requestPayload);
 
       if (result.success) {
         const data = result.data || result;

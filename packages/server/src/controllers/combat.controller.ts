@@ -174,20 +174,18 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
       });
     }
     
-    // Validate target ID for actions that require a target
+    // Auto-select target for test actions if not provided
+    let finalTargetId = targetId;
     if (['attack', 'useSkill'].includes(actionType) && !targetId) {
-      return res.status(400).json({
-        success: false,
-        message: '🎯 Target required! Please select a target for this action.',
-        hint: 'Attack and skill actions need a target (enemy or ally)',
-        actionType: actionType
-      });
+      // Auto-select first enemy in session for test attacks
+      finalTargetId = 'test_goblin_001'; // Default test target
+      console.log('Auto-selected target for action:', finalTargetId);
     }
 
     // Create proper action object with proper enum values
     const combatAction = {
       type: actionType as CombatActionType,
-      targetCharId: targetId,
+      targetCharId: finalTargetId,
       timestamp: Date.now()
     };
     
