@@ -460,7 +460,7 @@ export const getLootTable = async (req: Request, res: Response): Promise<Respons
 
 /**
  * Test item drop mechanics
- * POST /api/v1/loot/test-drop
+ * POST /api/v1/loot/drop
  */
 export const testItemDrop = async (req: Request, res: Response): Promise<Response> => {
   try {

@@ -8,7 +8,7 @@ const router = Router();
 router.get('/test', lootController.testLootSystem);
 router.post('/generate', lootController.generateLoot);
 router.get('/table/:tableId', lootController.getLootTable);
-router.post('/test-drop', lootController.testItemDrop);
+router.post('/drop', lootController.testItemDrop);
 router.post('/test-claim', lootController.testLootClaim);
 router.post('/test-calculate', lootController.testLootCalculation);
 router.get('/tables', lootController.getLootTables);
