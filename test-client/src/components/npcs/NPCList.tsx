@@ -59,10 +59,10 @@ export const NPCList: React.FC<NPCListProps> = ({
           className={`npc-item ${selectedNpcId === npc.id ? 'selected' : ''}`}
         >
           <div className="npc-header">
-            <div className="npc-icon">{getNPCIcon(npc.npcType)}</div>
+            <div className="npc-icon">{getNPCIcon(npc.type || npc.npcType)}</div>
             <div className="npc-info">
               <h4>{npc.display_name || npc.name}</h4>
-              <span className="npc-type">{formatNPCType(npc.npcType)}</span>
+              <span className="npc-type">{formatNPCType(npc.type || npc.npcType)}</span>
             </div>
           </div>
           
@@ -77,7 +77,7 @@ export const NPCList: React.FC<NPCListProps> = ({
               </div>
             )}
             
-            {npc.npcType === 'quest_giver' && (
+            {(npc.type === 'quest_giver' || npc.npcType === 'quest_giver') && (
               <div className="quest-indicator">
                 ❗ Has quests available
               </div>

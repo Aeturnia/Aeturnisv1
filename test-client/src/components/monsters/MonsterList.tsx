@@ -41,19 +41,13 @@ export const MonsterList: React.FC<MonsterListProps> = ({
     <div className="monster-list">
       <h3>Active Monsters ({monsters.length})</h3>
       
-      {!isAuthenticated && (
-        <div className="warning">
-          🔒 Login required to view monsters
-        </div>
-      )}
-      
-      {isAuthenticated && monsters.length === 0 && (
+      {monsters.length === 0 && (
         <div className="no-monsters">
           No monsters found in this zone
         </div>
       )}
       
-      {isAuthenticated && monsters.map((monster) => {
+      {monsters.map((monster) => {
         const healthPercentage = getHealthPercentage(monster.currentHp, monster.maxHp);
         const healthColor = getHealthColor(healthPercentage);
         
