@@ -342,7 +342,7 @@ export const startTestCombat = async (req: Request, res: Response): Promise<Resp
 };
 
 /**
- * Start a new combat session
+ * Start a new combat session (authenticated)
  */
 export const startCombat = async (req: AuthRequest, res: Response): Promise<Response> => {
   try {

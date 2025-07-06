@@ -388,11 +388,10 @@ Types: attack, defend, skill, general usage
 
       setCombatSessionId(sessionId);
       
-      // Step 2: Get initial combat state
+      // Step 2: Get initial combat state (no auth required for test endpoint)
       const sessionResponse = await fetch(`/api/v1/combat/session/${sessionId}`, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
         },
       });
 
@@ -439,12 +438,11 @@ Types: attack, defend, skill, general usage
 
     try {
       if (actionType === 'flee') {
-        // Use flee endpoint
+        // Use test flee endpoint (no auth required)
         const response = await fetch(`/api/v1/combat/flee/${combatSessionId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`,
           },
         });
 
@@ -461,27 +459,24 @@ Types: attack, defend, skill, general usage
           success: response.ok
         });
       } else {
-        // Use action endpoint
+        // Use test action endpoint (no auth required) with correct format
         const response = await fetch('/api/v1/combat/action', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`,
           },
           body: JSON.stringify({
             sessionId: combatSessionId,
-            action: {
-              type: actionType,
-              targetCharId: actionType === 'attack' ? selectedMonster || 'goblin_weak' : undefined
-            }
+            action: actionType,
+            targetId: selectedMonster || 'test_goblin_001'
           })
         });
 
         const data = await response.json();
         
         // Extract combat message for plain language display
-        const combatMessage = data?.data?.result?.message || 'No combat message available';
-        const combatStatus = data?.data?.result?.combatStatus || 'unknown';
+        const combatMessage = data?.data?.message || data?.plainText || 'No combat message available';
+        const combatStatus = data?.data?.combatStatus || 'unknown';
         
         const formattedResponse = [
           "=== COMBAT ACTION ===",
@@ -531,7 +526,6 @@ Types: attack, defend, skill, general usage
       const response = await fetch(`/api/v1/combat/session/${combatSessionId}`, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
         },
       });
 

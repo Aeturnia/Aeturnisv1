@@ -11,6 +11,7 @@ import * as combatController from '../controllers/combat.controller';
 const router = Router();
 
 // Test endpoints for live combat (no auth required - MUST BE FIRST)
+router.post('/test-start', combatController.startTestCombat);
 router.get('/session/:sessionId', combatController.getCombatSession);
 router.post('/action', combatController.performTestAction);
 router.post('/flee/:sessionId', combatController.fleeTestCombat);
