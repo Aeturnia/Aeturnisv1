@@ -86,6 +86,12 @@ export const CombatPanel: React.FC = () => {
       return;
     }
 
+    // If there's an existing session, clear it first
+    if (combatSessionId) {
+      setCombatSessionId('');
+      setCombatOutcome(null);
+    }
+
     setLiveCombatTest({ loading: true, response: 'Starting combat...', success: false });
     setCombatOutcome('ongoing');
 
@@ -103,6 +109,7 @@ export const CombatPanel: React.FC = () => {
             "Combat Started": true,
             "Session ID": result.data.sessionId,
             "Selected Monster": testMonsters.find(m => m.id === selectedMonster)?.name || selectedMonster,
+            "Note": combatSessionId ? "Previous combat session ended, new session started" : "New combat session started",
             "Combat Data": result.data
           }, null, 2),
           success: true
@@ -273,7 +280,7 @@ export const CombatPanel: React.FC = () => {
         </div>
 
         <div className="test-section">
-          <h3>Live Combat</h3>
+          <h3>Live Combat {combatSessionId && <span style={{color: '#4caf50'}}>(Active Session)</span>}</h3>
           
           {testMonsters.length > 0 && (
             <div className="monster-selection">
@@ -298,7 +305,7 @@ export const CombatPanel: React.FC = () => {
               variant="success"
               disabled={!selectedMonster}
             >
-              Start Combat
+              {combatSessionId ? 'Restart Combat' : 'Start Combat'}
             </TestButton>
             
 
