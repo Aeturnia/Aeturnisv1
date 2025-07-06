@@ -189,21 +189,13 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
     console.log('Processing action with combat service...');
     const result = await combatService.processAction(sessionId, actorId, combatAction);
     console.log('Combat service result:', JSON.stringify(result, null, 2));
-    
-    let plainText = '';
-    if ('message' in result && result.message) {
-      plainText = result.message;
-    } else if ('error' in result) {
-      plainText = `Error: ${result.error}`;
-    }
 
     console.log('=== COMBAT ACTION DEBUG END ===');
     
+    // Return the result directly without duplication - message is already in result.message
     return res.status(200).json({
       success: true,
-      message: 'Combat action performed successfully',
-      data: result,
-      plainText
+      ...result  // Spread result to include message, combatStatus, etc. at top level
     });
   } catch (error) {
     console.error('=== COMBAT ACTION ERROR ===');
