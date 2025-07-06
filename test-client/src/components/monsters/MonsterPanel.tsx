@@ -46,8 +46,12 @@ export const MonsterPanel: React.FC = () => {
     
     try {
       const result = await api.get(`/api/v1/monsters/spawn-points/${selectedZone}`);
-      if (result.success && result.data?.spawnPoints) {
-        setSpawnPoints(result.data.spawnPoints);
+      console.log('Spawn points API response:', result);
+      if (result.success) {
+        // Handle different possible response structures
+        const spawnPointsData = result.data?.spawnPoints || result.data || [];
+        console.log('Extracted spawn points:', spawnPointsData);
+        setSpawnPoints(spawnPointsData);
       }
     } catch (error) {
       console.error('Failed to fetch spawn points:', error);

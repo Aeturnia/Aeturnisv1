@@ -36,65 +36,8 @@ export const SpawnControl: React.FC<SpawnControlProps> = ({
       
       {isAuthenticated && spawnPoints.length === 0 && (
         <div className="no-spawn-points">
-          <p>No spawn points found in this zone</p>
-          <p><em>Mock spawn points are displayed below for testing:</em></p>
-        </div>
-      )}
-      
-      {/* Mock spawn points for testing when none exist */}
-      {isAuthenticated && spawnPoints.length === 0 && (
-        <div className="mock-spawn-points">
-          {[
-            {
-              id: 'mock-spawn-1',
-              name: 'Forest Clearing',
-              position: { x: 100, y: 0, z: 100 },
-              maxSpawns: 3,
-              currentSpawns: 1,
-              respawnTime: 30,
-              monsterTypeId: 'goblin'
-            },
-            {
-              id: 'mock-spawn-2',
-              name: 'Dark Cave Entrance',
-              position: { x: 150, y: 5, z: 75 },
-              maxSpawns: 2,
-              currentSpawns: 0,
-              respawnTime: 60,
-              monsterTypeId: 'orc'
-            }
-          ].map((spawnPoint) => (
-            <div key={spawnPoint.id} className="spawn-point-item mock-item">
-              <div className="spawn-point-header">
-                <h4>{spawnPoint.name} <em>(Mock)</em></h4>
-                <span className="spawn-capacity">
-                  {spawnPoint.currentSpawns}/{spawnPoint.maxSpawns}
-                </span>
-              </div>
-              
-              <div className="spawn-point-info">
-                <div className="position">
-                  Position: ({spawnPoint.position.x}, {spawnPoint.position.y}, {spawnPoint.position.z})
-                </div>
-                <div className="respawn-time">
-                  Respawn: {spawnPoint.respawnTime}s
-                </div>
-                <div className="monster-type">
-                  Type: {spawnPoint.monsterTypeId}
-                </div>
-              </div>
-              
-              <TestButton
-                onClick={() => onSpawn(spawnPoint.id)}
-                loading={loading}
-                variant="success"
-                size="small"
-                disabled={spawnPoint.currentSpawns >= spawnPoint.maxSpawns}
-              >
-                Spawn Monster
-              </TestButton>
-            </div>
-          ))}
+          <p>Loading spawn points from database...</p>
+          <p><em>If no spawn points appear, check the database connection.</em></p>
         </div>
       )}
       

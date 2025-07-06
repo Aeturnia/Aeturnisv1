@@ -21,28 +21,24 @@ export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
 
-  const extractUserFromToken = (accessToken: string): User => {
-    try {
-      const payload = JSON.parse(atob(accessToken.split('.')[1]));
-      return {
-        id: payload.userId,
-        username: payload.username || payload.email,
-        email: payload.email,
-        roles: payload.roles || ['user']
-      };
-    } catch (error) {
-      console.error('Failed to decode JWT token:', error);
-      return {};
-    }
-  };
-
   useEffect(() => {
     // Load token from localStorage on mount
     const savedToken = localStorage.getItem('authToken');
     if (savedToken) {
       setToken(savedToken);
       setIsAuthenticated(true);
-      setUser(extractUserFromToken(savedToken));
+      // Extract user info from JWT token
+      try {
+        const payload = JSON.parse(atob(savedToken.split('.')[1]));
+        setUser({
+          id: payload.userId,
+          username: payload.username || payload.email,
+          email: payload.email,
+          roles: payload.roles || ['user']
+        });
+      } catch (error) {
+        console.error('Failed to decode JWT token:', error);
+      }
     }
   }, []);
 
@@ -65,7 +61,7 @@ export const useAuth = () => {
         const accessToken = data.data.accessToken;
         setToken(accessToken);
         setIsAuthenticated(true);
-        setUser(extractUserFromToken(accessToken));
+        setUser(data.data.user || {});
         localStorage.setItem('authToken', accessToken);
         return data;
       } else {
@@ -99,7 +95,7 @@ export const useAuth = () => {
         const accessToken = data.data.accessToken;
         setToken(accessToken);
         setIsAuthenticated(true);
-        setUser(extractUserFromToken(accessToken));
+        setUser(data.data.user || {});
         localStorage.setItem('authToken', accessToken);
         return data;
       } else {

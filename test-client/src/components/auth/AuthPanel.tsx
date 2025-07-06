@@ -52,6 +52,9 @@ export const AuthPanel: React.FC = () => {
           <div className="auth-status">
             <div className="success">
               ✅ Authenticated as: {user?.username || user?.email || 'User'}
+              {user?.roles && user.roles.length > 0 && (
+                <span className="user-roles"> ({user.roles.join(', ')})</span>
+              )}
             </div>
             <TestButton onClick={logout} variant="secondary" size="small">
               Logout
