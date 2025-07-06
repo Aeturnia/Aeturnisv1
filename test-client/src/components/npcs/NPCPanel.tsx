@@ -122,7 +122,7 @@ export const NPCPanel: React.FC = () => {
 
   const filteredNPCs = npcs.filter(npc => {
     if (npcTypeFilter === 'all') return true;
-    return npc.npcType === npcTypeFilter;
+    return npc.npcType === npcTypeFilter || npc.npcType === npcTypeFilter.replace('_', '');
   });
 
   const zones = [
