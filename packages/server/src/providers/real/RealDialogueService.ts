@@ -8,7 +8,8 @@ import {
 } from '../interfaces/IDialogueService';
 import { DialogueNode, DialogueChoice, DialogueAction, DialogueCondition } from '@aeturnis/shared';
 import { DialogueService } from '../../services/DialogueService';
-import { DialogueRepository } from '../../repositories/dialogue.repository';
+// Note: DialogueRepository not implemented yet
+// import { DialogueRepository } from '../../repositories/dialogue.repository';
 
 /**
  * Real implementation wrapper for DialogueService

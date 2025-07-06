@@ -36,13 +36,14 @@ async function startServer() {
       process.exit(1);
     }
 
-    // Initialize Service Providers
+    // Initialize Service Providers - FORCE MOCK SERVICES FOR TESTING ENVIRONMENT
     logger.info('Initializing service providers...', { service: 'aeturnis-api' });
-    const useMocks = process.env.USE_MOCKS === 'true';
+    const useMocks = true; // Force mock services for testing environment
     await initializeProviders(useMocks);
     logger.info(`Service providers initialized with ${useMocks ? 'MOCK' : 'REAL'} services`, { 
       service: 'aeturnis-api',
-      useMocks 
+      useMocks,
+      note: 'Forced to use MOCK services for testing environment'
     });
 
     // Create Express app
