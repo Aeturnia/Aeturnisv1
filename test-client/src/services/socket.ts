@@ -12,11 +12,20 @@ export class SocketService {
 
   private init() {
     // Initialize Socket.IO client connection to port 3001
-    this.socket = io('ws://localhost:3001', {
+    // Use current domain with port 3001 for Replit compatibility
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const hostname = window.location.hostname;
+    const socketUrl = `${protocol}//${hostname}:3001`;
+    
+    console.log('Connecting Socket.IO to:', socketUrl);
+    
+    this.socket = io(socketUrl, {
       autoConnect: false,
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
+      timeout: 20000,
+      transports: ['websocket', 'polling'],
     });
 
     this.setupEventHandlers();
