@@ -17,6 +17,37 @@ const combatService = new CombatService();
 const resourceService = new ResourceService();
 
 /**
+ * Start a new combat session - test version for test monsters (no auth required)
+ */
+export const startTestCombat = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const { targetIds, battleType } = req.body;
+    
+    // For test monsters, use a mock user ID
+    const mockUserId = '550e8400-e29b-41d4-a716-446655440000';
+    
+    const combatService = new CombatService();
+    const session = await combatService.startCombat(mockUserId, {
+      targetIds: targetIds || ['test_goblin_001'],
+      battleType: battleType || 'pve'
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Test combat session started successfully',
+      data: {
+        session
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to start test combat session'
+    });
+  }
+};
+
+/**
  * Start a new combat session
  */
 export const startCombat = async (req: AuthRequest, res: Response): Promise<Response> => {

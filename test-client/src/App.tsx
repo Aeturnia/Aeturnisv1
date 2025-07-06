@@ -329,9 +329,9 @@ Types: attack, defend, skill, general usage
         });
         return;
       } else if (action === 'stats') {
-        url = `/api/v1/combat/stats/${selectedMonster || 'goblin_weak'}`;
+        url = `/api/v1/combat/test-stats/${selectedMonster || 'test_goblin_001'}`;
       } else if (action === 'resources') {
-        url = `/api/v1/combat/resources/${selectedMonster || 'goblin_weak'}`;
+        url = `/api/v1/combat/test-resources/${selectedMonster || 'test_goblin_001'}`;
       }
 
       const response = await fetch(url, {
@@ -360,15 +360,14 @@ Types: attack, defend, skill, general usage
     setLiveCombatTest({ loading: true, response: 'Starting combat session...', success: false });
     
     try {
-      // Step 1: Start combat session
-      const startResponse = await fetch('/api/v1/combat/start', {
+      // Step 1: Start combat session using test endpoint
+      const startResponse = await fetch('/api/v1/combat/test-start', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify({
-          targetIds: [selectedMonster || 'goblin_weak'],
+          targetIds: [selectedMonster || 'test_goblin_001'],
           battleType: 'pve'
         })
       });

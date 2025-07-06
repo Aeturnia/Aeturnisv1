@@ -48,6 +48,11 @@ router.get('/resources/:charId',
   combatController.getResources
 );
 
+// Test endpoints for test monsters (no auth required)
+router.get('/test-stats/:charId', combatController.getCharacterStats);
+router.get('/test-resources/:charId', combatController.getResources);
+router.post('/test-start', combatController.startTestCombat);
+
 // Test endpoint (always available for development)
 router.get('/test', combatController.testCombatSystem);
 

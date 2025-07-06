@@ -630,6 +630,27 @@ export class CombatService {
    * Get character resources
    */
   async getCharacterResources(charId: string): Promise<ResourcePool | null> {
+    // Check if this is a test monster
+    if (testMonsterService.isTestMonster(charId)) {
+      const monster = testMonsterService.getTestMonster(charId);
+      if (monster) {
+        return {
+          hp: monster.hp,
+          maxHp: monster.maxHp,
+          mana: monster.mana,
+          maxMana: monster.maxMana,
+          stamina: monster.stamina,
+          maxStamina: monster.maxStamina,
+          hpRegenRate: 1,
+          manaRegenRate: 0.5,
+          staminaRegenRate: 2,
+          lastRegenTime: Date.now()
+        };
+      }
+      throw new Error(`Test monster resources not found: ${charId}`);
+    }
+
+    // Regular character logic
     return this.resourceService.getResources(charId);
   }
 
