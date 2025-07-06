@@ -28,21 +28,17 @@ export const SpawnControl: React.FC<SpawnControlProps> = ({
     <div className="spawn-control">
       <h3>Spawn Points ({spawnPoints.length})</h3>
       
-      {!isAuthenticated && (
-        <div className="warning">
-          🔒 Admin access required for spawn control
-        </div>
-      )}
+      {/* Spawn points now work without authentication */}
       
-      {isAuthenticated && spawnPoints.length === 0 && (
+      {spawnPoints.length === 0 && (
         <div className="no-spawn-points">
-          <p>Loading spawn points from database...</p>
-          <p><em>If no spawn points appear, check the database connection.</em></p>
+          <p>Loading spawn points...</p>
+          <p><em>Using mock data for testing</em></p>
         </div>
       )}
       
       {/* Real spawn points */}
-      {isAuthenticated && spawnPoints.map((spawnPoint) => (
+      {spawnPoints.map((spawnPoint) => (
         <div key={spawnPoint.id} className="spawn-point-item">
           <div className="spawn-point-header">
             <h4>{spawnPoint.name}</h4>

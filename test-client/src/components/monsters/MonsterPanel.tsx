@@ -26,35 +26,36 @@ export const MonsterPanel: React.FC = () => {
       fetchMonstersInZone();
       fetchSpawnPoints();
     }
-  }, [selectedZone, isAuthenticated]);
+  }, [selectedZone]);
 
   const fetchMonstersInZone = async () => {
-    if (!isAuthenticated) return;
-    
     try {
       const result = await api.get(`/api/v1/monsters/zone/${selectedZone}`);
-      if (result.success && result.data?.monsters) {
-        setMonsters(result.data.monsters);
+      if (result.success && result.data) {
+        const monstersData = result.data.monsters || [];
+        // Ensure it's always an array
+        setMonsters(Array.isArray(monstersData) ? monstersData : []);
       }
     } catch (error) {
       console.error('Failed to fetch monsters:', error);
+      setMonsters([]);
     }
   };
 
   const fetchSpawnPoints = async () => {
-    if (!isAuthenticated) return;
-    
     try {
       const result = await api.get(`/api/v1/monsters/spawn-points/${selectedZone}`);
       console.log('Spawn points API response:', result);
-      if (result.success) {
+      if (result.success && result.data) {
         // Handle different possible response structures
-        const spawnPointsData = result.data?.spawnPoints || result.data || [];
+        const spawnPointsData = result.data.spawnPoints || [];
         console.log('Extracted spawn points:', spawnPointsData);
-        setSpawnPoints(spawnPointsData);
+        // Ensure it's always an array
+        setSpawnPoints(Array.isArray(spawnPointsData) ? spawnPointsData : []);
       }
     } catch (error) {
       console.error('Failed to fetch spawn points:', error);
+      setSpawnPoints([]);
     }
   };
 
@@ -115,8 +116,6 @@ export const MonsterPanel: React.FC = () => {
   };
 
   const handleSpawn = async (spawnPointId: string) => {
-    if (!isAuthenticated) return;
-    
     setMonsterTest({ loading: true, response: '', success: false });
     
     try {
