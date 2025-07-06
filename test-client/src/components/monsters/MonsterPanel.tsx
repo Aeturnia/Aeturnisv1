@@ -31,10 +31,17 @@ export const MonsterPanel: React.FC = () => {
   const fetchMonstersInZone = async () => {
     try {
       const result = await api.get(`/api/v1/monsters/zone/${selectedZone}`);
-      if (result.success && result.data) {
-        const monstersData = result.data.monsters || [];
-        // Ensure it's always an array
+      console.log('Monsters API response:', result);
+      console.log('Full monsters result:', JSON.stringify(result, null, 2));
+      
+      if (result && result.success && result.data && result.data.monsters) {
+        const monstersData = result.data.monsters;
+        console.log('Extracted monsters:', monstersData);
+        console.log('Is array?', Array.isArray(monstersData));
         setMonsters(Array.isArray(monstersData) ? monstersData : []);
+      } else {
+        console.log('No monsters data found in response');
+        setMonsters([]);
       }
     } catch (error) {
       console.error('Failed to fetch monsters:', error);
@@ -46,12 +53,16 @@ export const MonsterPanel: React.FC = () => {
     try {
       const result = await api.get(`/api/v1/monsters/spawn-points/${selectedZone}`);
       console.log('Spawn points API response:', result);
-      if (result.success && result.data) {
-        // Handle different possible response structures
-        const spawnPointsData = result.data.spawnPoints || [];
+      console.log('Full result object:', JSON.stringify(result, null, 2));
+      
+      if (result && result.success && result.data && result.data.spawnPoints) {
+        const spawnPointsData = result.data.spawnPoints;
         console.log('Extracted spawn points:', spawnPointsData);
-        // Ensure it's always an array
+        console.log('Is array?', Array.isArray(spawnPointsData));
         setSpawnPoints(Array.isArray(spawnPointsData) ? spawnPointsData : []);
+      } else {
+        console.log('No spawn points data found in response');
+        setSpawnPoints([]);
       }
     } catch (error) {
       console.error('Failed to fetch spawn points:', error);

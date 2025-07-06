@@ -43,6 +43,12 @@ export const useApi = (token?: string) => {
         const response = await fetch(url, requestOptions);
         const data = await response.json();
 
+        // If server response already has success/data structure, use it directly
+        // Otherwise wrap it in our standard format
+        if (response.ok && data && typeof data === 'object' && 'success' in data) {
+          return data; // Server response already in correct format
+        }
+
         return {
           success: response.ok,
           data: response.ok ? data : undefined,
