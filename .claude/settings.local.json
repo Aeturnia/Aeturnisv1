@@ -9,7 +9,8 @@
       "Bash(awk:*)",
       "Bash(done)",
       "Bash(ls:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": []
   }
