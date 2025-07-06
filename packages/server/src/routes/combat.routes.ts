@@ -53,6 +53,9 @@ router.get('/test-stats/:charId', combatController.getCharacterStats);
 router.get('/test-resources/:charId', combatController.getResources);
 router.post('/test-start', combatController.startTestCombat);
 
+// Player stats endpoint (no auth required for testing)
+router.get('/player-stats', combatController.getPlayerStats);
+
 // Test endpoint (always available for development)
 router.get('/test', combatController.testCombatSystem);
 

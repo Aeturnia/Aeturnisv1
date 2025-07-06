@@ -328,7 +328,9 @@ Types: attack, defend, skill, general usage
           success: true
         });
         return;
-      } else if (action === 'stats') {
+      } else if (action === 'player-stats') {
+        url = `/api/v1/combat/player-stats`;
+      } else if (action === 'monster-info') {
         url = `/api/v1/combat/test-stats/${selectedMonster || 'test_goblin_001'}`;
       } else if (action === 'resources') {
         url = `/api/v1/combat/test-resources/${selectedMonster || 'test_goblin_001'}`;
@@ -797,15 +799,22 @@ Types: attack, defend, skill, general usage
                 <h4>Combat Data</h4>
                 <button 
                   className="button" 
-                  onClick={() => testCombatEngine('stats')}
-                  disabled={combatEngineTest.loading || !authToken}
+                  onClick={() => testCombatEngine('player-stats')}
+                  disabled={combatEngineTest.loading}
                 >
-                  Character Stats
+                  Player Stats
+                </button>
+                <button 
+                  className="button" 
+                  onClick={() => testCombatEngine('monster-info')}
+                  disabled={combatEngineTest.loading}
+                >
+                  Monster Info
                 </button>
                 <button 
                   className="button" 
                   onClick={() => testCombatEngine('resources')}
-                  disabled={combatEngineTest.loading || !authToken}
+                  disabled={combatEngineTest.loading}
                 >
                   Resources
                 </button>

@@ -560,6 +560,16 @@ The expanded monorepo now includes:
 - **Removed Authentication Barriers**: Test monster functionality now works without requiring user login
 - **Status**: Combat Engine v2.0 FULLY FUNCTIONAL - Both Resources and Start Combat buttons working properly
 
+### July 06, 2025 - Option 3: Split Player Stats & Monster Info Implementation Complete ✅
+- **Created Player Stats Endpoint**: New /api/v1/combat/player-stats endpoint returning realistic Level 25 Human Warrior stats
+- **Separated UI Functions**: Split "Character Stats" into "Player Stats" and "Monster Info" buttons for better clarity
+- **Enhanced Player Data**: Mock player includes STR(28), DEX(18), equipment (Steel Sword +3), 180 HP, and progression system
+- **Updated Frontend Logic**: Modified testCombatEngine function to handle 'player-stats' and 'monster-info' actions separately
+- **Authentication Removed**: Player Stats button works without authentication for easier testing
+- **Clear Data Separation**: Player Stats shows player character data, Monster Info shows selected test monster data
+- **Frontend Deployed**: Built and deployed updated React interface with 3-button Combat Data section
+- **Status**: Option 3 implementation COMPLETE - Clear separation between player and monster data displays
+
 ### July 05, 2025 - Anti-Spam Cooldown System & Enhanced Status Messages Complete ✅
 - **3-Second Combat Cooldown**: Implemented user-based cooldown system preventing combat action spam with 3-second delays
 - **Cooldown Middleware**: Created combatActionCooldown middleware with in-memory player tracking and countdown messages

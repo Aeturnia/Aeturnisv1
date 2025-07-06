@@ -17,6 +17,64 @@ const combatService = new CombatService();
 const resourceService = new ResourceService();
 
 /**
+ * Get mock player stats for testing interface
+ */
+export const getPlayerStats = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const mockPlayerStats = {
+      charId: 'player_test_001',
+      name: 'Hero Player',
+      level: 25,
+      race: 'human',
+      class: 'warrior',
+      stats: {
+        strength: 28,
+        dexterity: 18,
+        intelligence: 14,
+        wisdom: 16,
+        constitution: 24,
+        charisma: 12,
+        attack: 45,
+        defense: 32,
+        speed: 15,
+        critRate: 0.15,
+        critDamage: 2.2
+      },
+      resources: {
+        hp: 180,
+        maxHp: 180,
+        mana: 80,
+        maxMana: 80,
+        stamina: 120,
+        maxStamina: 120
+      },
+      equipment: {
+        weapon: 'Steel Sword +3',
+        armor: 'Plate Mail',
+        accessory: 'Ring of Strength'
+      },
+      progression: {
+        experience: 45600,
+        experienceToNext: 8400,
+        skillPoints: 12,
+        attributePoints: 3
+      }
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: 'Player stats retrieved successfully',
+      data: mockPlayerStats
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to get player stats'
+    });
+  }
+};
+
+/**
  * Start a new combat session - test version for test monsters (no auth required)
  */
 export const startTestCombat = async (req: Request, res: Response): Promise<Response> => {
