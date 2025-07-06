@@ -77,10 +77,17 @@ export const CombatPanel: React.FC = () => {
   };
 
   const startCombat = async () => {
-    if (!selectedMonster) {
+    // Auto-select first monster if none selected
+    let monsterToFight = selectedMonster;
+    if (!monsterToFight && testMonsters.length > 0) {
+      monsterToFight = testMonsters[0].id;
+      setSelectedMonster(monsterToFight);
+    }
+    
+    if (!monsterToFight) {
       setLiveCombatTest({
         loading: false,
-        response: 'Please select a monster first',
+        response: 'No monsters available for combat',
         success: false
       });
       return;
@@ -98,7 +105,7 @@ export const CombatPanel: React.FC = () => {
     try {
       const result = await api.post('/api/v1/combat/start', {
         playerId: 'player-test-001',
-        enemyId: selectedMonster
+        enemyId: monsterToFight
       });
 
       if (result.success && result.data?.sessionId) {
@@ -108,7 +115,7 @@ export const CombatPanel: React.FC = () => {
           response: JSON.stringify({
             "Combat Started": true,
             "Session ID": result.data.sessionId,
-            "Selected Monster": testMonsters.find(m => m.id === selectedMonster)?.name || selectedMonster,
+            "Selected Monster": testMonsters.find(m => m.id === monsterToFight)?.name || monsterToFight,
             "Note": combatSessionId ? "Previous combat session ended, new session started" : "New combat session started",
             "Combat Data": result.data
           }, null, 2),
@@ -303,7 +310,7 @@ export const CombatPanel: React.FC = () => {
               onClick={startCombat}
               loading={liveCombatTest.loading}
               variant="success"
-              disabled={!selectedMonster}
+              disabled={false}
             >
               {combatSessionId ? 'Restart Combat' : 'Start Combat'}
             </TestButton>
