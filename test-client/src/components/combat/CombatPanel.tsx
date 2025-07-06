@@ -30,11 +30,16 @@ export const CombatPanel: React.FC = () => {
   const fetchTestMonsters = async () => {
     try {
       const result = await api.get('/api/v1/combat/test-monsters');
+      console.log('Monsters API result:', result);
       if (result.success && result.data) {
+        console.log('Setting monsters:', result.data);
         setTestMonsters(result.data);
         if (result.data.length > 0) {
+          console.log('Setting selected monster to:', result.data[0].id);
           setSelectedMonster(result.data[0].id);
         }
+      } else {
+        console.error('Monster fetch failed:', result);
       }
     } catch (error) {
       console.error('Failed to fetch test monsters:', error);
@@ -295,6 +300,11 @@ export const CombatPanel: React.FC = () => {
             >
               Start Combat
             </TestButton>
+            
+            {/* Debug info */}
+            <div style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.5rem' }}>
+              Debug: monsters={testMonsters.length}, selected="{selectedMonster}", disabled={!selectedMonster ? 'true' : 'false'}
+            </div>
             
             <TestButton
               onClick={() => performCombatAction('attack')}
