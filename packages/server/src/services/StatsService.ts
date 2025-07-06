@@ -29,6 +29,7 @@ export class StatsService {
   /**
    * Calculate effective stat value with infinite scaling
    * This is the core formula for infinite progression
+   * SECURITY: Always clamp negative values to ensure positive stats
    */
   private static calculateEffectiveStat(
     base: number,
@@ -38,37 +39,53 @@ export class StatsService {
     prestigeLevel: number,
     classScaling: number = 1.0
   ): number {
-    // Soft cap base stats at 100
-    const cappedBase = Math.min(base, 100);
+    // SECURITY: Clamp negative base stats to 1 minimum
+    const clampedBase = Math.max(1, Math.min(base, 100));
+    
+    // SECURITY: Clamp negative tier to 0 minimum
+    const clampedTier = Math.max(0, tier);
     
     // Each tier provides significant power increase (50 effective points)
-    const tierBonus = tier * 50;
+    const tierBonus = clampedTier * 50;
     
     // Bonus stats from gear/buffs with logarithmic scaling
-    const bonusEffect = bonus > BigInt(0) 
-      ? Math.log10(Number(bonus) + 1) * 20 
+    // SECURITY: Ensure bonus is non-negative
+    const safeBonusPoints = bonus > BigInt(0) ? Number(bonus) : 0;
+    const bonusEffect = safeBonusPoints > 0 
+      ? Math.log10(safeBonusPoints + 1) * 20 
       : 0;
     
     // Paragon points provide smaller but stackable benefits
-    const paragonEffect = paragonPoints > BigInt(0)
-      ? Math.log10(Number(paragonPoints) + 1) * 10
+    // SECURITY: Ensure paragon points are non-negative
+    const safeParagonPoints = paragonPoints > BigInt(0) ? Number(paragonPoints) : 0;
+    const paragonEffect = safeParagonPoints > 0
+      ? Math.log10(safeParagonPoints + 1) * 10
       : 0;
     
+    // SECURITY: Clamp class scaling to reasonable bounds (0.1 to 3.0)
+    const safeClassScaling = Math.max(0.1, Math.min(classScaling, 3.0));
+    
     // Apply class scaling
-    const scaledValue = (cappedBase + tierBonus + bonusEffect + paragonEffect) * classScaling;
+    const scaledValue = (clampedBase + tierBonus + bonusEffect + paragonEffect) * safeClassScaling;
+    
+    // SECURITY: Clamp prestige level to reasonable bounds (0 to 10000)
+    const safePrestigeLevel = Math.max(0, Math.min(prestigeLevel, 10000));
     
     // Prestige multiplier (10% per prestige level)
-    const prestigeMultiplier = 1 + (prestigeLevel * 0.1);
+    const prestigeMultiplier = 1 + (safePrestigeLevel * 0.1);
     
     const rawValue = scaledValue * prestigeMultiplier;
     
     // Apply final soft cap for extreme values (starts at 1000)
     if (rawValue > 1000) {
       // Logarithmic scaling after 1000
-      return 1000 + Math.log10(rawValue - 999) * 100;
+      const softCappedValue = 1000 + Math.log10(rawValue - 999) * 100;
+      // SECURITY: Final safety check for extreme values
+      return Math.max(1, Math.min(softCappedValue, 1000000));
     }
     
-    return rawValue;
+    // SECURITY: Always return positive value
+    return Math.max(1, rawValue);
   }
 
   /**
@@ -178,17 +195,18 @@ export class StatsService {
     );
 
     // Resource pools with infinite scaling
-    const maxHp = BigInt(Math.floor(
+    // SECURITY: Ensure resource pools are always ≥1
+    const maxHp = BigInt(Math.max(1, Math.floor(
       100 + (effectiveCon * 20) + (level * 50) + (effectiveStr * 5)
-    )) * BigInt(character.prestigeLevel + 1);
+    ))) * BigInt(Math.max(1, character.prestigeLevel + 1));
     
-    const maxMp = BigInt(Math.floor(
+    const maxMp = BigInt(Math.max(1, Math.floor(
       50 + (effectiveInt * 15) + (level * 20) + (effectiveWis * 10)
-    )) * BigInt(character.prestigeLevel + 1);
+    ))) * BigInt(Math.max(1, character.prestigeLevel + 1));
     
-    const maxStamina = BigInt(Math.floor(
+    const maxStamina = BigInt(Math.max(1, Math.floor(
       100 + (effectiveCon * 10) + (level * 15) + (effectiveDex * 5)
-    )) * BigInt(character.prestigeLevel + 1);
+    ))) * BigInt(Math.max(1, character.prestigeLevel + 1));
 
     // Regeneration rates scale with stats but cap at reasonable values
     const hpRegen = Math.min(
@@ -317,5 +335,111 @@ export class StatsService {
    */
   static hasParagonUnlocked(character: Character): boolean {
     return character.level >= this.PARAGON_UNLOCK_LEVEL;
+  }
+
+  /**
+   * Get effective stat breakdown for UI transparency
+   * This method provides detailed breakdown of how each effective stat is calculated
+   */
+  static getStatBreakdown(character: Character, statName: keyof BaseStats): {
+    baseStat: number;
+    tierBonus: number;
+    equipmentBonus: number;
+    paragonBonus: number;
+    classScaling: number;
+    prestigeMultiplier: number;
+    effectiveValue: number;
+    formula: string;
+  } {
+    const baseStats = this.calculateTotalBaseStats(character);
+    const classScaling = this.CLASS_SCALING[character.class];
+    const paragonDist = character.paragonDistribution;
+    
+    // Get stat-specific values
+    const baseStat = baseStats[statName];
+    const tier = character[`${statName}Tier` as keyof Character] as number;
+    const bonusStat = BigInt(character[`bonus${statName.charAt(0).toUpperCase() + statName.slice(1)}` as keyof Character] as number);
+    const paragonPoints = paragonDist[statName] || BigInt(0);
+    const scaling = classScaling[statName];
+    
+    // Calculate components
+    const clampedBase = Math.max(1, Math.min(baseStat, 100));
+    const tierBonus = Math.max(0, tier) * 50;
+    const equipmentBonus = bonusStat > BigInt(0) ? Math.log10(Number(bonusStat) + 1) * 20 : 0;
+    const paragonBonus = paragonPoints > BigInt(0) ? Math.log10(Number(paragonPoints) + 1) * 10 : 0;
+    const prestigeMultiplier = 1 + (Math.max(0, character.prestigeLevel) * 0.1);
+    
+    const preMultiplier = (clampedBase + tierBonus + equipmentBonus + paragonBonus) * scaling;
+    const effectiveValue = preMultiplier * prestigeMultiplier;
+    
+    const formula = `((${clampedBase} + ${tierBonus} + ${equipmentBonus.toFixed(1)} + ${paragonBonus.toFixed(1)}) × ${scaling}) × ${prestigeMultiplier}`;
+    
+    return {
+      baseStat: clampedBase,
+      tierBonus,
+      equipmentBonus: Math.round(equipmentBonus * 10) / 10,
+      paragonBonus: Math.round(paragonBonus * 10) / 10,
+      classScaling: scaling,
+      prestigeMultiplier,
+      effectiveValue: Math.round(effectiveValue * 10) / 10,
+      formula
+    };
+  }
+
+  /**
+   * Validate stat modification request (server-authoritative security)
+   */
+  static validateStatModification(
+    character: Character, 
+    statUpdates: Record<string, any>,
+    requestSource: 'server' | 'client' = 'client'
+  ): { valid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    
+    // SECURITY: Only server can modify certain stats
+    const serverOnlyStats = ['prestigeLevel', 'paragonPoints', 'experiencePoints'];
+    
+    if (requestSource === 'client') {
+      for (const stat of serverOnlyStats) {
+        if (stat in statUpdates) {
+          errors.push(`Client cannot modify ${stat} - server authoritative only`);
+        }
+      }
+    }
+    
+    // Validate base stat ranges (1-100)
+    const baseStatKeys = ['baseStrength', 'baseDexterity', 'baseIntelligence', 'baseWisdom', 'baseConstitution', 'baseCharisma'];
+    for (const key of baseStatKeys) {
+      if (key in statUpdates) {
+        const value = statUpdates[key];
+        if (typeof value !== 'number' || value < 1 || value > 100) {
+          errors.push(`${key} must be between 1 and 100`);
+        }
+      }
+    }
+    
+    // Validate tier values (non-negative)
+    const tierKeys = ['strengthTier', 'dexterityTier', 'intelligenceTier', 'wisdomTier', 'constitutionTier', 'charismaTier'];
+    for (const key of tierKeys) {
+      if (key in statUpdates) {
+        const value = statUpdates[key];
+        if (typeof value !== 'number' || value < 0) {
+          errors.push(`${key} cannot be negative`);
+        }
+      }
+    }
+    
+    // Validate prestige level
+    if ('prestigeLevel' in statUpdates) {
+      const value = statUpdates.prestigeLevel;
+      if (typeof value !== 'number' || value < 0 || value > 10000) {
+        errors.push('Prestige level must be between 0 and 10000');
+      }
+    }
+    
+    return {
+      valid: errors.length === 0,
+      errors
+    };
   }
 }
