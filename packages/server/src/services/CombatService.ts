@@ -97,47 +97,111 @@ export class CombatService {
    * Start a new combat session
    */
   async startCombat(initiatorId: string, request: CombatStartRequest): Promise<CombatSession> {
-    const sessionId = uuidv4();
-    
-    // Check if initiator is already in combat
-    const existingSession = this.participantToSession.get(initiatorId);
-    if (existingSession) {
-      throw new Error('Character is already in combat');
+    try {
+      console.log('=== COMBAT SERVICE START COMBAT ===');
+      console.log('Input parameters:', {
+        initiatorId,
+        request: JSON.stringify(request, null, 2)
+      });
+
+      const sessionId = uuidv4();
+      console.log('Generated session ID:', sessionId);
+      
+      // Check if initiator is already in combat
+      const existingSession = this.participantToSession.get(initiatorId);
+      console.log('Existing session check:', {
+        initiatorId,
+        existingSession: existingSession || 'none'
+      });
+      
+      if (existingSession) {
+        console.log('Character already in combat - throwing error');
+        throw new Error('Character is already in combat');
+      }
+
+      console.log('Creating participants...');
+      console.log('Creating player participant for:', initiatorId);
+      
+      // Create participants with realistic stats
+      const playerParticipant = await this.createParticipant(initiatorId, 'player');
+      console.log('Player participant created:', JSON.stringify({
+        charId: playerParticipant.charId,
+        charName: playerParticipant.charName,
+        team: playerParticipant.team,
+        hp: playerParticipant.hp,
+        maxHp: playerParticipant.maxHp
+      }, null, 2));
+
+      console.log('Creating enemy participants for:', request.targetIds);
+      const enemyParticipants = await Promise.all(
+        request.targetIds.map(async (id) => {
+          console.log(`Creating participant for target: ${id}`);
+          const participant = await this.createParticipant(id, request.battleType === 'pvp' ? 'player' : 'enemy');
+          console.log(`Participant created for ${id}:`, JSON.stringify({
+            charId: participant.charId,
+            charName: participant.charName,
+            team: participant.team,
+            hp: participant.hp,
+            maxHp: participant.maxHp
+          }, null, 2));
+          return participant;
+        })
+      );
+
+      const participants: CombatParticipant[] = [playerParticipant, ...enemyParticipants];
+      console.log('All participants created, total:', participants.length);
+
+      // Ensure player always goes first in turn order
+      const playerFirst = participants.filter(p => p.team === 'player');
+      const enemiesAfter = participants.filter(p => p.team === 'enemy');
+      const turnOrder = [...playerFirst, ...enemiesAfter].map(p => p.charId);
+      
+      console.log('Turn order created:', turnOrder);
+
+      const session: CombatSession = {
+        sessionId,
+        participants,
+        turnOrder,
+        currentTurnIndex: 0,
+        roundNumber: 1,
+        status: 'active',
+        startTime: Date.now()
+      };
+
+      console.log('Session object created:', JSON.stringify({
+        sessionId: session.sessionId,
+        participantCount: session.participants.length,
+        turnOrder: session.turnOrder,
+        status: session.status
+      }, null, 2));
+
+      console.log('Storing session in sessions map...');
+      this.sessions.set(sessionId, session);
+      console.log('Session stored. Total sessions:', this.sessions.size);
+      
+      // Track participants
+      console.log('Tracking participants...');
+      participants.forEach(p => {
+        console.log(`Tracking participant: ${p.charId} -> ${sessionId}`);
+        this.participantToSession.set(p.charId, sessionId);
+      });
+
+      console.log('=== COMBAT SERVICE START COMBAT SUCCESS ===');
+      return session;
+    } catch (error) {
+      console.error('=== COMBAT SERVICE START COMBAT ERROR ===');
+      console.error('Error in startCombat:', {
+        initiatorId,
+        request,
+        error: error instanceof Error ? {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        } : error
+      });
+      console.error('=== END COMBAT SERVICE START COMBAT ERROR ===');
+      throw error; // Re-throw to be caught by controller
     }
-
-    // Create participants with realistic stats
-    const participants: CombatParticipant[] = [
-      await this.createParticipant(initiatorId, 'player'),
-      ...await Promise.all(
-        request.targetIds.map((id) => 
-          this.createParticipant(id, request.battleType === 'pvp' ? 'player' : 'enemy')
-        )
-      )
-    ];
-
-    // Ensure player always goes first in turn order
-    const playerFirst = participants.filter(p => p.team === 'player');
-    const enemiesAfter = participants.filter(p => p.team === 'enemy');
-    const turnOrder = [...playerFirst, ...enemiesAfter].map(p => p.charId);
-
-    const session: CombatSession = {
-      sessionId,
-      participants,
-      turnOrder,
-      currentTurnIndex: 0,
-      roundNumber: 1,
-      status: 'active',
-      startTime: Date.now()
-    };
-
-    this.sessions.set(sessionId, session);
-    
-    // Track participants
-    participants.forEach(p => {
-      this.participantToSession.set(p.charId, sessionId);
-    });
-
-    return session;
   }
 
   /**
@@ -148,89 +212,184 @@ export class CombatService {
     userId: string, 
     action: CombatAction
   ): Promise<CombatResult | CombatError> {
-    const session = this.sessions.get(sessionId);
-    if (!session) {
-      return { error: 'Combat session not found', code: 'INVALID_ACTION' };
-    }
+    try {
+      console.log('=== COMBAT SERVICE PROCESS ACTION START ===');
+      console.log('Input parameters:', {
+        sessionId,
+        userId,
+        action: JSON.stringify(action, null, 2)
+      });
 
-    const config = this.sessionConfigs.get(sessionId) || this.defaultConfig;
-    
-    // Check max turns
-    if (session.roundNumber > config.maxTurns) {
-      session.status = 'completed';
-      session.endTime = Date.now();
-      return { 
-        error: 'Combat exceeded maximum turns', 
-        code: 'COMBAT_TIMEOUT' 
-      };
-    }
+      const session = this.sessions.get(sessionId);
+      console.log('Session lookup:', {
+        sessionId,
+        found: !!session,
+        sessionKeys: Array.from(this.sessions.keys()),
+        totalSessions: this.sessions.size
+      });
 
-    if (session.status !== 'active') {
-      return { error: 'Combat session is not active', code: 'INVALID_ACTION' };
-    }
+      if (!session) {
+        console.log('Session not found - returning error');
+        return { error: 'Combat session not found', code: 'INVALID_ACTION' };
+      }
 
-    // Allow only player actions (players can act anytime)
-    const actor = session.participants.find(p => p.charId === userId && p.team === 'player');
-    if (!actor) {
-      return { error: 'Player not found in combat', code: 'INVALID_ACTION' };
-    }
+      console.log('Session details:', {
+        sessionId: session.sessionId,
+        status: session.status,
+        participantCount: session.participants.length,
+        participants: session.participants.map(p => ({
+          charId: p.charId,
+          team: p.team,
+          status: p.status
+        }))
+      });
 
-    if (actor.status !== 'active') {
-      return { error: 'Player is not active', code: 'INVALID_ACTION' };
-    }
+      const config = this.sessionConfigs.get(sessionId) || this.defaultConfig;
+      console.log('Using config:', config);
+      
+      // Check max turns
+      if (session.roundNumber > config.maxTurns) {
+        console.log('Combat exceeded max turns:', session.roundNumber, '>', config.maxTurns);
+        session.status = 'completed';
+        session.endTime = Date.now();
+        return { 
+          error: 'Combat exceeded maximum turns', 
+          code: 'COMBAT_TIMEOUT' 
+        };
+      }
 
-    // FIXED: Validate resources before executing
-    const resourceError = this.validateResourceRequirements(actor, action);
-    if (resourceError) {
-      return resourceError;
-    }
+      if (session.status !== 'active') {
+        console.log('Session not active:', session.status);
+        return { error: 'Combat session is not active', code: 'INVALID_ACTION' };
+      }
 
-    // Initialize combat log if needed
-    if (!session.combatLog) session.combatLog = [];
+      // Allow only player actions (players can act anytime)
+      const actor = session.participants.find(p => p.charId === userId && p.team === 'player');
+      console.log('Actor lookup:', {
+        userId,
+        found: !!actor,
+        actor: actor ? {
+          charId: actor.charId,
+          team: actor.team,
+          status: actor.status,
+          hp: actor.hp,
+          stamina: actor.stamina,
+          mana: actor.mana
+        } : null
+      });
 
-    // Process the player's action
-    const playerResult = await this.executeAction(session, actor, action);
-    
-    // Check for combat end after player action
-    const endMessage = await this.checkCombatEnd(session);
-    
-    // If combat ended, return result with end message
-    if (session.status !== 'active') {
-      return {
+      if (!actor) {
+        console.log('Player not found in combat participants');
+        return { error: 'Player not found in combat', code: 'INVALID_ACTION' };
+      }
+
+      if (actor.status !== 'active') {
+        console.log('Player not active:', actor.status);
+        return { error: 'Player is not active', code: 'INVALID_ACTION' };
+      }
+
+      // FIXED: Validate resources before executing
+      console.log('Validating resource requirements...');
+      const resourceError = this.validateResourceRequirements(actor, action);
+      if (resourceError) {
+        console.log('Resource validation failed:', resourceError);
+        return resourceError;
+      }
+      console.log('Resource validation passed');
+
+      // Initialize combat log if needed
+      if (!session.combatLog) {
+        console.log('Initializing combat log');
+        session.combatLog = [];
+      }
+
+      // Process the player's action
+      console.log('Executing player action...');
+      const playerResult = await this.executeAction(session, actor, action);
+      console.log('Player action result:', JSON.stringify(playerResult, null, 2));
+      
+      // Check for combat end after player action
+      console.log('Checking for combat end...');
+      const endMessage = await this.checkCombatEnd(session);
+      console.log('Combat end check result:', {
+        endMessage,
+        sessionStatus: session.status
+      });
+      
+      // If combat ended, return result with end message
+      if (session.status !== 'active') {
+        console.log('Combat ended - returning final result');
+        const finalResult = {
+          ...playerResult,
+          message: endMessage || playerResult.message,
+          combatStatus: session.status
+        };
+        console.log('Final result:', JSON.stringify(finalResult, null, 2));
+        console.log('=== COMBAT SERVICE PROCESS ACTION END (COMBAT ENDED) ===');
+        return finalResult;
+      }
+
+      // Automatically process enemy turns
+      console.log('Processing enemy turns...');
+      const enemyMessages: string[] = [];
+      const enemies = session.participants.filter(p => p.team === 'enemy' && p.status === 'active');
+      console.log('Active enemies:', enemies.length);
+      
+      for (const enemy of enemies) {
+        console.log('Processing enemy:', enemy.charId);
+        const enemyAction = this.chooseAIAction(session, enemy);
+        console.log('Enemy action chosen:', JSON.stringify(enemyAction, null, 2));
+        
+        const enemyResult = await this.executeAction(session, enemy, enemyAction);
+        console.log('Enemy action result:', JSON.stringify(enemyResult, null, 2));
+        enemyMessages.push(enemyResult.message);
+        
+        // Check for combat end after each enemy action
+        const enemyEndMessage = await this.checkCombatEnd(session);
+        if (session.status !== 'active') {
+          console.log('Combat ended during enemy turn');
+          // If combat ended due to enemy action, include end message
+          if (enemyEndMessage) {
+            enemyMessages.push(enemyEndMessage);
+          }
+          break;
+        }
+      }
+
+      // Combine player and enemy messages
+      const combinedMessage = [playerResult.message, ...enemyMessages].join('\n');
+      console.log('Combined message:', combinedMessage);
+      
+      const finalResult = {
         ...playerResult,
-        message: endMessage || playerResult.message,
+        message: combinedMessage,
         combatStatus: session.status
       };
-    }
 
-    // Automatically process enemy turns
-    const enemyMessages: string[] = [];
-    const enemies = session.participants.filter(p => p.team === 'enemy' && p.status === 'active');
-    
-    for (const enemy of enemies) {
-      const enemyAction = this.chooseAIAction(session, enemy);
-      const enemyResult = await this.executeAction(session, enemy, enemyAction);
-      enemyMessages.push(enemyResult.message);
+      console.log('Final result:', JSON.stringify(finalResult, null, 2));
+      console.log('=== COMBAT SERVICE PROCESS ACTION END ===');
       
-      // Check for combat end after each enemy action
-      const enemyEndMessage = await this.checkCombatEnd(session);
-      if (session.status !== 'active') {
-        // If combat ended due to enemy action, include end message
-        if (enemyEndMessage) {
-          enemyMessages.push(enemyEndMessage);
-        }
-        break;
-      }
+      return finalResult;
+    } catch (error) {
+      console.error('=== COMBAT SERVICE ERROR ===');
+      console.error('Error in processAction:', {
+        sessionId,
+        userId,
+        action,
+        error: error instanceof Error ? {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        } : error
+      });
+      console.error('=== END COMBAT SERVICE ERROR ===');
+      
+      // Return a proper CombatError instead of throwing
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error in combat processing',
+        code: 'INVALID_ACTION'
+      };
     }
-
-    // Combine player and enemy messages
-    const combinedMessage = [playerResult.message, ...enemyMessages].join('\n');
-    
-    return {
-      ...playerResult,
-      message: combinedMessage,
-      combatStatus: session.status
-    };
   }
 
   /**
@@ -912,5 +1071,54 @@ export class CombatService {
         
         return enemies[0]; // Fallback
     }
+  }
+
+  /**
+   * Clear all sessions (for testing/debugging)
+   */
+  clearAllSessions(): void {
+    console.log('Clearing all combat sessions...');
+    console.log('Current sessions:', this.sessions.size);
+    console.log('Current participant mappings:', this.participantToSession.size);
+    
+    this.sessions.clear();
+    this.participantToSession.clear();
+    this.sessionConfigs.clear();
+    
+    console.log('All sessions cleared');
+  }
+
+  /**
+   * Remove participant from session tracking when combat ends
+   */
+  private cleanupSession(sessionId: string): void {
+    const session = this.sessions.get(sessionId);
+    if (session) {
+      // Remove all participants from tracking
+      session.participants.forEach(participant => {
+        this.participantToSession.delete(participant.charId);
+      });
+      
+      // Remove session and config
+      this.sessions.delete(sessionId);
+      this.sessionConfigs.delete(sessionId);
+      
+      console.log(`Session ${sessionId} cleaned up`);
+    }
+  }
+
+  /**
+   * Force start combat (for testing) - clears existing session if needed
+   */
+  async forceStartCombat(initiatorId: string, request: CombatStartRequest): Promise<CombatSession> {
+    // Clear existing session if participant is already in combat
+    const existingSession = this.participantToSession.get(initiatorId);
+    if (existingSession) {
+      console.log(`Forcing new combat for ${initiatorId}, clearing existing session ${existingSession}`);
+      this.cleanupSession(existingSession);
+    }
+    
+    // Now start combat normally
+    return this.startCombat(initiatorId, request);
   }
 }

@@ -121,9 +121,19 @@ export const getCombatSession = async (req: Request, res: Response): Promise<Res
  */
 export const performTestAction = async (req: Request, res: Response): Promise<Response> => {
   try {
+    console.log('=== COMBAT ACTION DEBUG START ===');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
     const { sessionId, action, targetId } = req.body;
     
+    console.log('Extracted values:', {
+      sessionId,
+      action,
+      targetId
+    });
+    
     if (!sessionId || !action) {
+      console.log('Validation failed: missing sessionId or action');
       return res.status(400).json({
         success: false,
         message: 'Session ID and action are required'
@@ -132,15 +142,53 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
 
     // Use mock player ID for testing
     const actorId = '550e8400-e29b-41d4-a716-446655440000';
+    console.log('Using actor ID:', actorId);
+    
+    // Validate action type
+    const validActions = Object.values(CombatActionType);
+    const actionType = action.toLowerCase();
+    console.log('Action type validation:', {
+      provided: actionType,
+      valid: validActions,
+      isValid: validActions.includes(actionType as CombatActionType)
+    });
+    
+    if (!validActions.includes(actionType as CombatActionType)) {
+      console.log('Invalid action type provided');
+      return res.status(400).json({
+        success: false,
+        message: `Invalid action type. Valid actions: ${validActions.join(', ')}`
+      });
+    }
     
     // Create proper action object with proper enum values
     const combatAction = {
-      type: action.toLowerCase() as CombatActionType, // Cast to proper enum type
-      targetCharId: targetId, // Use targetCharId instead of targetId
+      type: actionType as CombatActionType,
+      targetCharId: targetId,
       timestamp: Date.now()
     };
     
+    console.log('Combat action object:', JSON.stringify(combatAction, null, 2));
+    
+    // Check if session exists before processing action
+    const session = await combatService.getSession(sessionId);
+    console.log('Session lookup result:', {
+      sessionId,
+      exists: !!session,
+      status: session?.status || 'N/A'
+    });
+    
+    if (!session) {
+      console.log('Session not found');
+      return res.status(404).json({
+        success: false,
+        message: 'Combat session not found'
+      });
+    }
+    
+    console.log('Processing action with combat service...');
     const result = await combatService.processAction(sessionId, actorId, combatAction);
+    console.log('Combat service result:', JSON.stringify(result, null, 2));
     
     let plainText = '';
     if ('message' in result && result.message) {
@@ -149,6 +197,8 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
       plainText = `Error: ${result.error}`;
     }
 
+    console.log('=== COMBAT ACTION DEBUG END ===');
+    
     return res.status(200).json({
       success: true,
       message: 'Combat action performed successfully',
@@ -156,10 +206,22 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
       plainText
     });
   } catch (error) {
-    console.error('Combat action error:', error);
+    console.error('=== COMBAT ACTION ERROR ===');
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace',
+      name: error instanceof Error ? error.name : 'Unknown error type'
+    });
+    console.error('Request body at error:', JSON.stringify(req.body, null, 2));
+    console.error('=== END COMBAT ACTION ERROR ===');
+    
     return res.status(500).json({
       success: false,
-      message: error instanceof Error ? error.message : 'Failed to perform combat action'
+      message: error instanceof Error ? error.message : 'Failed to perform combat action',
+      debug: process.env.NODE_ENV === 'development' ? {
+        stack: error instanceof Error ? error.stack : undefined,
+        body: req.body
+      } : undefined
     });
   }
 };
@@ -215,30 +277,66 @@ export const fleeTestCombat = async (req: Request, res: Response): Promise<Respo
  */
 export const startTestCombat = async (req: Request, res: Response): Promise<Response> => {
   try {
+    console.log('=== START TEST COMBAT DEBUG ===');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
     const { targetIds, battleType } = req.body;
+    
+    console.log('Extracted values:', {
+      targetIds,
+      battleType
+    });
     
     // For test monsters, use a mock user ID
     const mockUserId = '550e8400-e29b-41d4-a716-446655440000';
+    console.log('Using mock user ID:', mockUserId);
     
-    // Use the shared combatService instance instead of creating a new one
-    const session = await combatService.startCombat(mockUserId, {
+    const combatRequest = {
       targetIds: targetIds || ['test_goblin_001'],
       battleType: battleType || 'pve'
-    });
+    };
+    
+    console.log('Combat request:', JSON.stringify(combatRequest, null, 2));
+    console.log('Calling combatService.startCombat...');
+    
+    // Use the shared combatService instance with force start for testing
+    const session = await combatService.forceStartCombat(mockUserId, combatRequest);
 
-    console.log(`Combat session created: ${session.id}`);
+    console.log(`Combat session created successfully: ${session.sessionId}`);
+    console.log('Session details:', JSON.stringify({
+      sessionId: session.sessionId,
+      status: session.status,
+      participantCount: session.participants.length,
+      participants: session.participants.map(p => p.charId)
+    }, null, 2));
 
-    return res.status(201).json({
+    const response = {
       success: true,
       message: 'Test combat session started successfully',
       data: {
         session
       }
-    });
+    };
+
+    console.log('=== START TEST COMBAT SUCCESS ===');
+    return res.status(201).json(response);
   } catch (error) {
+    console.error('=== START TEST COMBAT ERROR ===');
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace',
+      name: error instanceof Error ? error.name : 'Unknown error type'
+    });
+    console.error('Request body at error:', JSON.stringify(req.body, null, 2));
+    console.error('=== END START TEST COMBAT ERROR ===');
+    
     return res.status(500).json({
       success: false,
-      message: error instanceof Error ? error.message : 'Failed to start test combat session'
+      message: error instanceof Error ? error.message : 'Failed to start test combat session',
+      debug: process.env.NODE_ENV === 'development' ? {
+        stack: error instanceof Error ? error.stack : undefined,
+        body: req.body
+      } : undefined
     });
   }
 };
