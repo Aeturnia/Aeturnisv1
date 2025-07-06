@@ -2,14 +2,18 @@ import { logger } from '../utils/logger';
 import { CacheService } from './CacheService';
 import { db } from '../database/config';
 import { monsters, monsterTypes, spawnPoints, zones } from '../database/schema';
-import { eq, and } from 'drizzle-orm';
-import { Monster, MonsterState, Position3D } from '../../../shared/src/types/monster.types';
+import { eq } from 'drizzle-orm';
+import { Position3D } from '@aeturnis/shared';
 
 export class MonsterService {
   private cache: CacheService;
 
   constructor() {
-    this.cache = new CacheService();
+    this.cache = new CacheService({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379'),
+      password: process.env.REDIS_PASSWORD
+    });
   }
 
   /**
@@ -20,7 +24,7 @@ export class MonsterService {
       logger.info(`Fetching monsters for zone: ${zoneIdOrName}`);
       
       const cacheKey = `monsters:zone:${zoneIdOrName}`;
-      const cached = await this.cache.get(cacheKey);
+      const cached = await this.cache.get<any[]>(cacheKey);
       if (cached) {
         logger.info(`Cache hit for monsters in zone: ${zoneIdOrName}`);
         return cached;
@@ -66,7 +70,7 @@ export class MonsterService {
       logger.info(`Found ${result.length} monsters in zone: ${zoneId}`);
       return result;
     } catch (error) {
-      logger.error(`Error fetching monsters for zone ${zoneId}:`, error);
+      logger.error(`Error fetching monsters for zone ${zoneIdOrName}:`, error);
       throw error;
     }
   }
@@ -181,7 +185,7 @@ export class MonsterService {
       logger.info('Fetching all monster types');
       
       const cacheKey = 'monster-types:all';
-      const cached = await this.cache.get(cacheKey);
+      const cached = await this.cache.get<any[]>(cacheKey);
       if (cached) {
         logger.info('Cache hit for monster types');
         return cached;
@@ -208,7 +212,7 @@ export class MonsterService {
       logger.info(`Fetching spawn points for zone: ${zoneId}`);
       
       const cacheKey = `spawn-points:zone:${zoneId}`;
-      const cached = await this.cache.get(cacheKey);
+      const cached = await this.cache.get<any[]>(cacheKey);
       if (cached) {
         logger.info(`Cache hit for spawn points in zone: ${zoneId}`);
         return cached;

@@ -20,8 +20,8 @@ import { CombatHandler } from './handlers/combatHandler';
 import { SocketRedisAdapter, createRedisAdapter } from './adapters/redisAdapter';
 
 // Import event registrations
-import { registerMonsterEvents } from './events/monster.events';
-import { registerNPCEvents } from './events/npc.events';
+import { registerMonsterEvents } from './monster.events';
+import { registerNPCEvents } from './npc.events';
 
 export interface SocketServerConfig {
   port?: number;

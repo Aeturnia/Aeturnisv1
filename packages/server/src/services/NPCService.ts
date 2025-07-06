@@ -3,13 +3,16 @@ import { CacheService } from './CacheService';
 import { db } from '../database/config';
 import { npcs, npcInteractions, zones } from '../database/schema';
 import { eq, and } from 'drizzle-orm';
-import { NPC, NPCInteraction, DialogueNode } from '../../../shared/src/types/npc.types';
 
 export class NPCService {
   private cache: CacheService;
 
   constructor() {
-    this.cache = new CacheService();
+    this.cache = new CacheService({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379'),
+      password: process.env.REDIS_PASSWORD
+    });
   }
 
   /**
@@ -20,7 +23,7 @@ export class NPCService {
       logger.info(`Fetching NPCs for zone: ${zoneIdOrName}`);
       
       const cacheKey = `npcs:zone:${zoneIdOrName}`;
-      const cached = await this.cache.get(cacheKey);
+      const cached = await this.cache.get<any[]>(cacheKey);
       if (cached) {
         logger.info(`Cache hit for NPCs in zone: ${zoneIdOrName}`);
         return cached;
@@ -52,7 +55,7 @@ export class NPCService {
       logger.info(`Found ${result.length} NPCs in zone: ${zoneId}`);
       return result;
     } catch (error) {
-      logger.error(`Error fetching NPCs for zone ${zoneId}:`, error);
+      logger.error(`Error fetching NPCs for zone ${zoneIdOrName}:`, error);
       throw error;
     }
   }
@@ -80,9 +83,9 @@ export class NPCService {
         npcId,
         characterId,
         interactionType: 'talk',
-        interactionData: {
+        dialogueState: {
           startTime: new Date().toISOString(),
-          dialogueState: 'greeting'
+          currentNode: 'greeting'
         }
       };
 
@@ -91,8 +94,9 @@ export class NPCService {
         .values(interaction)
         .returning();
 
-      // Get initial dialogue from NPC's dialogue tree
-      const dialogueTree = npc[0].dialogueTree as any;
+      // Get initial dialogue from NPC's metadata
+      const metadata = npc[0].metadata as any;
+      const dialogueTree = metadata?.dialogueTree;
       const initialDialogue = dialogueTree?.root || {
         nodeId: 'greeting',
         text: `Hello! I'm ${npc[0].displayName}. How can I help you?`,
@@ -140,13 +144,14 @@ export class NPCService {
       }
 
       // Get dialogue tree and find next node
-      const dialogueTree = npc[0].dialogueTree as any;
+      const metadata = npc[0].metadata as any;
+      const dialogueTree = metadata?.dialogueTree;
       let nextDialogue;
 
       // Simple dialogue logic based on choice
       switch (choiceId) {
         case 'services':
-          const services = npc[0].services as any[];
+          const services = (npc[0].metadata as any)?.services || ['general'];
           nextDialogue = {
             nodeId: 'services',
             text: `I offer the following services: ${services.join(', ')}. What interests you?`,
@@ -205,9 +210,9 @@ export class NPCService {
           };
       }
 
-      // Update interaction data
+      // Update dialogue state
       const updateData = {
-        interactionData: {
+        dialogueState: {
           lastChoice: choiceId,
           currentNode: nextDialogue.nodeId,
           timestamp: new Date().toISOString()
@@ -240,7 +245,7 @@ export class NPCService {
       logger.info(`Ending interaction between character ${characterId} and NPC ${npcId}`);
       
       const updateData = {
-        interactionData: {
+        dialogueState: {
           endTime: new Date().toISOString(),
           status: 'completed'
         }
@@ -269,7 +274,7 @@ export class NPCService {
       logger.info('Fetching quest-giving NPCs');
       
       const cacheKey = 'npcs:quest-givers';
-      const cached = await this.cache.get(cacheKey);
+      const cached = await this.cache.get<any[]>(cacheKey);
       if (cached) {
         logger.info('Cache hit for quest-giving NPCs');
         return cached;
@@ -362,7 +367,8 @@ export class NPCService {
       }
 
       // Verify NPC is a merchant
-      const services = npc[0].services as any[];
+      const metadata = npc[0].metadata as any;
+      const services = metadata?.services || [];
       if (!services.includes('shop') && !services.includes('trade')) {
         throw new Error(`NPC ${npcId} is not a merchant`);
       }
@@ -372,7 +378,7 @@ export class NPCService {
         npcId,
         characterId,
         interactionType: 'trade',
-        interactionData: {
+        dialogueState: {
           tradeData,
           timestamp: new Date().toISOString()
         }
@@ -420,7 +426,7 @@ export class NPCService {
       logger.info('Fetching merchant NPCs');
       
       const cacheKey = 'npcs:merchants';
-      const cached = await this.cache.get(cacheKey);
+      const cached = await this.cache.get<any[]>(cacheKey);
       if (cached) {
         logger.info('Cache hit for merchant NPCs');
         return cached;

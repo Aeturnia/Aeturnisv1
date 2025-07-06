@@ -1,3 +1,7 @@
+// Export type modules
+export * from './monster.types';
+export * from './npc.types';
+
 // Game-wide type definitions
 export type CharacterRace = 'human' | 'elf' | 'dwarf' | 'orc' | 'halfling' | 'gnome' | 'darkelf' | 'lizardman';
 

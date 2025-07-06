@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { NPCService } from '../services/NPCService';
@@ -7,7 +7,7 @@ const router = Router();
 const npcService = new NPCService();
 
 // Get NPCs in a specific zone
-router.get('/zone/:zoneId', authenticate, asyncHandler(async (req: AuthRequest, res: Response) => {
+router.get('/zone/:zoneId', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
   const { zoneId } = req.params;
   
   const npcs = await npcService.getNPCsInZone(zoneId);
@@ -22,7 +22,7 @@ router.get('/zone/:zoneId', authenticate, asyncHandler(async (req: AuthRequest, 
 }));
 
 // Start interaction with an NPC
-router.post('/:npcId/interact', authenticate, asyncHandler(async (req: AuthRequest, res: Response) => {
+router.post('/:npcId/interact', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
   const { npcId } = req.params;
   const { characterId } = req.body;
   
@@ -42,7 +42,7 @@ router.post('/:npcId/interact', authenticate, asyncHandler(async (req: AuthReque
 }));
 
 // Advance dialogue with an NPC
-router.post('/:npcId/dialogue/advance', authenticate, asyncHandler(async (req: AuthRequest, res: Response) => {
+router.post('/:npcId/dialogue/advance', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
   const { npcId } = req.params;
   const { characterId, choiceId } = req.body;
   
@@ -65,7 +65,7 @@ router.post('/:npcId/dialogue/advance', authenticate, asyncHandler(async (req: A
 }));
 
 // Get NPC interaction history for a character
-router.get('/interactions/character/:characterId', authenticate, asyncHandler(async (req: AuthRequest, res: Response) => {
+router.get('/interactions/character/:characterId', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
   const { characterId } = req.params;
   
   const interactions = await npcService.getInteractionHistory(characterId);
@@ -80,7 +80,7 @@ router.get('/interactions/character/:characterId', authenticate, asyncHandler(as
 }));
 
 // Get all quest-giving NPCs
-router.get('/quest-givers', authenticate, asyncHandler(async (req: AuthRequest, res: Response) => {
+router.get('/quest-givers', authenticate, asyncHandler<AuthRequest>(async (_req, res) => {
   const questGivers = await npcService.getQuestGivers();
   
   res.json({ 
@@ -93,7 +93,7 @@ router.get('/quest-givers', authenticate, asyncHandler(async (req: AuthRequest, 
 }));
 
 // Test endpoint for NPC system
-router.get('/test', asyncHandler(async (req: Request, res: Response) => {
+router.get('/test', asyncHandler(async (_req, res) => {
   res.json({
     success: true,
     data: {

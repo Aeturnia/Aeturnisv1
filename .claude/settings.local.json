@@ -8,7 +8,8 @@
       "Bash(do echo -e \"\\n=== $file ===\")",
       "Bash(awk:*)",
       "Bash(done)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": []
   }

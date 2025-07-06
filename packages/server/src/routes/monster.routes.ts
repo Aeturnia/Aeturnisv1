@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import { authenticate, AuthRequest, authorize } from '../middleware/auth';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { MonsterService } from '../services/MonsterService';
@@ -7,7 +7,7 @@ const router = Router();
 const monsterService = new MonsterService();
 
 // Get monsters in a specific zone
-router.get('/zone/:zoneId', authenticate, asyncHandler(async (req: AuthRequest, res: Response) => {
+router.get('/zone/:zoneId', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
   const { zoneId } = req.params;
   
   const monsters = await monsterService.getMonstersInZone(zoneId);
@@ -22,7 +22,7 @@ router.get('/zone/:zoneId', authenticate, asyncHandler(async (req: AuthRequest, 
 }));
 
 // Spawn a monster at a spawn point (admin only)
-router.post('/spawn', authenticate, authorize('admin'), asyncHandler(async (req: AuthRequest, res: Response) => {
+router.post('/spawn', authenticate, authorize(['admin']), asyncHandler<AuthRequest>(async (req, res) => {
   const { spawnPointId } = req.body;
   
   if (!spawnPointId) {
@@ -44,7 +44,7 @@ router.post('/spawn', authenticate, authorize('admin'), asyncHandler(async (req:
 }));
 
 // Update monster state
-router.patch('/:monsterId/state', authenticate, asyncHandler(async (req: AuthRequest, res: Response) => {
+router.patch('/:monsterId/state', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
   const { monsterId } = req.params;
   const { newState, targetId } = req.body;
   
@@ -65,7 +65,7 @@ router.patch('/:monsterId/state', authenticate, asyncHandler(async (req: AuthReq
 }));
 
 // Get monster types
-router.get('/types', authenticate, asyncHandler(async (req: AuthRequest, res: Response) => {
+router.get('/types', authenticate, asyncHandler<AuthRequest>(async (_req, res) => {
   const monsterTypes = await monsterService.getMonsterTypes();
   
   res.json({ 
@@ -78,7 +78,7 @@ router.get('/types', authenticate, asyncHandler(async (req: AuthRequest, res: Re
 }));
 
 // Get spawn points for a zone
-router.get('/spawn-points/:zoneId', authenticate, asyncHandler(async (req: AuthRequest, res: Response) => {
+router.get('/spawn-points/:zoneId', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
   const { zoneId } = req.params;
   
   const spawnPoints = await monsterService.getSpawnPointsByZone(zoneId);
@@ -93,7 +93,7 @@ router.get('/spawn-points/:zoneId', authenticate, asyncHandler(async (req: AuthR
 }));
 
 // Test endpoint for monster system
-router.get('/test', asyncHandler(async (req: Request, res: Response) => {
+router.get('/test', asyncHandler(async (_req, res) => {
   res.json({
     success: true,
     data: {
