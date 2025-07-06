@@ -13,6 +13,7 @@ interface AuthRequest extends Request {
   };
 }
 
+// Use singleton pattern for combat service to maintain session state
 const combatService = new CombatService();
 const resourceService = new ResourceService();
 
@@ -88,7 +89,9 @@ export const getCombatSession = async (req: Request, res: Response): Promise<Res
       });
     }
 
+    console.log(`Looking for combat session: ${sessionId}`);
     const session = await combatService.getSession(sessionId);
+    console.log(`Session found: ${session ? 'Yes' : 'No'}`);
     
     if (!session) {
       return res.status(404).json({
@@ -217,11 +220,13 @@ export const startTestCombat = async (req: Request, res: Response): Promise<Resp
     // For test monsters, use a mock user ID
     const mockUserId = '550e8400-e29b-41d4-a716-446655440000';
     
-    const combatService = new CombatService();
+    // Use the shared combatService instance instead of creating a new one
     const session = await combatService.startCombat(mockUserId, {
       targetIds: targetIds || ['test_goblin_001'],
       battleType: battleType || 'pve'
     });
+
+    console.log(`Combat session created: ${session.id}`);
 
     return res.status(201).json({
       success: true,

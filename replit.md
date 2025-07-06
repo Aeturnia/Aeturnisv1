@@ -615,6 +615,14 @@ The expanded monorepo now includes:
 - **Test Environment Operational**: Combat Engine v2.0 test interface fully functional with Attack, Defend, Flee actions
 - **Status**: Combat system fully operational in test environment with proper API integration
 
+### July 06, 2025 - Combat Session Storage Issue Resolved ✅
+- **Session Instance Problem Fixed**: Resolved issue where startTestCombat and getCombatSession used different CombatService instances
+- **Singleton Pattern Applied**: All combat endpoints now use shared CombatService instance to maintain session state
+- **Session Storage Working**: Combat sessions now persist correctly between creation and retrieval
+- **Debug Logging Added**: Enhanced logging to track session creation and lookup for troubleshooting
+- **404 Error Resolved**: Combat session retrieval now works correctly after session creation
+- **Status**: Combat session management fully operational - sessions persist across all endpoints
+
 ### July 05, 2025 - Anti-Spam Cooldown System & Enhanced Status Messages Complete ✅
 - **3-Second Combat Cooldown**: Implemented user-based cooldown system preventing combat action spam with 3-second delays
 - **Cooldown Middleware**: Created combatActionCooldown middleware with in-memory player tracking and countdown messages
