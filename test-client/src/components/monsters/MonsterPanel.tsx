@@ -223,13 +223,17 @@ export const MonsterPanel: React.FC = () => {
           <MonsterList
             monsters={monsters.map(monster => ({
               ...monster,
-              currentHp: monster.hp || monster.stats?.hp || 0,
-              maxHp: monster.maxHp || monster.stats?.maxHp || 1
+              currentHp: monster.hp || monster.stats?.hp || 100,
+              maxHp: monster.maxHp || monster.stats?.maxHp || 100
             }))}
             onAction={handleMonsterAction}
             loading={monsterTest.loading}
-            isAuthenticated={isAuthenticated}
+            isAuthenticated={true}
           />
+          
+          <div style={{ fontSize: '12px', color: '#666', marginTop: '8px', padding: '8px', border: '1px solid #333' }}>
+            Debug: monsters.length={monsters?.length} | Raw data: {JSON.stringify(monsters?.slice(0,1), null, 2)}
+          </div>
         </div>
 
         <div className="test-section">
