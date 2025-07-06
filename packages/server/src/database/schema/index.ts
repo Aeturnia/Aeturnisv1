@@ -624,13 +624,16 @@ export const monsters = pgTable('monsters', {
   id: uuid('id').defaultRandom().primaryKey(),
   monsterTypeId: uuid('monster_type_id').notNull().references(() => monsterTypes.id),
   zoneId: uuid('zone_id').notNull().references(() => zones.id),
+  name: varchar('name', { length: 100 }).notNull(),
   position: jsonb('position').notNull().$type<{x: number, y: number, z: number}>(),
   currentHp: integer('current_hp').notNull(),
   maxHp: integer('max_hp').notNull(),
   state: varchar('state', { length: 20 }).notNull().default('idle'), // idle, patrol, combat, flee
   aggroRadius: integer('aggro_radius').notNull().default(10),
+  aggroList: jsonb('aggro_list').notNull().default([]).$type<string[]>(),
   targetId: uuid('target_id'), // current target character_id
   spawnPointId: uuid('spawn_point_id').references(() => spawnPoints.id),
+  metadata: jsonb('metadata').default({}).$type<Record<string, unknown>>(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   killedAt: timestamp('killed_at', { withTimezone: true }),

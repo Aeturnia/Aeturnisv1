@@ -15,32 +15,36 @@ export class NPCService {
   /**
    * Get all NPCs in a specific zone
    */
-  async getNPCsInZone(zoneId: string): Promise<any[]> {
+  async getNPCsInZone(zoneIdOrName: string): Promise<any[]> {
     try {
-      logger.info(`Fetching NPCs for zone: ${zoneId}`);
+      logger.info(`Fetching NPCs for zone: ${zoneIdOrName}`);
       
-      const cacheKey = `npcs:zone:${zoneId}`;
+      const cacheKey = `npcs:zone:${zoneIdOrName}`;
       const cached = await this.cache.get(cacheKey);
       if (cached) {
-        logger.info(`Cache hit for NPCs in zone: ${zoneId}`);
+        logger.info(`Cache hit for NPCs in zone: ${zoneIdOrName}`);
         return cached;
       }
 
-      const result = await database
-        .select({
-          id: npcs.id,
-          name: npcs.name,
-          displayName: npcs.displayName,
-          npcType: npcs.npcType,
-          position: npcs.position,
-          dialogueTree: npcs.dialogueTree,
-          services: npcs.services,
-          level: npcs.level,
-          zoneId: npcs.zoneId,
-          metadata: npcs.metadata,
-          createdAt: npcs.createdAt,
-          updatedAt: npcs.updatedAt
-        })
+      // First, resolve zone name to UUID if needed
+      let zoneId = zoneIdOrName;
+      if (!zoneIdOrName.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        // It's a zone name, look up the UUID
+        const zoneResult = await db
+          .select({ id: zones.id })
+          .from(zones)
+          .where(eq(zones.name, zoneIdOrName))
+          .limit(1);
+        
+        if (!zoneResult.length) {
+          logger.error(`Zone not found: ${zoneIdOrName}`);
+          return [];
+        }
+        zoneId = zoneResult[0].id;
+      }
+
+      const result = await db
+        .select()
         .from(npcs)
         .where(eq(npcs.zoneId, zoneId));
 
@@ -61,7 +65,7 @@ export class NPCService {
       logger.info(`Starting interaction between character ${characterId} and NPC ${npcId}`);
       
       // Get NPC details
-      const npc = await database
+      const npc = await db
         .select()
         .from(npcs)
         .where(eq(npcs.id, npcId))
@@ -82,7 +86,7 @@ export class NPCService {
         }
       };
 
-      const result = await database
+      const result = await db
         .insert(npcInteractions)
         .values(interaction)
         .returning();
@@ -125,7 +129,7 @@ export class NPCService {
       logger.info(`Advancing dialogue for character ${characterId} and NPC ${npcId} with choice: ${choiceId}`);
       
       // Get NPC details
-      const npc = await database
+      const npc = await db
         .select()
         .from(npcs)
         .where(eq(npcs.id, npcId))
@@ -210,7 +214,7 @@ export class NPCService {
         }
       };
 
-      await database
+      await db
         .update(npcInteractions)
         .set(updateData)
         .where(and(
@@ -242,7 +246,7 @@ export class NPCService {
         }
       };
 
-      await database
+      await db
         .update(npcInteractions)
         .set(updateData)
         .where(and(
@@ -271,7 +275,7 @@ export class NPCService {
         return cached;
       }
 
-      const result = await database
+      const result = await db
         .select()
         .from(npcs)
         .where(eq(npcs.npcType, 'quest_giver'));
@@ -292,7 +296,7 @@ export class NPCService {
     try {
       logger.info(`Fetching interaction history for character: ${characterId}`);
       
-      const result = await database
+      const result = await db
         .select()
         .from(npcInteractions)
         .where(eq(npcInteractions.characterId, characterId));
@@ -311,7 +315,7 @@ export class NPCService {
   async canInteract(npcId: string, characterId: string): Promise<boolean> {
     try {
       // Get NPC details
-      const npc = await database
+      const npc = await db
         .select()
         .from(npcs)
         .where(eq(npcs.id, npcId))
@@ -347,7 +351,7 @@ export class NPCService {
       logger.info(`Processing trade between character ${characterId} and NPC ${npcId}`);
       
       // Get NPC details
-      const npc = await database
+      const npc = await db
         .select()
         .from(npcs)
         .where(eq(npcs.id, npcId))
@@ -374,7 +378,7 @@ export class NPCService {
         }
       };
 
-      await database
+      await db
         .insert(npcInteractions)
         .values(interaction);
 
@@ -395,7 +399,7 @@ export class NPCService {
    */
   async getNPCById(npcId: string): Promise<any> {
     try {
-      const result = await database
+      const result = await db
         .select()
         .from(npcs)
         .where(eq(npcs.id, npcId))
@@ -422,7 +426,7 @@ export class NPCService {
         return cached;
       }
 
-      const result = await database
+      const result = await db
         .select()
         .from(npcs)
         .where(eq(npcs.npcType, 'merchant'));

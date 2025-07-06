@@ -15,15 +15,32 @@ export class MonsterService {
   /**
    * Get all monsters in a specific zone
    */
-  async getMonstersInZone(zoneId: string): Promise<any[]> {
+  async getMonstersInZone(zoneIdOrName: string): Promise<any[]> {
     try {
-      logger.info(`Fetching monsters for zone: ${zoneId}`);
+      logger.info(`Fetching monsters for zone: ${zoneIdOrName}`);
       
-      const cacheKey = `monsters:zone:${zoneId}`;
+      const cacheKey = `monsters:zone:${zoneIdOrName}`;
       const cached = await this.cache.get(cacheKey);
       if (cached) {
-        logger.info(`Cache hit for monsters in zone: ${zoneId}`);
+        logger.info(`Cache hit for monsters in zone: ${zoneIdOrName}`);
         return cached;
+      }
+
+      // First, resolve zone name to UUID if needed
+      let zoneId = zoneIdOrName;
+      if (!zoneIdOrName.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        // It's a zone name, look up the UUID
+        const zoneResult = await db
+          .select({ id: zones.id })
+          .from(zones)
+          .where(eq(zones.name, zoneIdOrName))
+          .limit(1);
+        
+        if (!zoneResult.length) {
+          logger.error(`Zone not found: ${zoneIdOrName}`);
+          return [];
+        }
+        zoneId = zoneResult[0].id;
       }
 
       const result = await db
