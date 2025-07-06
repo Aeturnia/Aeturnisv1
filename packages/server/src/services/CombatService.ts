@@ -9,7 +9,6 @@ import {
   CombatStartRequest,
   CombatEndResult,
   CombatError,
-  CombatLog,
   CombatSessionConfig
 } from '../types/combat.types';
 import { ResourcePool, ResourceUpdate } from '../types/resources.types';
@@ -26,7 +25,6 @@ export class CombatService {
   // Session storage with config
   private sessions: Map<string, CombatSession> = new Map();
   private sessionConfigs: Map<string, CombatSessionConfig> = new Map();
-  private turnTimers: Map<string, NodeJS.Timeout> = new Map();
   private participantToSession: Map<string, string> = new Map();
 
   // Default configuration
@@ -111,7 +109,7 @@ export class CombatService {
     const participants: CombatParticipant[] = [
       await this.createParticipant(initiatorId, 'player'),
       ...await Promise.all(
-        request.targetIds.map((id, index) => 
+        request.targetIds.map((id) => 
           this.createParticipant(id, request.battleType === 'pvp' ? 'player' : 'enemy')
         )
       )
@@ -197,11 +195,11 @@ export class CombatService {
     const endMessage = await this.checkCombatEnd(session);
     
     // If combat ended, return result with end message
-    if (session.status === 'ended') {
+    if (session.status !== 'active') {
       return {
         ...playerResult,
         message: endMessage || playerResult.message,
-        combatStatus: 'ended'
+        combatStatus: session.status
       };
     }
 
@@ -216,7 +214,7 @@ export class CombatService {
       
       // Check for combat end after each enemy action
       const enemyEndMessage = await this.checkCombatEnd(session);
-      if (session.status === 'ended') {
+      if (session.status !== 'active') {
         // If combat ended due to enemy action, include end message
         if (enemyEndMessage) {
           enemyMessages.push(enemyEndMessage);
@@ -429,57 +427,9 @@ export class CombatService {
     };
   }
 
-  /**
-   * Get the next character's turn
-   */
-  private getNextTurnCharId(session: CombatSession): string {
-    let nextIndex = (session.currentTurnIndex + 1) % session.turnOrder.length;
-    let attempts = 0;
-    
-    // Skip defeated or fled participants
-    while (attempts < session.turnOrder.length) {
-      const charId = session.turnOrder[nextIndex];
-      const participant = session.participants.find(p => p.charId === charId);
-      
-      if (participant && participant.status === 'active') {
-        return charId;
-      }
-      
-      nextIndex = (nextIndex + 1) % session.turnOrder.length;
-      attempts++;
-    }
-    
-    // If no active participants found, return current
-    return session.turnOrder[session.currentTurnIndex];
-  }
 
-  /**
-   * Update session state after action
-   */
-  private updateSessionAfterAction(session: CombatSession, result: CombatResult): void {
-    // Advance turn
-    session.currentTurnIndex = session.turnOrder.findIndex(id => id === result.nextTurnCharId);
-    
-    if (session.currentTurnIndex === 0 || session.currentTurnIndex === -1) {
-      session.roundNumber++;
-      if (session.currentTurnIndex === -1) {
-        session.currentTurnIndex = 0;
-      }
-    }
 
-    // Update buff/debuff durations
-    session.participants.forEach(participant => {
-      participant.buffs = participant.buffs.filter(buff => {
-        buff.duration--;
-        return buff.duration > 0;
-      });
-      
-      participant.debuffs = participant.debuffs.filter(debuff => {
-        debuff.duration--;
-        return debuff.duration > 0;
-      });
-    });
-  }
+
 
   /**
    * Check if combat should end and generate end message
@@ -577,7 +527,16 @@ export class CombatService {
       timestamp: Date.now()
     };
 
-    return this.processAction(sessionId, userId, fleeAction);
+    const result = await this.processAction(sessionId, userId, fleeAction);
+    if ('error' in result) {
+      return {
+        sessionId,
+        action: fleeAction,
+        actorId: userId,
+        message: result.error
+      };
+    }
+    return result;
   }
 
   /**
@@ -689,7 +648,7 @@ export class CombatService {
   /**
    * Fixed damage calculation with proper defense clamping
    */
-  private calculateDamage(attacker: CombatParticipant, target: CombatParticipant): number {
+  private calculateDamage(_attacker: CombatParticipant, _target: CombatParticipant): number {
     const baseAttack = 25; // Mock attack stat
     const targetDefense = 20; // Mock defense stat
     const randomFactor = 0.8 + Math.random() * 0.4; // 80-120% damage variance
@@ -699,7 +658,7 @@ export class CombatService {
     let damage = Math.floor(baseDamage * randomFactor);
     
     // Apply defender buffs (defending stance)
-    const defendBuff = target.buffs.find(b => b.name === 'Defending');
+    const defendBuff = _target.buffs.find((b: any) => b.name === 'Defending');
     if (defendBuff) {
       damage = Math.floor(damage * defendBuff.modifier);
     }
@@ -710,7 +669,7 @@ export class CombatService {
   /**
    * Fixed skill damage to consider defense
    */
-  private calculateSkillDamage(caster: CombatParticipant, target: CombatParticipant): number {
+  private calculateSkillDamage(_caster: CombatParticipant, _target: CombatParticipant): number {
     const baseSkillDamage = 35; // Higher than normal attack
     const targetDefense = 20; // Mock defense stat
     const randomFactor = 0.9 + Math.random() * 0.2; // 90-110% damage variance
@@ -720,14 +679,7 @@ export class CombatService {
     return Math.floor(baseDamage * randomFactor);
   }
 
-  /**
-   * Calculate character speed (mock formula)
-   */
-  private calculateSpeed(charId: string): number {
-    // Mock speed calculation based on character ID
-    const hash = charId.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-    return 10 + (hash % 20); // Speed between 10-30
-  }
+
 
   /**
    * Simulate combat for testing
