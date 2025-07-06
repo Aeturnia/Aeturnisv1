@@ -307,3 +307,162 @@ export const getLootTables = async (req: Request, res: Response): Promise<Respon
     });
   }
 };
+
+/**
+ * Generate loot for testing
+ * POST /api/v1/loot/generate
+ */
+export const generateLoot = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const { characterId, enemyLevel, lootType } = req.body;
+    
+    // Mock loot generation for testing
+    const mockLoot = {
+      lootId: 'loot_' + Date.now(),
+      characterId: characterId || 'player-test-001',
+      enemyLevel: enemyLevel || 5,
+      lootType: lootType || 'monster_kill',
+      items: [
+        {
+          itemId: 'item_001',
+          name: 'Iron Sword',
+          rarity: 'common',
+          quantity: 1,
+          stats: { damage: 15, durability: 100 },
+          value: 50
+        },
+        {
+          itemId: 'item_002', 
+          name: 'Health Potion',
+          rarity: 'common',
+          quantity: 3,
+          healing: 25,
+          value: 10
+        },
+        {
+          itemId: 'item_003',
+          name: 'Silver Ring',
+          rarity: 'rare',
+          quantity: 1,
+          stats: { defense: 5, luck: 2 },
+          value: 150
+        }
+      ],
+      totalValue: 210,
+      experience: 125,
+      gold: 45,
+      generatedAt: new Date().toISOString()
+    };
+
+    logger.info('Loot generation test completed', { 
+      characterId: mockLoot.characterId,
+      itemCount: mockLoot.items.length,
+      totalValue: mockLoot.totalValue
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: mockLoot,
+      message: 'Loot generated successfully (mock data)'
+    });
+  } catch (error) {
+    logger.error('Error generating loot', { error });
+
+    return res.status(500).json({
+      success: false,
+      message: 'Error generating loot',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+/**
+ * Get loot table for testing
+ * GET /api/v1/loot/loot-table
+ */
+export const getLootTable = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const mockLootTable = {
+      tableId: 'goblin_loot_table',
+      enemyType: 'goblin',
+      levelRange: [1, 10],
+      dropRates: {
+        common: 0.7,
+        uncommon: 0.2,
+        rare: 0.08,
+        epic: 0.02,
+        legendary: 0.001
+      },
+      items: [
+        { name: 'Rusty Dagger', rarity: 'common', dropChance: 0.3 },
+        { name: 'Leather Boots', rarity: 'common', dropChance: 0.25 },
+        { name: 'Health Potion', rarity: 'common', dropChance: 0.4 },
+        { name: 'Silver Coin', rarity: 'common', dropChance: 0.8 },
+        { name: 'Goblin Earring', rarity: 'uncommon', dropChance: 0.15 },
+        { name: 'Magic Scroll', rarity: 'rare', dropChance: 0.05 }
+      ],
+      goldRange: { min: 5, max: 25 },
+      experienceBase: 50
+    };
+
+    return res.status(200).json({
+      success: true,
+      data: mockLootTable,
+      message: 'Loot table retrieved successfully (mock data)'
+    });
+  } catch (error) {
+    logger.error('Error getting loot table', { error });
+
+    return res.status(500).json({
+      success: false,
+      message: 'Error getting loot table',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+/**
+ * Test item drop mechanics
+ * POST /api/v1/loot/test-drop
+ */
+export const testItemDrop = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const { itemId, position, playerLevel } = req.body;
+    
+    const mockDrop = {
+      dropId: 'drop_' + Date.now(),
+      itemId: itemId || 'test_item_001',
+      position: position || { x: 100, y: 0, z: 150 },
+      playerLevel: playerLevel || 10,
+      dropTime: new Date().toISOString(),
+      pickupExpiry: new Date(Date.now() + 300000).toISOString(), // 5 minutes
+      canPickup: true,
+      item: {
+        name: 'Test Treasure Chest',
+        rarity: 'rare',
+        description: 'A mysterious chest containing valuable items',
+        value: 200
+      }
+    };
+
+    logger.info('Item drop test completed', { 
+      dropId: mockDrop.dropId,
+      position: mockDrop.position,
+      playerLevel: mockDrop.playerLevel
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: mockDrop,
+      message: 'Item drop simulated successfully (mock data)'
+    });
+  } catch (error) {
+    logger.error('Error testing item drop', { error });
+
+    return res.status(500).json({
+      success: false,
+      message: 'Error testing item drop',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
