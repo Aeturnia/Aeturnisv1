@@ -1,0 +1,210 @@
+import React, { useState, useEffect } from 'react';
+import { TestButton } from '../common/TestButton';
+import { ResponseViewer } from '../common/ResponseViewer';
+import { MonsterList } from './MonsterList';
+import { SpawnControl } from './SpawnControl';
+import { useApi } from '../../hooks/useApi';
+import { useAuth } from '../../hooks/useAuth';
+
+interface TestState {
+  loading: boolean;
+  response: string;
+  success: boolean;
+}
+
+export const MonsterPanel: React.FC = () => {
+  const { token, isAuthenticated } = useAuth();
+  const api = useApi(token);
+  
+  const [monsterTest, setMonsterTest] = useState<TestState>({ loading: false, response: '', success: false });
+  const [selectedZone, setSelectedZone] = useState<string>('tutorial_area');
+  const [monsters, setMonsters] = useState<any[]>([]);
+  const [spawnPoints, setSpawnPoints] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (selectedZone) {
+      fetchMonstersInZone();
+      fetchSpawnPoints();
+    }
+  }, [selectedZone, isAuthenticated]);
+
+  const fetchMonstersInZone = async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      const result = await api.get(`/api/v1/monsters/zone/${selectedZone}`);
+      if (result.success && result.data?.monsters) {
+        setMonsters(result.data.monsters);
+      }
+    } catch (error) {
+      console.error('Failed to fetch monsters:', error);
+    }
+  };
+
+  const fetchSpawnPoints = async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      const result = await api.get(`/api/v1/monsters/spawn-points/${selectedZone}`);
+      if (result.success && result.data?.spawnPoints) {
+        setSpawnPoints(result.data.spawnPoints);
+      }
+    } catch (error) {
+      console.error('Failed to fetch spawn points:', error);
+    }
+  };
+
+  const testMonsterSystem = async () => {
+    setMonsterTest({ loading: true, response: '', success: false });
+    
+    try {
+      const result = await api.get(`/api/v1/monsters/zone/${selectedZone}`);
+      setMonsterTest({
+        loading: false,
+        response: JSON.stringify(result, null, 2),
+        success: result.success
+      });
+      
+      if (result.success && result.data?.monsters) {
+        setMonsters(result.data.monsters);
+      }
+    } catch (error) {
+      setMonsterTest({
+        loading: false,
+        response: `Error: ${error}`,
+        success: false
+      });
+    }
+  };
+
+  const handleMonsterAction = async (monsterId: string, action: string, data?: any) => {
+    if (!isAuthenticated) return;
+    
+    setMonsterTest({ loading: true, response: '', success: false });
+    
+    try {
+      let result;
+      if (action === 'kill') {
+        result = await api.delete(`/api/v1/monsters/${monsterId}`);
+      } else if (action === 'updateState') {
+        result = await api.patch(`/api/v1/monsters/${monsterId}/state`, { state: data.state });
+      }
+      
+      if (result) {
+        setMonsterTest({
+          loading: false,
+          response: JSON.stringify(result, null, 2),
+          success: result.success
+        });
+        
+        if (result.success) {
+          fetchMonstersInZone(); // Refresh monster list
+        }
+      }
+    } catch (error) {
+      setMonsterTest({
+        loading: false,
+        response: `Error performing ${action}: ${error}`,
+        success: false
+      });
+    }
+  };
+
+  const handleSpawn = async (spawnPointId: string) => {
+    if (!isAuthenticated) return;
+    
+    setMonsterTest({ loading: true, response: '', success: false });
+    
+    try {
+      const result = await api.post('/api/v1/monsters/spawn', { spawnPointId });
+      setMonsterTest({
+        loading: false,
+        response: JSON.stringify(result, null, 2),
+        success: result.success
+      });
+      
+      if (result.success) {
+        fetchMonstersInZone(); // Refresh monster list
+      }
+    } catch (error) {
+      setMonsterTest({
+        loading: false,
+        response: `Error spawning monster: ${error}`,
+        success: false
+      });
+    }
+  };
+
+  const zones = [
+    { id: 'tutorial_area', name: 'Tutorial Area' },
+    { id: 'forest_grove', name: 'Forest Grove' },
+    { id: 'mountain_peak', name: 'Mountain Peak' },
+    { id: 'dark_dungeon', name: 'Dark Dungeon' },
+  ];
+
+  return (
+    <div className="tab-content">
+      <div className="section">
+        <h2>👹 Monster System</h2>
+        <p>Test monster spawning, management, and AI behavior in different zones.</p>
+        
+        {!isAuthenticated && (
+          <div className="warning">
+            ⚠️ Authentication required to access monster management
+          </div>
+        )}
+      </div>
+
+      <div className="zone-selector">
+        <label>Select Zone:</label>
+        <select 
+          value={selectedZone} 
+          onChange={(e) => setSelectedZone(e.target.value)}
+        >
+          {zones.map((zone) => (
+            <option key={zone.id} value={zone.id}>
+              {zone.name}
+            </option>
+          ))}
+        </select>
+        
+        <TestButton
+          onClick={testMonsterSystem}
+          loading={monsterTest.loading}
+          disabled={!isAuthenticated}
+          variant="primary"
+          size="small"
+        >
+          Refresh Monsters
+        </TestButton>
+      </div>
+
+      <div className="grid-container">
+        <div className="test-section">
+          <MonsterList
+            monsters={monsters}
+            onAction={handleMonsterAction}
+            loading={monsterTest.loading}
+            isAuthenticated={isAuthenticated}
+          />
+        </div>
+
+        <div className="test-section">
+          <SpawnControl
+            spawnPoints={spawnPoints}
+            onSpawn={handleSpawn}
+            loading={monsterTest.loading}
+            isAuthenticated={isAuthenticated}
+          />
+        </div>
+      </div>
+
+      <ResponseViewer
+        response={monsterTest.response}
+        success={monsterTest.success}
+        loading={monsterTest.loading}
+        title="Monster System Response"
+      />
+    </div>
+  );
+};
