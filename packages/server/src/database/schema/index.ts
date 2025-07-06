@@ -137,6 +137,12 @@ export const characters = pgTable('characters', {
   currentZone: varchar('current_zone', { length: 50 }).notNull().default('starter_zone'),
   position: jsonb('position').notNull().default({ x: 0, y: 0, z: 0 }).$type<CharacterPosition>(),
   
+  // Death & Respawn System
+  isDead: boolean('is_dead').notNull().default(false),
+  deathAt: timestamp('death_at', { withTimezone: true }),
+  deathCount: integer('death_count').notNull().default(0),
+  lastRespawnAt: timestamp('last_respawn_at', { withTimezone: true }),
+
   // Meta
   isDeleted: boolean('is_deleted').notNull().default(false),
   lastPlayedAt: timestamp('last_played_at', { withTimezone: true }),
@@ -148,6 +154,7 @@ export const characters = pgTable('characters', {
     nameIdx: uniqueIndex('idx_characters_name').on(table.name),
     levelIdx: index('idx_characters_level').on(table.level),
     prestigeIdx: index('idx_characters_prestige').on(table.prestigeLevel),
+    deathIdx: index('idx_characters_death').on(table.isDead),
   };
 });
 
@@ -242,6 +249,90 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
   }),
   relatedCharacter: one(characters, {
     fields: [transactions.relatedCharacterId],
+    references: [characters.id],
+  }),
+}));
+
+// Respawn Points Table
+export const respawnPoints = pgTable('respawn_points', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  zoneId: varchar('zone_id', { length: 50 }).notNull(),
+  x: integer('x').notNull(),
+  y: integer('y').notNull(),
+  isGraveyard: boolean('is_graveyard').default(false).notNull(),
+  name: varchar('name', { length: 100 }).notNull(),
+  restrictions: jsonb('restrictions').default({}).$type<Record<string, unknown>>(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => {
+  return {
+    zoneIdx: index('idx_respawn_points_zone').on(table.zoneId),
+  };
+});
+
+// Loot Tables
+export const lootTables = pgTable('loot_tables', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 100 }).notNull().unique(),
+  dropRules: jsonb('drop_rules').default({}).$type<Record<string, unknown>>(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Loot Entries
+export const lootEntries = pgTable('loot_entries', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  lootTableId: uuid('loot_table_id').notNull().references(() => lootTables.id, { onDelete: 'cascade' }),
+  itemId: varchar('item_id', { length: 255 }).notNull(),
+  minQty: integer('min_qty').notNull().default(1),
+  maxQty: integer('max_qty').notNull().default(1),
+  dropRate: decimal('drop_rate', { precision: 5, scale: 4 }).notNull(),
+  rarity: varchar('rarity', { length: 20 }).notNull(),
+  conditions: jsonb('conditions').default({}).$type<Record<string, unknown>>(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => {
+  return {
+    lootTableIdx: index('idx_loot_entries_table').on(table.lootTableId),
+    rarityIdx: index('idx_loot_entries_rarity').on(table.rarity),
+  };
+});
+
+// Loot History
+export const lootHistory = pgTable('loot_history', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  characterId: uuid('character_id').notNull().references(() => characters.id),
+  combatSessionId: varchar('combat_session_id', { length: 255 }),
+  itemId: varchar('item_id', { length: 255 }).notNull(),
+  qty: integer('qty').notNull().default(1),
+  source: varchar('source', { length: 50 }).notNull(),
+  timestamp: timestamp('timestamp', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => {
+  return {
+    characterIdx: index('idx_loot_history_character').on(table.characterId),
+    timestampIdx: index('idx_loot_history_timestamp').on(table.timestamp),
+    sourceIdx: index('idx_loot_history_source').on(table.source),
+  };
+});
+
+// Death, Loot, and Respawn Relations
+export const respawnPointsRelations = relations(respawnPoints, ({ many }) => ({
+  // Future: respawns: many(characterRespawns),
+}));
+
+export const lootTablesRelations = relations(lootTables, ({ many }) => ({
+  entries: many(lootEntries),
+}));
+
+export const lootEntriesRelations = relations(lootEntries, ({ one }) => ({
+  lootTable: one(lootTables, {
+    fields: [lootEntries.lootTableId],
+    references: [lootTables.id],
+  }),
+}));
+
+export const lootHistoryRelations = relations(lootHistory, ({ one }) => ({
+  character: one(characters, {
+    fields: [lootHistory.characterId],
     references: [characters.id],
   }),
 }));

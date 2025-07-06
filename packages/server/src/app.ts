@@ -20,6 +20,8 @@ import currencyRoutes from './routes/currency.routes';
 import bankRoutes from './routes/bank.routes';
 import equipmentRoutes from './routes/equipment.routes.simple';
 import combatRoutes from './routes/combat.routes';
+import { deathRoutes } from './routes/death.routes';
+import { lootRoutes } from './routes/loot.routes';
 
 // Services
 // import { shutdownServices } from './services/index';
@@ -109,6 +111,8 @@ export const createApp = () => {
   app.use('/api/v1/bank', generalLimiter, bankRoutes);
   app.use('/api/v1/equipment', generalLimiter, equipmentRoutes);
   app.use('/api/v1/combat', generalLimiter, combatRoutes);
+  app.use('/api/v1/death', generalLimiter, deathRoutes);
+  app.use('/api/v1/loot', generalLimiter, lootRoutes);
 
   // Legacy auth routes (for backward compatibility)
   app.use('/api/auth', authLimiter, authRoutes);
@@ -118,8 +122,8 @@ export const createApp = () => {
     res.json({
       message: 'Aeturnis Online API',
       status: 'operational',
-      version: '2.2.0',
-      architecture: 'MMORPG Backend',
+      version: '2.5.0',
+      architecture: 'MMORPG Backend with Death & Loot Systems',
       uptime: Math.floor(process.uptime()),
       timestamp: new Date().toISOString(),
       endpoints: {
@@ -131,6 +135,8 @@ export const createApp = () => {
         characters: '/api/v1/characters',
         equipment: '/api/v1/equipment',
         combat: '/api/v1/combat',
+        death: '/api/v1/death',
+        loot: '/api/v1/loot',
       },
       services: {
         database: 'connected',

@@ -1,0 +1,589 @@
+# 🎯 Claude Prompt: Step 2.5 — Death, Loot & Rewards Implementation
+
+## 💡 Implementation Overview
+Implement the Death, Respawn, and Loot systems for Aeturnis Online with comprehensive API contracts, database schemas, and business logic. This micro-feature handles character death states, respawn mechanics, loot table calculations, and reward distribution following an API-first architecture.
+
+## 🧱 File Targets
+
+### New Files to Create:
+```
+/src/types/death.ts              # Death/Respawn interfaces
+/src/types/loot.ts               # Loot system interfaces
+/src/controllers/death.controller.ts
+/src/controllers/loot.controller.ts
+/src/services/death.service.ts
+/src/services/loot.service.ts
+/src/services/respawn.service.ts
+/src/repositories/death.repository.ts
+/src/repositories/loot.repository.ts
+/src/routes/death.routes.ts
+/src/routes/loot.routes.ts
+/src/database/migrations/xxxx_add_death_loot_tables.ts
+/src/sockets/death.events.ts
+/src/sockets/loot.events.ts
+```
+
+### Modify Existing:
+```
+/src/types/character.ts          # Add death state fields
+/src/services/combat.service.ts  # Integrate death trigger
+/src/routes/index.ts             # Register new routes
+```
+
+## 📋 Database Schema
+
+```sql
+-- Respawn Points Table
+CREATE TABLE respawn_points (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  zone_id UUID NOT NULL REFERENCES zones(id),
+  x INTEGER NOT NULL,
+  y INTEGER NOT NULL,
+  is_graveyard BOOLEAN DEFAULT false,
+  name VARCHAR(100) NOT NULL,
+  restrictions JSONB DEFAULT '{}',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Loot Tables
+CREATE TABLE loot_tables (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(100) NOT NULL UNIQUE,
+  drop_rules JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Loot Entries
+CREATE TABLE loot_entries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  loot_table_id UUID NOT NULL REFERENCES loot_tables(id) ON DELETE CASCADE,
+  item_id UUID NOT NULL REFERENCES items(id),
+  min_qty INTEGER NOT NULL DEFAULT 1,
+  max_qty INTEGER NOT NULL DEFAULT 1,
+  drop_rate DECIMAL(5,4) NOT NULL CHECK (drop_rate >= 0 AND drop_rate <= 1),
+  rarity VARCHAR(20) NOT NULL CHECK (rarity IN ('common', 'uncommon', 'rare', 'epic', 'legendary')),
+  conditions JSONB DEFAULT '{}',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Loot History
+CREATE TABLE loot_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  character_id UUID NOT NULL REFERENCES characters(id),
+  combat_session_id UUID REFERENCES combat_sessions(id),
+  item_id UUID NOT NULL REFERENCES items(id),
+  qty INTEGER NOT NULL DEFAULT 1,
+  source VARCHAR(50) NOT NULL,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Character Death Fields (ALTER existing table)
+ALTER TABLE characters 
+ADD COLUMN is_dead BOOLEAN DEFAULT false,
+ADD COLUMN death_at TIMESTAMP,
+ADD COLUMN death_count INTEGER DEFAULT 0,
+ADD COLUMN last_respawn_at TIMESTAMP;
+
+-- Indexes
+CREATE INDEX idx_respawn_points_zone ON respawn_points(zone_id);
+CREATE INDEX idx_loot_entries_table ON loot_entries(loot_table_id);
+CREATE INDEX idx_loot_history_character ON loot_history(character_id);
+CREATE INDEX idx_loot_history_timestamp ON loot_history(timestamp);
+```
+
+## 🔧 TypeScript Interfaces
+
+### `/src/types/death.ts`
+```typescript
+export interface IDeathEvent {
+  characterId: string;
+  reason: DeathReason;
+  killerId?: string;
+  context?: IDeathContext;
+  deathAt: Date;
+  zoneId: string;
+  position: { x: number; y: number };
+}
+
+export enum DeathReason {
+  COMBAT = 'combat',
+  FALL_DAMAGE = 'fall_damage',
+  ENVIRONMENTAL = 'environmental',
+  ADMIN = 'admin',
+  UNKNOWN = 'unknown'
+}
+
+export interface IDeathContext {
+  damageType?: string;
+  lastDamageSource?: string;
+  combatSessionId?: string;
+}
+
+export interface IPenaltyBreakdown {
+  xpLoss: number;
+  xpLossPercentage: number;
+  durabilityDamage: IDurabilityPenalty[];
+  goldLoss?: number;
+}
+
+export interface IDurabilityPenalty {
+  itemId: string;
+  slot: string;
+  damagePercent: number;
+  newDurability: number;
+}
+
+export interface IRespawnPoint {
+  id: string;
+  zoneId: string;
+  x: number;
+  y: number;
+  isGraveyard: boolean;
+  name: string;
+  restrictions: IRespawnRestrictions;
+}
+
+export interface IRespawnRestrictions {
+  minLevel?: number;
+  maxLevel?: number;
+  requiredQuests?: string[];
+  faction?: string;
+}
+
+export interface IDeathStatus {
+  isDead: boolean;
+  deathAt?: string;
+  canRespawn: boolean;
+  respawnCooldownMs: number;
+  availableReviveTypes: ReviveType[];
+}
+
+export enum ReviveType {
+  SELF_RESPAWN = 'self_respawn',
+  ITEM_REVIVE = 'item_revive',
+  SPELL_REVIVE = 'spell_revive',
+  PLAYER_ASSIST = 'player_assist',
+  ADMIN_REVIVE = 'admin_revive'
+}
+```
+
+### `/src/types/loot.ts`
+```typescript
+export interface ILootTable {
+  id: string;
+  name: string;
+  dropRules: IDropRules;
+}
+
+export interface IDropRules {
+  guaranteedDrops?: string[];
+  partyBonusMultiplier?: number;
+  levelScaling?: boolean;
+  eventMultipliers?: Record<string, number>;
+}
+
+export interface ILootEntry {
+  id: string;
+  lootTableId: string;
+  itemId: string;
+  minQty: number;
+  maxQty: number;
+  dropRate: number;
+  rarity: ItemRarity;
+  conditions: IDropConditions;
+}
+
+export interface IDropConditions {
+  minLevel?: number;
+  maxLevel?: number;
+  requiredQuests?: string[];
+  timeGated?: ITimeGate;
+}
+
+export interface ITimeGate {
+  startHour: number;
+  endHour: number;
+  daysOfWeek?: number[];
+}
+
+export interface ILootDrop {
+  itemId: string;
+  quantity: number;
+  rarity: ItemRarity;
+  rolledChance: number;
+  guaranteed: boolean;
+}
+
+export interface IDropModifierInput {
+  characterLevel: number;
+  partySize?: number;
+  luckBonus?: number;
+  eventModifiers?: Record<string, number>;
+  seed?: string;
+}
+
+export interface ILootClaimRequest {
+  characterId: string;
+}
+
+export interface ILootClaimResponse {
+  loot: ILootDrop[];
+  experience: number;
+  gold: number;
+}
+
+export enum ItemRarity {
+  COMMON = 'common',
+  UNCOMMON = 'uncommon',
+  RARE = 'rare',
+  EPIC = 'epic',
+  LEGENDARY = 'legendary'
+}
+```
+
+## 🛣️ API Endpoints
+
+### Death Controller Routes
+
+#### `POST /api/character/:id/death`
+```typescript
+// Request DTO
+interface IDeathRequest {
+  reason: DeathReason;
+  killerId?: string;
+  context?: IDeathContext;
+}
+
+// Response DTO
+interface IDeathResponse {
+  success: boolean;
+  deathAt: string;
+  penalties: IPenaltyBreakdown;
+}
+
+// Validation Rules
+- Character must exist and belong to authenticated user
+- Character must be alive (isDead === false)
+- Reason must be valid DeathReason enum
+- Context object validated if provided
+```
+
+#### `POST /api/character/:id/respawn`
+```typescript
+// Request DTO (empty body, character ID in path)
+
+// Response DTO
+interface IRespawnResponse {
+  success: boolean;
+  location: {
+    zoneId: string;
+    x: number;
+    y: number;
+  };
+  revivedAt: string;
+}
+
+// Validation Rules
+- Character must be dead
+- Respawn cooldown must be expired (30s default)
+- Valid respawn point must exist in character's zone
+```
+
+#### `GET /api/character/:id/death_status`
+```typescript
+// Response DTO
+interface IDeathStatusResponse extends IDeathStatus {}
+
+// Validation Rules
+- Character must exist
+- Authenticated user must own character
+```
+
+### Loot Controller Routes
+
+#### `POST /api/combat/:sessionId/claim_loot`
+```typescript
+// Request DTO
+interface ILootClaimRequest {
+  characterId: string;
+}
+
+// Response DTO
+interface ILootClaimResponse {
+  loot: ILootDrop[];
+  experience: number;
+  gold: number;
+}
+
+// Validation Rules
+- Combat session must exist and be completed
+- Character must be a participant
+- Character must not have already claimed loot
+- Session must have unclaimed loot
+```
+
+## 🧪 Validation Rules
+
+### Death Service Validations
+```typescript
+// death.service.ts validation logic
+async validateDeathRequest(characterId: string, request: IDeathRequest): Promise<void> {
+  const character = await this.characterRepo.findById(characterId);
+  
+  if (!character) {
+    throw new NotFoundError('Character not found');
+  }
+  
+  if (character.isDead) {
+    throw new ConflictError('Character is already dead');
+  }
+  
+  if (!Object.values(DeathReason).includes(request.reason)) {
+    throw new ValidationError('Invalid death reason');
+  }
+  
+  if (request.killerId) {
+    const killer = await this.characterRepo.findById(request.killerId);
+    if (!killer) {
+      throw new ValidationError('Invalid killer ID');
+    }
+  }
+}
+```
+
+### Loot Service Validations
+```typescript
+// loot.service.ts validation logic
+async validateLootClaim(sessionId: string, characterId: string): Promise<void> {
+  const session = await this.combatRepo.findSessionById(sessionId);
+  
+  if (!session) {
+    throw new NotFoundError('Combat session not found');
+  }
+  
+  if (session.status !== 'completed') {
+    throw new ValidationError('Combat session not completed');
+  }
+  
+  const participation = session.participants.find(p => p.characterId === characterId);
+  if (!participation) {
+    throw new ForbiddenError('Character did not participate in combat');
+  }
+  
+  const existingClaim = await this.lootRepo.findClaimBySessionAndCharacter(sessionId, characterId);
+  if (existingClaim) {
+    throw new ConflictError('Loot already claimed');
+  }
+}
+```
+
+## 🔁 Event & Real-Time Logic
+
+### Socket Events
+```typescript
+// death.events.ts
+export const DEATH_EVENTS = {
+  OCCURRED: 'death:occurred',
+  RESPAWNED: 'character:respawned',
+  PENALTY_APPLIED: 'death:penalty_applied'
+} as const;
+
+// Emit on death
+io.to(`zone:${zoneId}`).emit(DEATH_EVENTS.OCCURRED, {
+  characterId,
+  charName,
+  deathReason,
+  position: { x, y }
+});
+
+// loot.events.ts  
+export const LOOT_EVENTS = {
+  ASSIGNED: 'loot:assigned',
+  ROLL: 'loot:roll',
+  CLAIMED: 'loot:claimed'
+} as const;
+
+// Emit on loot assignment
+io.to(`character:${characterId}`).emit(LOOT_EVENTS.ASSIGNED, {
+  items: lootDrops,
+  source: 'combat_victory'
+});
+```
+
+### Redis Keys
+```typescript
+// Death cooldown tracking
+const RESPAWN_COOLDOWN_KEY = `respawn:cooldown:${characterId}`;
+// TTL: 30 seconds
+
+// Loot claim tracking
+const LOOT_CLAIM_KEY = `loot:claimed:${sessionId}:${characterId}`;
+// TTL: 1 hour
+
+// Death counter for rate limiting
+const DEATH_COUNTER_KEY = `death:counter:${characterId}:${date}`;
+// TTL: 24 hours
+```
+
+## 🧪 Example Test Cases
+
+### Death Service Test
+```typescript
+// death.service.test.ts
+describe('DeathService', () => {
+  let deathService: DeathService;
+  let mockCharacterRepo: jest.Mocked<CharacterRepository>;
+  let mockRedis: jest.Mocked<RedisClient>;
+
+  beforeEach(() => {
+    mockCharacterRepo = createMockRepository();
+    mockRedis = createMockRedis();
+    deathService = new DeathService(mockCharacterRepo, mockRedis);
+  });
+
+  describe('processCharacterDeath', () => {
+    it('should mark character as dead and apply penalties', async () => {
+      const character = {
+        id: 'char-123',
+        charName: 'TestHero',
+        level: 10,
+        experience: 5000,
+        isDead: false
+      };
+
+      mockCharacterRepo.findById.mockResolvedValue(character);
+      mockCharacterRepo.update.mockResolvedValue({ ...character, isDead: true });
+
+      const result = await deathService.processCharacterDeath('char-123', {
+        reason: DeathReason.COMBAT,
+        killerId: 'char-456'
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.penalties.xpLoss).toBe(500); // 10% of 5000
+      expect(mockCharacterRepo.update).toHaveBeenCalledWith('char-123', {
+        isDead: true,
+        deathAt: expect.any(Date),
+        experience: 4500,
+        deathCount: 1
+      });
+    });
+
+    it('should throw ConflictError if character already dead', async () => {
+      mockCharacterRepo.findById.mockResolvedValue({
+        id: 'char-123',
+        isDead: true
+      });
+
+      await expect(
+        deathService.processCharacterDeath('char-123', {
+          reason: DeathReason.COMBAT
+        })
+      ).rejects.toThrow(ConflictError);
+    });
+  });
+});
+```
+
+### Loot Service Test
+```typescript
+// loot.service.test.ts
+describe('LootService', () => {
+  describe('calculateLootDrops', () => {
+    it('should calculate drops with proper RNG seeding', async () => {
+      const lootTable = {
+        id: 'table-1',
+        entries: [
+          { itemId: 'sword-1', dropRate: 0.5, minQty: 1, maxQty: 1 },
+          { itemId: 'potion-1', dropRate: 0.8, minQty: 1, maxQty: 3 }
+        ]
+      };
+
+      mockLootRepo.findTableWithEntries.mockResolvedValue(lootTable);
+
+      const drops = await lootService.calculateLootDrops('table-1', {
+        characterLevel: 10,
+        seed: 'test-seed-123'
+      });
+
+      // With same seed, results should be deterministic
+      const drops2 = await lootService.calculateLootDrops('table-1', {
+        characterLevel: 10,
+        seed: 'test-seed-123'
+      });
+
+      expect(drops).toEqual(drops2);
+    });
+  });
+});
+```
+
+## 🚧 Edge Cases
+
+1. **Simultaneous Death**
+   - Handle race conditions when multiple damage sources kill character
+   - Use database transactions with row locking
+
+2. **Respawn Point Selection**
+   - Handle zones with no respawn points
+   - Fallback to nearest zone with valid respawn
+   - Special handling for instanced zones
+
+3. **Loot Distribution**
+   - Party leader disconnect during distribution
+   - Full inventory preventing loot claim
+   - Item binding rules (soulbound on pickup)
+
+4. **Death Penalty Caps**
+   - Minimum XP threshold (never go below 0)
+   - Maximum durability damage (items don't break)
+   - Bankruptcy protection for gold loss
+
+5. **Revival Edge Cases**
+   - Revival during respawn animation
+   - Multiple revival attempts from different sources
+   - Revival in unsafe locations
+
+## 🚀 Deployment Considerations
+
+1. **Database Migrations**
+   - Run migrations in transaction
+   - Seed initial respawn points per zone
+   - Create default loot tables for NPCs
+
+2. **Performance**
+   - Index on `character_id` for death queries
+   - Cache loot tables in Redis (TTL: 5 minutes)
+   - Batch loot history inserts
+
+3. **Monitoring**
+   - Track death rates per zone
+   - Monitor loot drop rates vs expected
+   - Alert on excessive death loops
+
+4. **Feature Flags**
+   ```typescript
+   const FEATURES = {
+     DEATH_PENALTIES_ENABLED: process.env.DEATH_PENALTIES_ENABLED === 'true',
+     GRAVEYARD_RECOVERY: process.env.GRAVEYARD_RECOVERY === 'true',
+     PARTY_LOOT_ROLLING: process.env.PARTY_LOOT_ROLLING === 'true'
+   };
+   ```
+
+---
+
+### 🔐 Self‑Audit Commands
+```bash
+npm run lint:ts --max-warnings=0
+npm test --coverage
+```
+Paste: TS errors / Coverage %
+
+### 📝 Implementation Notes
+- Ensure atomic transactions for death penalties
+- Validate all Redis TTLs match business requirements  
+- Socket events must follow `entity:action` pattern
+- All monetary values in smallest unit (copper)
+- Maintain backward compatibility for character state
