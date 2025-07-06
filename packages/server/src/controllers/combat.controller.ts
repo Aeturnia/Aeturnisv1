@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { CombatService } from '../services/CombatService';
 import { ResourceService } from '../services/ResourceService';
 import { testMonsterService } from '../services/TestMonsterService';
-import { CombatStartRequest, CombatActionRequest } from '../types/combat.types';
+import { CombatStartRequest, CombatActionRequest, CombatActionType } from '../types/combat.types';
 
 // Extend Request type for authenticated requests
 interface AuthRequest extends Request {
@@ -130,10 +130,10 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
     // Use mock player ID for testing
     const actorId = '550e8400-e29b-41d4-a716-446655440000';
     
-    // Create proper action object
+    // Create proper action object with proper enum values
     const combatAction = {
-      type: action.toUpperCase(),
-      targetId: targetId,
+      type: action.toLowerCase() as CombatActionType, // Cast to proper enum type
+      targetCharId: targetId, // Use targetCharId instead of targetId
       timestamp: Date.now()
     };
     
@@ -153,6 +153,7 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
       plainText
     });
   } catch (error) {
+    console.error('Combat action error:', error);
     return res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Failed to perform combat action'
