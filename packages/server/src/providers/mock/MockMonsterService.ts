@@ -137,10 +137,14 @@ export class MockMonsterService implements IMonsterService {
   async getMonstersInZone(zoneIdOrName: string): Promise<Monster[]> {
     logger.info(`MockMonsterService: Getting monsters for zone ${zoneIdOrName}`);
     
-    // Filter monsters by zone
+    // Filter monsters by zone - handle common zone name mappings
     const monsters = this.mockMonsters.filter(m => 
-      m.zoneId === zoneIdOrName || zoneIdOrName === 'test-zone'
+      m.zoneId === zoneIdOrName || 
+      zoneIdOrName === 'test-zone' ||
+      (zoneIdOrName === 'tutorial_area' && m.zoneId === 'test-zone')
     );
+    
+    logger.info(`MockMonsterService: Found ${monsters.length} monsters after filtering`);
     
     // Convert to proper Monster format
     return monsters.map(m => ({

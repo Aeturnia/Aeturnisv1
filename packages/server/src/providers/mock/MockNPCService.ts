@@ -69,10 +69,14 @@ export class MockNPCService implements INPCService {
   async getNPCsInZone(zoneIdOrName: string): Promise<NPC[]> {
     logger.info(`MockNPCService: Getting NPCs for zone ${zoneIdOrName}`);
     
-    // Filter NPCs by zone
+    // Filter NPCs by zone - handle common zone name mappings
     const npcs = this.mockNPCs.filter(npc => 
-      npc.zoneId === zoneIdOrName || zoneIdOrName === 'test-zone'
+      npc.zoneId === zoneIdOrName || 
+      zoneIdOrName === 'test-zone' ||
+      (zoneIdOrName === 'tutorial_area' && npc.zoneId === 'test-zone')
     );
+    
+    logger.info(`MockNPCService: Found ${npcs.length} NPCs after filtering`);
     
     // Convert to proper NPC format
     return npcs.map(npc => ({
