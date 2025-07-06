@@ -16,8 +16,7 @@ import { ResourceService } from './ResourceService';
 import { testMonsterService } from './TestMonsterService';
 import { CharacterService } from './CharacterService';
 import { StatsService } from './StatsService';
-import { EquipmentService } from './EquipmentService';
-import { DerivedStats } from '../types/character.types';
+import { DerivedStats, CharacterClass } from '../types/character.types';
 
 export class CombatService {
   private resourceService: ResourceService;
@@ -829,26 +828,18 @@ export class CombatService {
       }
 
       // Get weapon damage ranges
-      const equipment = await this.equipmentService.getCharacterEquipment(charId);
-      let weaponMinDamage = 5; // Base unarmed damage
-      let weaponMaxDamage = 10;
+      // TODO: Integrate with EquipmentService once dependency injection is set up
+      // For now, use level-based weapon damage scaling
+      let weaponMinDamage = 5 + character.level; // Base damage scales with level
+      let weaponMaxDamage = 10 + (character.level * 2);
       
-      if (equipment && equipment.equipment.weapon) {
-        // Get weapon stats from equipment
-        const weaponItem = equipment.equipment.weapon;
-        const weaponStats = weaponItem.item?.stats || [];
-        const minDmgStat = weaponStats.find((s: any) => s.statType === 'min_damage');
-        const maxDmgStat = weaponStats.find((s: any) => s.statType === 'max_damage');
-        
-        if (minDmgStat) weaponMinDamage = minDmgStat.value;
-        if (maxDmgStat) weaponMaxDamage = maxDmgStat.value;
-        
-        // If no min/max, use damage stat as base
-        const dmgStat = weaponStats.find((s: any) => s.statType === 'damage');
-        if (dmgStat && !minDmgStat && !maxDmgStat) {
-          weaponMinDamage = Math.floor(dmgStat.value * 0.8);
-          weaponMaxDamage = Math.floor(dmgStat.value * 1.2);
-        }
+      // Add some variance based on class
+      if (character.class === CharacterClass.WARRIOR || character.class === CharacterClass.PALADIN) {
+        weaponMinDamage = Math.floor(weaponMinDamage * 1.2);
+        weaponMaxDamage = Math.floor(weaponMaxDamage * 1.2);
+      } else if (character.class === CharacterClass.MAGE || character.class === CharacterClass.CLERIC) {
+        weaponMinDamage = Math.floor(weaponMinDamage * 0.8);
+        weaponMaxDamage = Math.floor(weaponMaxDamage * 0.8);
       }
 
       return {
