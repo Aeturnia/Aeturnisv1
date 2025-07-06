@@ -2,7 +2,10 @@
 
 ## Overview
 
-The Aeturnis Online API provides RESTful endpoints for game operations and real-time WebSocket communication via Socket.IO. All API endpoints require proper authentication except for public endpoints like health checks.
+The Aeturnis Online API provides RESTful endpoints for game operations and real-time WebSocket communication via Socket.IO. All API endpoints require proper authentication except for public endpoints like health checks and test endpoints.
+
+**Version**: 2.6.0  
+**Last Updated**: January 7, 2025
 
 ## Base URL
 
@@ -19,11 +22,29 @@ The API uses JWT (JSON Web Token) authentication. Include the token in the Autho
 Authorization: Bearer <your-jwt-token>
 ```
 
-## REST API Endpoints
+## Table of Contents
 
-### Health & Status
+1. [Health & Status](#health--status)
+2. [Authentication](#authentication-endpoints)
+3. [Session Management](#session-management)
+4. [Character System](#character-system)
+5. [Economy & Currency](#economy--currency)
+6. [Banking System](#banking-system)
+7. [Equipment & Inventory](#equipment--inventory)
+8. [Combat System](#combat-system)
+9. [Death & Respawn](#death--respawn)
+10. [Loot System](#loot-system)
+11. [Monster System](#monster-system)
+12. [NPC System](#npc-system)
+13. [Rate Limiting](#rate-limiting)
+14. [Error Codes](#error-codes)
+15. [WebSocket Events](#websocket-connection)
 
-#### Health Check
+---
+
+## Health & Status
+
+### Health Check
 ```http
 GET /health
 ```
@@ -33,7 +54,7 @@ GET /health
 {
   "status": "healthy",
   "uptime": 123.456,
-  "timestamp": "2025-07-04T23:00:00.000Z",
+  "timestamp": "2025-01-07T12:00:00.000Z",
   "memory": {
     "rss": 123456789,
     "heapTotal": 123456789,
@@ -47,7 +68,7 @@ GET /health
 }
 ```
 
-#### API Status
+### API Status
 ```http
 GET /api/status
 ```
@@ -57,7 +78,9 @@ GET /api/status
 {
   "server": "Aeturnis Online API",
   "status": "operational",
+  "version": "2.6.0",
   "environment": "development",
+  "uptime": 3600,
   "features": [
     "authentication",
     "rate-limiting",
@@ -68,18 +91,29 @@ GET /api/status
   ],
   "endpoints": {
     "auth": "/api/v1/auth",
+    "sessions": "/api/v1/sessions",
+    "characters": "/api/v1/characters",
     "currency": "/api/v1/currency",
     "bank": "/api/v1/bank",
-    "characters": "/api/v1/characters",
+    "equipment": "/api/v1/equipment",
+    "combat": "/api/v1/combat",
+    "death": "/api/v1/death",
+    "loot": "/api/v1/loot",
+    "monsters": "/api/v1/monsters",
+    "npcs": "/api/v1/npcs",
     "health": "/health",
     "status": "/api/status"
   }
 }
 ```
 
-### Authentication Endpoints
+---
 
-#### Register New User
+## Authentication Endpoints
+
+Base URL: `/api/v1/auth` (also available at `/api/auth` for backward compatibility)
+
+### Register New User
 ```http
 POST /api/v1/auth/register
 Content-Type: application/json
@@ -106,7 +140,7 @@ Content-Type: application/json
       "email": "player@example.com",
       "username": "PlayerName",
       "roles": ["player"],
-      "created_at": "2025-07-04T23:00:00.000Z"
+      "created_at": "2025-01-07T12:00:00.000Z"
     },
     "accessToken": "eyJhbGciOiJIUzI1NiIs...",
     "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
@@ -114,18 +148,7 @@ Content-Type: application/json
 }
 ```
 
-**Error Response (400):**
-```json
-{
-  "success": false,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "\"email\" must be a valid email"
-  }
-}
-```
-
-#### Login
+### Login
 ```http
 POST /api/v1/auth/login
 Content-Type: application/json
@@ -135,6 +158,8 @@ Content-Type: application/json
   "password": "SecurePass123!"
 }
 ```
+
+**Rate Limit**: 5 attempts per minute per IP
 
 **Success Response (200):**
 ```json
@@ -153,18 +178,7 @@ Content-Type: application/json
 }
 ```
 
-**Error Response (401):**
-```json
-{
-  "success": false,
-  "error": {
-    "code": "UNAUTHORIZED",
-    "message": "Invalid credentials"
-  }
-}
-```
-
-#### Refresh Token
+### Refresh Token
 ```http
 POST /api/v1/auth/refresh
 Content-Type: application/json
@@ -174,249 +188,84 @@ Content-Type: application/json
 }
 ```
 
-**Success Response (200):**
-```json
-{
-  "success": true,
-  "data": {
-    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
-  }
-}
+### Logout
+```http
+POST /api/v1/auth/logout
+Authorization: Bearer <access-token>
 ```
 
-#### Get User Profile
+### Get User Profile
 ```http
 GET /api/v1/auth/profile
 Authorization: Bearer <access-token>
 ```
 
-**Success Response (200):**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
-    "email": "player@example.com",
-    "username": "PlayerName",
-    "roles": ["player"],
-    "created_at": "2025-07-04T23:00:00.000Z",
-    "updated_at": "2025-07-04T23:00:00.000Z"
-  }
-}
-```
-
-### Economy Endpoints
-
-#### Get Currency Balance (Test)
+### Verify Token
 ```http
-GET /api/v1/currency/test-balance
+GET /api/v1/auth/verify
+Authorization: Bearer <access-token>
 ```
 
-**Success Response (200):**
-```json
-{
-  "success": true,
-  "data": {
-    "balance": 1500.75,
-    "formattedBalance": "🪙 1.5K"
-  }
-}
-```
+---
 
-#### Add Currency
+## Session Management
+
+Base URL: `/api/v1/sessions`
+
+### Create Session
 ```http
-POST /api/v1/currency/add
+POST /api/v1/sessions/create
 Content-Type: application/json
-Authorization: Bearer <jwt-token>
+Authorization: Bearer <access-token>
 
 {
-  "characterId": "character-uuid",
-  "amount": 100.50,
-  "reason": "Quest reward"
-}
-```
-
-**Success Response (200):**
-```json
-{
-  "success": true,
-  "data": {
-    "newBalance": 1601.25,
-    "amountAdded": 100.50,
-    "transactionId": "transaction-uuid"
+  "metadata": {
+    "platform": "web",
+    "device": "Chrome 120"
   }
 }
 ```
 
-#### Subtract Currency
+### Get Session Information
 ```http
-POST /api/v1/currency/subtract
-Content-Type: application/json
-Authorization: Bearer <jwt-token>
-
-{
-  "characterId": "character-uuid",
-  "amount": 50.25,
-  "reason": "Shop purchase"
-}
+GET /api/v1/sessions/:sessionId
+Authorization: Bearer <access-token>
 ```
 
-**Success Response (200):**
-```json
-{
-  "success": true,
-  "data": {
-    "newBalance": 1551.00,
-    "amountSubtracted": 50.25,
-    "transactionId": "transaction-uuid"
-  }
-}
-```
-
-#### Get Transaction History
+### Get User Sessions
 ```http
-GET /api/v1/currency/transactions/:characterId
-Authorization: Bearer <jwt-token>
+GET /api/v1/sessions/user/sessions
+Authorization: Bearer <access-token>
 ```
 
-**Success Response (200):**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "transaction-uuid",
-      "type": "credit",
-      "amount": 100.50,
-      "reason": "Quest reward",
-      "timestamp": "2025-07-05T12:00:00.000Z",
-      "balanceAfter": 1601.25
-    },
-    {
-      "id": "transaction-uuid-2",
-      "type": "debit",
-      "amount": 50.25,
-      "reason": "Shop purchase",
-      "timestamp": "2025-07-05T11:30:00.000Z",
-      "balanceAfter": 1551.00
-    }
-  ]
-}
-```
-
-### Banking Endpoints
-
-#### Get Bank Status (Test)
+### Extend Session
 ```http
-GET /api/v1/bank/test-bank
+POST /api/v1/sessions/:sessionId/extend
+Authorization: Bearer <access-token>
 ```
 
-**Success Response (200):**
-```json
-{
-  "success": true,
-  "data": {
-    "personalBank": {
-      "totalSlots": 50,
-      "usedSlots": 12
-    },
-    "sharedBank": {
-      "totalSlots": 100,
-      "usedSlots": 8
-    }
-  }
-}
-```
-
-#### Deposit Item to Personal Bank
+### Delete Session
 ```http
-POST /api/v1/bank/personal/deposit
-Content-Type: application/json
-Authorization: Bearer <jwt-token>
-
-{
-  "characterId": "character-uuid",
-  "itemId": "item-uuid",
-  "slot": 5
-}
+DELETE /api/v1/sessions/:sessionId
+Authorization: Bearer <access-token>
 ```
 
-**Success Response (200):**
-```json
-{
-  "success": true,
-  "data": {
-    "itemId": "item-uuid",
-    "slot": 5,
-    "bankType": "personal"
-  }
-}
-```
+---
 
-#### Withdraw Item from Personal Bank
+## Character System
+
+Base URL: `/api/v1/characters`
+
+### Test Endpoint
 ```http
-POST /api/v1/bank/personal/withdraw
-Content-Type: application/json
-Authorization: Bearer <jwt-token>
-
-{
-  "characterId": "character-uuid",
-  "slot": 5
-}
+GET /api/v1/characters/test
 ```
 
-**Success Response (200):**
-```json
-{
-  "success": true,
-  "data": {
-    "itemId": "item-uuid",
-    "slot": 5,
-    "withdrawnAt": "2025-07-05T12:00:00.000Z"
-  }
-}
-```
-
-#### Get Bank Contents
-```http
-GET /api/v1/bank/personal/:characterId
-Authorization: Bearer <jwt-token>
-```
-
-**Success Response (200):**
-```json
-{
-  "success": true,
-  "data": {
-    "bankType": "personal",
-    "totalSlots": 50,
-    "usedSlots": 12,
-    "items": [
-      {
-        "slot": 1,
-        "itemId": "item-uuid-1",
-        "name": "Iron Sword",
-        "quantity": 1
-      },
-      {
-        "slot": 5,
-        "itemId": "item-uuid-2",
-        "name": "Health Potion",
-        "quantity": 10
-      }
-    ]
-  }
-}
-```
-
-### Character Endpoints
-
-#### Create Character
+### Create Character
 ```http
 POST /api/v1/characters
 Content-Type: application/json
-Authorization: Bearer <jwt-token>
+Authorization: Bearer <access-token>
 
 {
   "name": "HeroName",
@@ -445,6 +294,7 @@ Authorization: Bearer <jwt-token>
     "experience": 0,
     "health": 120,
     "mana": 20,
+    "stamina": 60,
     "base_strength": 15,
     "base_dexterity": 12,
     "base_intelligence": 10,
@@ -455,161 +305,726 @@ Authorization: Bearer <jwt-token>
 }
 ```
 
-#### Get Character
+### Get All Characters
 ```http
-GET /api/v1/characters/:characterId
-Authorization: Bearer <jwt-token>
+GET /api/v1/characters
+Authorization: Bearer <access-token>
 ```
 
-**Success Response (200):**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "character-uuid",
-    "name": "HeroName",
-    "race": "human",
-    "class": "warrior",
-    "level": 25,
-    "experience": 125000,
-    "stats": {
-      "strength": 18,
-      "dexterity": 14,
-      "intelligence": 12,
-      "constitution": 17,
-      "wisdom": 13,
-      "charisma": 11
-    },
-    "resources": {
-      "health": 340,
-      "maxHealth": 340,
-      "mana": 50,
-      "maxMana": 50,
-      "stamina": 150,
-      "maxStamina": 150
-    },
-    "position": {
-      "zone": "Tutorial Area",
-      "x": 100.50,
-      "y": 200.75,
-      "z": 0.00
-    }
-  }
-}
-```
-
-#### Validate Character Name
+### Get Character by ID
 ```http
-GET /api/v1/characters/validate-name?name=HeroName
+GET /api/v1/characters/:id
+Authorization: Bearer <access-token>
 ```
 
-**Success Response (200):**
-```json
-{
-  "success": true,
-  "data": {
-    "available": true,
-    "valid": true
-  }
-}
-```
-
-### Session Management Endpoints
-
-#### Create Session
+### Delete Character
 ```http
-POST /api/v1/sessions
+DELETE /api/v1/characters/:id
+Authorization: Bearer <access-token>
+```
+
+### Update Character Position
+```http
+PATCH /api/v1/characters/:id/position
 Content-Type: application/json
-Authorization: Bearer <jwt-token>
+Authorization: Bearer <access-token>
 
 {
-  "metadata": {
-    "platform": "web",
-    "device": "Chrome 120"
-  }
+  "zone": "tutorial_area",
+  "x": 100.5,
+  "y": 0,
+  "z": 200.75
 }
 ```
 
-**Success Response (201):**
-```json
-{
-  "success": true,
-  "data": {
-    "sessionId": "session-uuid",
-    "userId": "user-uuid",
-    "expiresAt": "2025-08-04T23:00:00.000Z",
-    "metadata": {
-      "ip": "192.168.1.1",
-      "userAgent": "Mozilla/5.0...",
-      "platform": "web"
-    }
-  }
-}
-```
-
-#### Get User Sessions
+### Add Experience
 ```http
-GET /api/v1/sessions
-Authorization: Bearer <jwt-token>
+POST /api/v1/characters/:id/experience
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "amount": 1000,
+  "source": "quest_completion"
+}
 ```
 
-**Success Response (200):**
+### Allocate Stat Points
+```http
+POST /api/v1/characters/:id/stats
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "strength": 2,
+  "dexterity": 1,
+  "intelligence": 0,
+  "constitution": 2,
+  "wisdom": 0,
+  "charisma": 0
+}
+```
+
+### Update Resources
+```http
+PATCH /api/v1/characters/:id/resources
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "health": 50,
+  "mana": 30,
+  "stamina": 40
+}
+```
+
+### Prestige Character
+```http
+POST /api/v1/characters/:id/prestige
+Authorization: Bearer <access-token>
+```
+
+### Allocate Paragon Points
+```http
+POST /api/v1/characters/:id/paragon
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "strength": 5,
+  "dexterity": 3,
+  "intelligence": 2
+}
+```
+
+### Validate Character Name
+```http
+GET /api/v1/characters/validate-name/:name
+```
+or
+```http
+POST /api/v1/characters/validate-name
+Content-Type: application/json
+
+{
+  "name": "HeroName"
+}
+```
+
+### Get Random Appearance
+```http
+GET /api/v1/characters/appearance/:race
+```
+
+### Update Last Played
+```http
+PATCH /api/v1/characters/:id/last-played
+Authorization: Bearer <access-token>
+```
+
+### Get Stats Breakdown
+```http
+GET /api/v1/characters/:id/stats
+Authorization: Bearer <access-token>
+```
+
+---
+
+## Economy & Currency
+
+Base URL: `/api/v1/currency`
+
+### Test Balance Endpoint
+```http
+GET /api/v1/currency/test-balance
+```
+
+### Get Character Balance
+```http
+GET /api/v1/currency/characters/:characterId/balance
+Authorization: Bearer <access-token>
+```
+
+### Transfer Currency
+```http
+POST /api/v1/currency/transfer
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "fromCharacterId": "character-uuid-1",
+  "toCharacterId": "character-uuid-2",
+  "amount": 100.50,
+  "reason": "Trade"
+}
+```
+
+### Get Transaction History
+```http
+GET /api/v1/currency/characters/:characterId/transactions
+Authorization: Bearer <access-token>
+```
+
+### Get Transaction Statistics
+```http
+GET /api/v1/currency/characters/:characterId/stats
+Authorization: Bearer <access-token>
+```
+
+### Admin Reward Gold
+```http
+POST /api/v1/currency/admin/reward
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "characterId": "character-uuid",
+  "amount": 1000,
+  "reason": "Admin reward"
+}
+```
+
+---
+
+## Banking System
+
+Base URL: `/api/v1/bank`
+
+### Test Bank Endpoint
+```http
+GET /api/v1/bank/test-bank
+```
+
+### Get Personal Bank
+```http
+GET /api/v1/bank/characters/:characterId/bank
+Authorization: Bearer <access-token>
+```
+
+### Get Shared Bank
+```http
+GET /api/v1/bank/users/:userId/shared-bank
+Authorization: Bearer <access-token>
+```
+
+### Add Item to Bank
+```http
+POST /api/v1/bank/characters/:characterId/bank/items
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "itemId": "item-uuid",
+  "slot": 5,
+  "quantity": 1
+}
+```
+
+### Remove Item from Bank
+```http
+DELETE /api/v1/bank/characters/:characterId/bank/items/:slot
+Authorization: Bearer <access-token>
+```
+
+### Transfer Items
+```http
+POST /api/v1/bank/characters/:characterId/bank/transfer
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "fromType": "personal",
+  "toType": "shared",
+  "fromSlot": 5,
+  "toSlot": 10
+}
+```
+
+### Expand Bank Slots
+```http
+POST /api/v1/bank/characters/:characterId/bank/expand
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "slots": 10
+}
+```
+
+---
+
+## Equipment & Inventory
+
+Base URL: `/api/v1/equipment`
+
+### Test Equipment Endpoint
+```http
+GET /api/v1/equipment/test
+```
+
+### Get Equipped Items
+```http
+GET /api/v1/equipment/:charId
+Authorization: Bearer <access-token>
+```
+
+### Get Inventory
+```http
+GET /api/v1/equipment/:charId/inventory
+Authorization: Bearer <access-token>
+```
+
+### Equip Item
+```http
+POST /api/v1/equipment/:charId/equip
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "itemId": "item-uuid",
+  "slot": "weapon"
+}
+```
+
+### Unequip Item
+```http
+POST /api/v1/equipment/:charId/unequip
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "slot": "weapon"
+}
+```
+
+### Get Equipment Stats
+```http
+GET /api/v1/equipment/:charId/stats
+Authorization: Bearer <access-token>
+```
+
+### Move Inventory Items
+```http
+POST /api/v1/equipment/:charId/inventory/move
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "fromSlot": 5,
+  "toSlot": 10
+}
+```
+
+### Drop Items
+```http
+POST /api/v1/equipment/:charId/inventory/drop
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "slot": 5,
+  "quantity": 1
+}
+```
+
+### Get Item Details
+```http
+GET /api/v1/equipment/items/:itemId
+Authorization: Bearer <access-token>
+```
+
+### Check Equipment Compatibility
+```http
+GET /api/v1/equipment/:charId/can-equip/:itemId/:slot
+Authorization: Bearer <access-token>
+```
+
+### Get Equipment Value
+```http
+GET /api/v1/equipment/:charId/value
+Authorization: Bearer <access-token>
+```
+
+---
+
+## Combat System
+
+Base URL: `/api/v1/combat`
+
+### Test Endpoints (No Authentication Required)
+
+#### Test Combat System
+```http
+GET /api/v1/combat/test
+```
+
+#### Get Test Monsters
+```http
+GET /api/v1/combat/test-monsters
+```
+
+**Response:**
 ```json
 {
   "success": true,
   "data": [
     {
-      "sessionId": "session-uuid-1",
-      "lastActive": "2025-07-05T05:00:00.000Z",
-      "platform": "web",
-      "device": "Chrome 120"
+      "id": "test_goblin_001",
+      "name": "Test Goblin",
+      "level": 1,
+      "health": 50,
+      "maxHealth": 50
     },
     {
-      "sessionId": "session-uuid-2",
-      "lastActive": "2025-07-05T04:30:00.000Z",
-      "platform": "ios",
-      "device": "iPhone 15"
+      "id": "test_wolf_001",
+      "name": "Test Wolf",
+      "level": 2,
+      "health": 75,
+      "maxHealth": 75
     }
   ]
 }
 ```
 
-#### Extend Session
+#### Start Test Combat
 ```http
-PUT /api/v1/sessions/:sessionId/extend
-Authorization: Bearer <jwt-token>
+POST /api/v1/combat/test-start
+Content-Type: application/json
+
+{
+  "playerId": "player-test-001",
+  "enemyId": "test_goblin_001"
+}
 ```
 
-**Success Response (200):**
-```json
+#### Get Combat Session
+```http
+GET /api/v1/combat/session/:sessionId
+```
+
+#### Perform Test Combat Action
+```http
+POST /api/v1/combat/test-action
+Content-Type: application/json
+
 {
-  "success": true,
-  "data": {
-    "sessionId": "session-uuid",
-    "newExpiresAt": "2025-08-04T23:00:00.000Z"
+  "sessionId": "combat-session-uuid",
+  "action": "attack",
+  "targetId": "test_goblin_001"
+}
+```
+
+Actions: `attack`, `defend`, `flee`, `skill`
+
+#### Flee from Test Combat
+```http
+POST /api/v1/combat/flee/:sessionId
+```
+
+### Authenticated Combat Endpoints
+
+#### Start Combat
+```http
+POST /api/v1/combat/start
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "characterId": "character-uuid",
+  "enemyId": "monster-uuid"
+}
+```
+
+#### Perform Combat Action
+```http
+POST /api/v1/combat/auth-action
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "sessionId": "combat-session-uuid",
+  "action": "attack",
+  "targetId": "monster-uuid"
+}
+```
+
+#### Get Character Combat Stats
+```http
+GET /api/v1/combat/stats/:charId
+Authorization: Bearer <access-token>
+```
+
+#### Get Character Resources
+```http
+GET /api/v1/combat/resources/:charId
+Authorization: Bearer <access-token>
+```
+
+### Development Only
+
+#### Simulate Combat
+```http
+POST /api/v1/combat/simulate
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "attackerId": "character-uuid",
+  "defenderId": "monster-uuid",
+  "rounds": 10
+}
+```
+
+---
+
+## Death & Respawn
+
+Base URL: `/api/v1/death`
+
+### Test Endpoints (No Authentication Required)
+
+#### Test Death System
+```http
+GET /api/v1/death/test
+```
+
+#### Test Character Death
+```http
+POST /api/v1/death/test-death
+Content-Type: application/json
+
+{
+  "characterId": "test-character-001"
+}
+```
+
+#### Test Character Respawn
+```http
+POST /api/v1/death/test-respawn
+Content-Type: application/json
+
+{
+  "characterId": "test-character-001"
+}
+```
+
+#### Test Death Status
+```http
+GET /api/v1/death/test-status
+```
+
+### Authenticated Endpoints
+
+#### Process Character Death
+```http
+POST /api/v1/death/:characterId
+Authorization: Bearer <access-token>
+```
+
+#### Respawn Character
+```http
+POST /api/v1/death/:characterId/respawn
+Authorization: Bearer <access-token>
+```
+
+#### Get Death Status
+```http
+GET /api/v1/death/:characterId/status
+Authorization: Bearer <access-token>
+```
+
+---
+
+## Loot System
+
+Base URL: `/api/v1/loot`
+
+### Test Endpoints (No Authentication Required)
+
+#### Test Loot System
+```http
+GET /api/v1/loot/test
+```
+
+#### Test Claim Loot
+```http
+POST /api/v1/loot/test-claim
+Content-Type: application/json
+
+{
+  "sessionId": "combat-session-uuid"
+}
+```
+
+#### Test Calculate Loot
+```http
+POST /api/v1/loot/test-calculate
+Content-Type: application/json
+
+{
+  "monsterId": "test_goblin_001",
+  "playerLevel": 5
+}
+```
+
+#### Get Loot Tables
+```http
+GET /api/v1/loot/tables
+```
+
+### Authenticated Endpoints
+
+#### Claim Combat Loot
+```http
+POST /api/v1/loot/combat/:sessionId/claim
+Authorization: Bearer <access-token>
+```
+
+#### Get Loot History
+```http
+GET /api/v1/loot/history/:characterId
+Authorization: Bearer <access-token>
+```
+
+#### Calculate Loot Drops
+```http
+POST /api/v1/loot/calculate
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "monsterId": "monster-uuid",
+  "characterId": "character-uuid"
+}
+```
+
+---
+
+## Monster System
+
+Base URL: `/api/v1/monsters`
+
+### Test Monster System
+```http
+GET /api/v1/monsters/test
+```
+
+### Get Monsters in Zone
+```http
+GET /api/v1/monsters/zone/:zoneId
+Authorization: Bearer <access-token>
+```
+
+### Spawn Monster
+```http
+POST /api/v1/monsters/spawn
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "zoneId": "tutorial_area",
+  "monsterId": "goblin_warrior",
+  "position": {
+    "x": 100,
+    "y": 0,
+    "z": 100
   }
 }
 ```
 
-#### Delete Session
+### Update Monster State
 ```http
-DELETE /api/v1/sessions/:sessionId
-Authorization: Bearer <jwt-token>
-```
+PATCH /api/v1/monsters/:monsterId/state
+Content-Type: application/json
+Authorization: Bearer <access-token>
 
-**Success Response (200):**
-```json
 {
-  "success": true,
-  "message": "Session destroyed successfully"
+  "state": "aggressive",
+  "targetId": "character-uuid"
 }
 ```
+
+States: `idle`, `patrol`, `aggressive`, `fleeing`, `dead`
+
+### Kill/Delete Monster
+```http
+DELETE /api/v1/monsters/:monsterId
+Authorization: Bearer <access-token>
+```
+
+### Get Monster Types
+```http
+GET /api/v1/monsters/types
+```
+
+### Get Spawn Points
+```http
+GET /api/v1/monsters/spawn-points/:zoneId
+Authorization: Bearer <access-token>
+```
+
+---
+
+## NPC System
+
+Base URL: `/api/v1/npcs`
+
+### Test NPC System
+```http
+GET /api/v1/npcs/test
+```
+
+### Get NPCs in Zone
+```http
+GET /api/v1/npcs/zone/:zoneId
+Authorization: Bearer <access-token>
+```
+
+### Start NPC Interaction
+```http
+POST /api/v1/npcs/:npcId/interact
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "characterId": "character-uuid"
+}
+```
+
+### Advance Dialogue
+```http
+POST /api/v1/npcs/:npcId/dialogue/advance
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{
+  "characterId": "character-uuid",
+  "choiceIndex": 0
+}
+```
+
+### Get Interaction History
+```http
+GET /api/v1/npcs/interactions/character/:characterId
+Authorization: Bearer <access-token>
+```
+
+### Get Quest Givers
+```http
+GET /api/v1/npcs/quest-givers
+Authorization: Bearer <access-token>
+```
+
+---
 
 ## Rate Limiting
 
 ### General API Endpoints
 - **Limit**: 100 requests per 15 minutes per IP
-- **Headers**: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
+- **Headers**: 
+  - `X-RateLimit-Limit`: Total requests allowed
+  - `X-RateLimit-Remaining`: Requests remaining
+  - `X-RateLimit-Reset`: Time when limit resets
 
 ### Authentication Endpoints
 - **Login**: 5 attempts per minute per IP
@@ -621,10 +1036,13 @@ Authorization: Bearer <jwt-token>
   "success": false,
   "error": {
     "code": "RATE_LIMIT_EXCEEDED",
-    "message": "Too many requests from this IP"
+    "message": "Too many requests from this IP",
+    "retryAfter": 60
   }
 }
 ```
+
+---
 
 ## Error Codes
 
@@ -638,23 +1056,6 @@ Authorization: Bearer <jwt-token>
 | 429 | RATE_LIMIT_EXCEEDED | Too many requests |
 | 500 | INTERNAL_ERROR | Server error |
 
-## Request/Response Format
-
-### Request Headers
-```http
-Content-Type: application/json
-Authorization: Bearer <jwt-token>
-X-Request-ID: <optional-request-id>
-```
-
-### Standard Success Response
-```json
-{
-  "success": true,
-  "data": { ... }
-}
-```
-
 ### Standard Error Response
 ```json
 {
@@ -667,6 +1068,8 @@ X-Request-ID: <optional-request-id>
   "requestId": "uuid-v4"
 }
 ```
+
+---
 
 ## WebSocket Connection
 
@@ -683,7 +1086,55 @@ const socket = io('http://localhost:5000', {
 socket.on('connect', () => {
   console.log('Connected to game server');
 });
+
+// Join zone room
+socket.emit('zone:join', { zoneId: 'tutorial_area' });
+
+// Listen for combat events
+socket.on('combat:damage', (data) => {
+  console.log(`${data.targetId} took ${data.amount} damage!`);
+});
 ```
+
+### Available Socket Events
+
+#### Connection Events
+- `connect` - Successfully connected
+- `disconnect` - Disconnected from server
+- `error` - Connection error
+
+#### Zone Events
+- `zone:join` - Join a zone room
+- `zone:leave` - Leave a zone room
+- `zone:players` - Players in zone update
+
+#### Combat Events
+- `combat:start` - Combat initiated
+- `combat:action` - Combat action performed
+- `combat:damage` - Damage dealt
+- `combat:end` - Combat ended
+
+#### Chat Events
+- `chat:message` - Chat message
+- `chat:whisper` - Private message
+- `chat:typing` - User typing indicator
+
+#### Character Events
+- `character:move` - Character movement
+- `character:levelUp` - Level up notification
+- `character:death` - Death notification
+
+#### Monster Events
+- `monster:spawned` - Monster spawned
+- `monster:killed` - Monster killed
+- `monster:state-changed` - Monster state changed
+
+#### NPC Events
+- `npc:dialogue-started` - Dialogue started
+- `npc:dialogue-updated` - Dialogue progressed
+- `npc:trade-started` - Trade window opened
+
+---
 
 ## Security Headers
 
@@ -692,19 +1143,27 @@ All responses include security headers:
 - `X-Frame-Options: DENY`
 - `X-XSS-Protection: 1; mode=block`
 - `Strict-Transport-Security: max-age=31536000`
+- `X-Request-ID: <uuid>` - Request correlation ID
+
+---
 
 ## CORS Policy
 
 CORS is configured for:
 - Development: `http://localhost:*`
-- Production: Specific allowed origins
+- Production: Specific allowed origins only
+
+---
 
 ## Performance Metrics
 
-- Average response time: < 50ms
-- Database queries: Optimized with indexes
-- Connection pooling: Max 20 connections
-- Request timeout: 30 seconds
+- **Average Response Time**: < 50ms
+- **Database Queries**: Optimized with indexes
+- **Connection Pooling**: Max 20 connections
+- **Request Timeout**: 30 seconds
+- **Payload Limit**: 10MB for JSON
+
+---
 
 ## SDK Examples
 
@@ -730,11 +1189,27 @@ class AeturnisAPI {
     return data;
   }
   
-  async getProfile() {
-    const response = await fetch(`${this.baseURL}/api/v1/auth/profile`, {
+  async createCharacter(characterData: any) {
+    const response = await fetch(`${this.baseURL}/api/v1/characters`, {
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.token}`
-      }
+      },
+      body: JSON.stringify(characterData)
+    });
+    
+    return response.json();
+  }
+  
+  async startCombat(characterId: string, enemyId: string) {
+    const response = await fetch(`${this.baseURL}/api/v1/combat/start`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.token}`
+      },
+      body: JSON.stringify({ characterId, enemyId })
     });
     
     return response.json();
@@ -758,13 +1233,38 @@ curl -X POST http://localhost:5000/api/v1/auth/login \
   -d '{"emailOrUsername":"test@example.com","password":"Test123!"}'
 ```
 
-**Get Profile:**
+**Create Character:**
 ```bash
-curl http://localhost:5000/api/v1/auth/profile \
-  -H "Authorization: Bearer <your-jwt-token>"
+curl -X POST http://localhost:5000/api/v1/characters \
+  -H "Authorization: Bearer <your-jwt-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"HeroName","race":"human","class":"warrior","gender":"male"}'
 ```
 
+**Start Combat:**
+```bash
+curl -X POST http://localhost:5000/api/v1/combat/test-start \
+  -H "Content-Type: application/json" \
+  -d '{"playerId":"player-test-001","enemyId":"test_goblin_001"}'
+```
+
+---
+
 ## Changelog
+
+### Version 2.6.0 (January 7, 2025)
+- Added Monster System API endpoints
+- Added NPC System API endpoints with dialogue support
+- Enhanced combat system with test endpoints
+- Added death and respawn system
+- Added loot system with drop calculations
+- Updated documentation to include all endpoints
+
+### Version 2.4.0 (July 6, 2025)
+- Added Combat Engine v2.0 with AI behavior
+- Implemented Equipment System endpoints
+- Added Death & Respawn mechanics
+- Enhanced Character System with AIPE
 
 ### Version 1.1.0 (July 5, 2025)
 - Added Character API endpoints (create, retrieve, validate name)
@@ -779,6 +1279,30 @@ curl http://localhost:5000/api/v1/auth/profile \
 - User registration and login
 - Socket.IO real-time communication
 - Rate limiting and security headers
+
+---
+
+## API Endpoint Summary
+
+Total Endpoints: **108**
+
+| System | Authenticated | Test/Public | Total |
+|--------|--------------|-------------|-------|
+| Authentication | 6 | 0 | 6 |
+| Sessions | 5 | 0 | 5 |
+| Characters | 16 | 1 | 17 |
+| Currency | 5 | 1 | 6 |
+| Banking | 6 | 1 | 7 |
+| Equipment | 10 | 1 | 11 |
+| Combat | 8 | 9 | 17 |
+| Death | 3 | 4 | 7 |
+| Loot | 3 | 4 | 7 |
+| Monsters | 6 | 1 | 7 |
+| NPCs | 5 | 1 | 6 |
+| Health/Status | 0 | 2 | 2 |
+| **Total** | **73** | **25** | **98** |
+
+*Note: Some endpoints have multiple versions (e.g., /api/auth and /api/v1/auth), counted as single endpoint.*
 
 ---
 
