@@ -40,9 +40,12 @@ export const CombatPanel: React.FC = () => {
         }
       } else {
         console.error('Monster fetch failed:', result);
+        // Add fallback debugging
+        console.log('Full API response:', JSON.stringify(result, null, 2));
       }
     } catch (error) {
       console.error('Failed to fetch test monsters:', error);
+      console.log('Error details:', error);
     }
   };
 

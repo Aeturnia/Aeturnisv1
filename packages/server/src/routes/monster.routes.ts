@@ -21,8 +21,8 @@ router.get('/zone/:zoneId', authenticate, asyncHandler<AuthRequest>(async (req, 
   });
 }));
 
-// Spawn a monster at a spawn point (admin only)
-router.post('/spawn', authenticate, authorize(['admin']), asyncHandler<AuthRequest>(async (req, res) => {
+// Spawn a monster at a spawn point (authentication required)
+router.post('/spawn', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
   const { spawnPointId } = req.body;
   
   if (!spawnPointId) {

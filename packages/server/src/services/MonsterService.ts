@@ -207,15 +207,32 @@ export class MonsterService {
   /**
    * Get spawn points for a zone
    */
-  async getSpawnPointsByZone(zoneId: string): Promise<any[]> {
+  async getSpawnPointsByZone(zoneIdOrName: string): Promise<any[]> {
     try {
-      logger.info(`Fetching spawn points for zone: ${zoneId}`);
+      logger.info(`Fetching spawn points for zone: ${zoneIdOrName}`);
       
-      const cacheKey = `spawn-points:zone:${zoneId}`;
+      const cacheKey = `spawn-points:zone:${zoneIdOrName}`;
       const cached = await this.cache.get<any[]>(cacheKey);
       if (cached) {
-        logger.info(`Cache hit for spawn points in zone: ${zoneId}`);
+        logger.info(`Cache hit for spawn points in zone: ${zoneIdOrName}`);
         return cached;
+      }
+
+      // First, resolve zone name to UUID if needed
+      let zoneId = zoneIdOrName;
+      if (!zoneIdOrName.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        // It's a zone name, look up the UUID
+        const zoneResult = await db
+          .select({ id: zones.id })
+          .from(zones)
+          .where(eq(zones.name, zoneIdOrName))
+          .limit(1);
+        
+        if (!zoneResult.length) {
+          logger.error(`Zone not found: ${zoneIdOrName}`);
+          return [];
+        }
+        zoneId = zoneResult[0].id;
       }
 
       const result = await db
@@ -227,7 +244,7 @@ export class MonsterService {
       logger.info(`Found ${result.length} spawn points in zone: ${zoneId}`);
       return result;
     } catch (error) {
-      logger.error(`Error fetching spawn points for zone ${zoneId}:`, error);
+      logger.error(`Error fetching spawn points for zone ${zoneIdOrName}:`, error);
       throw error;
     }
   }
