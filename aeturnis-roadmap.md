@@ -3,7 +3,7 @@
 This roadmap outlines every phase and step in the Aeturnis Online MMORPG development, from foundational infrastructure to full launch.
 
 **Last Updated**: July 7, 2025  
-**Current Status**: Phase 2.6 Complete - Monster & NPC Systems with Testing Environment  
+**Current Status**: Phase 2.7 Complete - World & Movement System with AIPE Infinite Progression  
 
 ---
 
@@ -12,7 +12,7 @@ This roadmap outlines every phase and step in the Aeturnis Online MMORPG develop
 | Phase | Description | Status | Completion |
 |-------|------------|--------|------------|
 | **Phase 1** | Foundation Infrastructure | ✅ Complete | 100% |
-| **Phase 2** | Core Game Systems | 🚧 In Progress | 90% |
+| **Phase 2** | Core Game Systems | 🚧 In Progress | 95% |
 | **Phase 3** | Mobile UI/UX | 📋 Planned | 0% |
 | **Phase 4** | Advanced Features | 📋 Planned | 0% |
 | **Phase 5** | Content & Polish | 📋 Planned | 0% |
@@ -43,8 +43,8 @@ This roadmap outlines every phase and step in the Aeturnis Online MMORPG develop
 | **2.4** | Combat & Resource Systems | ✅ Complete | 9.5/10 | Combat Engine v2.0, Turn-based with AI, HP/Mana/Stamina tracking, Socket.io sync |
 | **2.5** | Death, Loot & Rewards | ✅ Complete | 9.0/10 | Death state & penalties, Respawn mechanics, Loot table schema, Reward distribution |
 | **2.6** | Monster & NPC Systems | ✅ Complete | 9.8/10 | Monster AI + spawn points, NPC dialogue trees, Complete testing environment, Frontend integration |
-| **2.7** | World & Movement | 🔄 In Progress | - | Zone system & transitions, Coordinate system, Movement validation, XP progression |
-| **2.8** | Tutorial & Affinity Systems | 📋 Planned | - | Tutorial zone, Help messages, Weapon/magic affinity, Affinity tracking |
+| **2.7** | World & Movement | ✅ Complete | 9.6/10 | 8 interconnected zones, 2-second movement cooldowns, AIPE infinite progression (BigInt), 15 API endpoints |
+| **2.8** | Tutorial & Affinity Systems | 📋 Next | - | Tutorial zone, Help messages, Weapon/magic affinity, Affinity tracking |
 
 ---
 

@@ -14,7 +14,7 @@
 | 2.4       | 2025-07-06    | 2.4             | Combat & Resource System            | Turn-based, AI, HP/MP | ✅ | 9.5/10 |
 | 2.5       | 2025-07-06    | 2.5             | Death, Loot & Rewards               | Death penalties, loot drops | ✅ | 9.5/10 |
 | 2.6       | 2025-07-07    | 2.6             | Monster & NPC Systems               | Complete with testing environment | ✅ | 9.8/10, Full testing integration |
-| 2.7       | —             | 2.7             | World & Movement                    | In progress     | ⏳        | —     |
+| 2.7       | 2025-07-07    | 2.7             | World & Movement System             | 8 zones, AIPE progression, movement cooldowns | ✅ | 9.6/10, BigInt infinite scaling |
 | 2.8       | —             | 2.8             | Tutorial & Affinity Systems         | Pending         | ⏳        | —     |
 
 **Legend:**  
