@@ -53,7 +53,17 @@ export const NPCList: React.FC<NPCListProps> = ({
       )}
       
       {/* Real NPCs */}
-      {npcs.map((npc) => (
+      {npcs.filter(npc => npc && npc.id).map((npc) => {
+        // Bulletproof position handling
+        const safePosition = npc.position && typeof npc.position === 'object'
+          ? {
+              x: npc.position.x ?? 0,
+              y: npc.position.y ?? 0,
+              z: npc.position.z ?? 0
+            }
+          : { x: 0, y: 0, z: 0 };
+        
+        return (
         <div 
           key={npc.id} 
           className={`npc-item ${selectedNpcId === npc.id ? 'selected' : ''}`}
@@ -68,7 +78,7 @@ export const NPCList: React.FC<NPCListProps> = ({
           
           <div className="npc-details">
             <div className="position">
-              Position: ({npc.position?.x || 0}, {npc.position?.y || 0}, {npc.position?.z || 0})
+              Position: ({safePosition.x}, {safePosition.y}, {safePosition.z})
             </div>
             
             {npc.services && (
@@ -93,7 +103,8 @@ export const NPCList: React.FC<NPCListProps> = ({
             Start Dialogue
           </TestButton>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 };

@@ -47,9 +47,18 @@ export const MonsterList: React.FC<MonsterListProps> = ({
         </div>
       )}
       
-      {monsters.map((monster) => {
-        const healthPercentage = getHealthPercentage(monster.currentHp, monster.maxHp);
+      {monsters.filter(monster => monster && monster.id).map((monster) => {
+        const healthPercentage = getHealthPercentage(monster.currentHp || 0, monster.maxHp || 100);
         const healthColor = getHealthColor(healthPercentage);
+        
+        // Bulletproof position handling
+        const safePosition = monster.position && typeof monster.position === 'object'
+          ? {
+              x: monster.position.x ?? 0,
+              y: monster.position.y ?? 0,
+              z: monster.position.z ?? 0
+            }
+          : { x: 0, y: 0, z: 0 };
         
         return (
           <div key={monster.id} className="monster-item">
@@ -77,7 +86,7 @@ export const MonsterList: React.FC<MonsterListProps> = ({
               </div>
               
               <div className="position-info">
-                Position: ({monster.position?.x || 0}, {monster.position?.y || 0}, {monster.position?.z || 0})
+                Position: ({safePosition.x}, {safePosition.y}, {safePosition.z})
               </div>
               
               {monster.aggroList && monster.aggroList.length > 0 && (
