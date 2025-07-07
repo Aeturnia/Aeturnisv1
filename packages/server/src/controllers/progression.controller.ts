@@ -12,7 +12,7 @@ import {
   PowerScoreResponse,
   CharacterProgression
 } from '@aeturnis/shared/types/progression.types';
-import logger from '../utils/logger';
+import { logger } from '../utils/logger';
 
 // Mock character progressions for testing
 const mockProgressions: Record<string, CharacterProgression> = {

@@ -4,7 +4,7 @@
  */
 
 import { Zone, ZoneListResponse, ZoneDetailsResponse, CharacterPosition } from '@aeturnis/shared/types/zone.types';
-import logger from '../../utils/logger';
+import { logger } from '../../utils/logger';
 
 export class MockZoneService {
   private zones: Map<string, Zone> = new Map();

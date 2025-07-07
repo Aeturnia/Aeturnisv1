@@ -11,7 +11,7 @@ import {
   Direction 
 } from '@aeturnis/shared/types/movement.types';
 import { MockZoneService } from './MockZoneService';
-import logger from '../../utils/logger';
+import { logger } from '../../utils/logger';
 
 export class MockMovementService implements MovementValidation {
   private zoneService: MockZoneService;

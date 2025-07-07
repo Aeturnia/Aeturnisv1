@@ -15,7 +15,7 @@ import {
   StatAllocation, 
   StatType 
 } from '@aeturnis/shared/types/progression.types';
-import logger from '../../utils/logger';
+import { logger } from '../../utils/logger';
 
 export class MockProgressionService {
   private characterProgressions: Map<string, CharacterProgression> = new Map();
