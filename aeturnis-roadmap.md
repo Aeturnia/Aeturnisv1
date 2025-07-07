@@ -74,7 +74,8 @@ This roadmap outlines every phase and step in the Aeturnis Online MMORPG develop
 | **4.5** | Auction House & Market | 📋 Planned | Search/filter/bid systems, Transaction logs, Market trends |
 | **4.6** | Guild Systems | 📋 Planned | Guild banks, Rank permissions, Guild events and buffs |
 | **4.7** | Communication & Social | 📋 Planned | Mail system (COD, attachments), LFG system, Group finder, auto-match |
-| **4.8** | PvP & Moderation | 📋 Planned | PvP arena, Leaderboards/ELO, Chat moderation tools |
+| **4.8** | Admin Foundation | 📋 Planned | Admin infrastructure, Player ban/kick/warn system, Audit logging |
+| **4.9** | PvP & Moderation | 📋 Planned | PvP arena, Leaderboards/ELO, Chat moderation tools |
 
 ---
 
@@ -89,7 +90,9 @@ This roadmap outlines every phase and step in the Aeturnis Online MMORPG develop
 | **5.5** | World Events & Dynamics | 📋 Planned | Server-wide events, Dynamic rewards, AI-generated event chains |
 | **5.6** | Environmental Systems | 📋 Planned | Day/night cycle, Weather mechanics, Travel & mounts |
 | **5.7** | Instance & Dungeon Systems | 📋 Planned | Boss mechanics, Difficulty tiers, Group instances |
-| **5.8** | Balance & Polish | 📋 Planned | Combat balance curves, Economic sinks, Performance + security audits |
+| **5.8** | Admin Systems Advanced | 📋 Planned | Configuration management, Real-time monitoring, Performance dashboards |
+| **5.9** | GM Tools & Commands | 📋 Planned | GM command system, Admin dashboard UI, Log viewer, Config editor |
+| **5.10** | Balance & Polish | 📋 Planned | Combat balance curves, Economic sinks, Performance + security audits |
 
 ---
 
@@ -100,10 +103,10 @@ This roadmap outlines every phase and step in the Aeturnis Online MMORPG develop
 | **6.1** | Test Infrastructure | 📋 Planned | E2E and unit test suites, Regression testing, API & socket coverage |
 | **6.2** | Load & Stress Testing | 📋 Planned | Concurrent user loads, Zone-wide event tests, Resource leaks & throttling |
 | **6.3** | Content Testing | 📋 Planned | Balance checks, Reward testing, AI narrative validation |
-| **6.4** | Security & Anti-Cheat | 📋 Planned | Exploit detection, Item dupe checks, Behavior analysis |
+| **6.4** | Security & Anti-Cheat | 📋 Planned | Exploit detection, Item dupe checks, Behavior analysis, Admin security |
 | **6.5** | Beta Program | 📋 Planned | Closed/open beta systems, Bug tracking interface, Community feedback |
 | **6.6** | Tutorial & Onboarding | 📋 Planned | Drop-off analysis, First-hour experience tuning, Accessibility support |
-| **6.7** | Launch Infrastructure | 📋 Planned | Load balancing, CDN delivery, Monitoring dashboards |
+| **6.7** | Launch Infrastructure | 📋 Planned | Load balancing, CDN delivery, Monitoring dashboards, Admin operations |
 | **6.8** | Launch & Post-Launch | 📋 Planned | Phased rollout, Queue management, Post-launch support + events |
 
 ---
@@ -124,6 +127,11 @@ This roadmap outlines every phase and step in the Aeturnis Online MMORPG develop
 - ✅ **Monster & NPC Systems**: AI behavior, dialogue trees, and comprehensive testing environment
 - ✅ **World & Movement System**: 8 interconnected zones, AIPE infinite progression, movement validation
 - ✅ **Tutorial & Affinity Systems**: Tutorial framework, weapon/magic affinity tracking, 14 service architecture
+
+### Planned Admin Systems
+- 📋 **Admin Foundation** (4.8): Basic admin infrastructure and player management
+- 📋 **Admin Systems Advanced** (5.8): Configuration management and monitoring
+- 📋 **GM Tools & Commands** (5.9): In-game GM tools and admin dashboard
 
 ### Recently Completed
 - ✅ **Tutorial & Affinity Systems**: Complete tutorial framework with 3 quests and weapon/magic affinity tracking

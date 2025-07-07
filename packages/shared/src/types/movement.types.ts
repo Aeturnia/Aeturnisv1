@@ -5,6 +5,9 @@
 
 import { Direction, Zone } from './zone.types';
 
+// Re-export Direction for easier importing
+export type { Direction } from './zone.types';
+
 export interface MovementValidationResult {
   allowed: boolean;
   reason?: string;
