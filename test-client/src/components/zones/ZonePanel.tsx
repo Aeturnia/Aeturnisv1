@@ -3,8 +3,6 @@ import { TestButton } from '../common/TestButton';
 import { ResponseViewer } from '../common/ResponseViewer';
 import { useApi } from '../../hooks/useApi';
 
-
-
 export const ZonePanel: React.FC = () => {
   const [response, setResponse] = useState<any>(null);
   const [loading, setLoading] = useState(false);
