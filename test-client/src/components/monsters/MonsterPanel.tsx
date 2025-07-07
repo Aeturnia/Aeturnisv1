@@ -83,21 +83,47 @@ export const MonsterPanel: React.FC = () => {
 
   const fetchSpawnPoints = async () => {
     try {
+      console.log('=== DEBUG: Fetching spawn points for zone:', selectedZone);
       const result = await api.get(`/api/v1/monsters/spawn-points/${selectedZone}`);
-      console.log('Spawn points API response:', result);
-      console.log('Full result object:', JSON.stringify(result, null, 2));
+      console.log('=== DEBUG: Spawn points API raw response:', result);
       
       if (result && result.success && result.data && result.data.spawnPoints) {
-        const spawnPointsData = result.data.spawnPoints;
-        console.log('Extracted spawn points:', spawnPointsData);
-        console.log('Is array?', Array.isArray(spawnPointsData));
-        setSpawnPoints(Array.isArray(spawnPointsData) ? spawnPointsData : []);
+        const rawSpawnPoints = result.data.spawnPoints;
+        console.log('=== DEBUG: Raw spawn points before transformation:', rawSpawnPoints);
+        
+        // Transform spawn points to match expected interface
+        const transformedSpawnPoints = rawSpawnPoints.map((spawnPoint: any) => {
+          console.log('=== DEBUG: Processing spawn point:', spawnPoint);
+          
+          // Spawn points have x, y directly, not in position object
+          const safeSpawnPoint = {
+            id: spawnPoint.id || 'unknown',
+            name: spawnPoint.name || 'Unknown Spawn Point',
+            zone: spawnPoint.zone || selectedZone,
+            position: {
+              x: spawnPoint.x ?? 0,
+              y: spawnPoint.y ?? 0,
+              z: spawnPoint.z ?? 0
+            },
+            spawnRadius: spawnPoint.spawnRadius || 10,
+            maxMonsters: spawnPoint.maxMonsters || 1,
+            respawnTime: spawnPoint.respawnTime || 300,
+            monsterTypes: spawnPoint.monsterTypes || [],
+            isActive: spawnPoint.isActive !== false
+          };
+          
+          console.log('=== DEBUG: Transformed spawn point:', safeSpawnPoint);
+          return safeSpawnPoint;
+        });
+        
+        console.log('=== DEBUG: Transformed spawn points:', transformedSpawnPoints);
+        setSpawnPoints(transformedSpawnPoints);
       } else {
-        console.log('No spawn points data found in response');
+        console.log('=== DEBUG: No spawn points data found, clearing array');
         setSpawnPoints([]);
       }
     } catch (error) {
-      console.error('Failed to fetch spawn points:', error);
+      console.error('=== DEBUG: Failed to fetch spawn points:', error);
       setSpawnPoints([]);
     }
   };
