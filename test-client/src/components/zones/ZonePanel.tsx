@@ -24,7 +24,7 @@ export const ZonePanel: React.FC = () => {
   const testZoneEndpoints = async (action: string) => {
     setLoading(true);
     try {
-      let result;
+      let result: any;
       
       switch (action) {
         case 'all-zones':
@@ -43,11 +43,13 @@ export const ZonePanel: React.FC = () => {
           result = { success: false, message: 'Unknown action' };
       }
       
-      setResponse(result);
+      setResponse(result || { success: false, message: 'No response received' });
     } catch (error) {
+      console.error('Zone endpoint error:', error);
       setResponse({ 
         success: false, 
-        message: error instanceof Error ? error.message : 'Unknown error' 
+        message: error instanceof Error ? error.message : 'Unknown error',
+        error: String(error)
       });
     } finally {
       setLoading(false);

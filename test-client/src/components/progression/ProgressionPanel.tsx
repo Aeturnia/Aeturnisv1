@@ -16,7 +16,7 @@ export const ProgressionPanel: React.FC = () => {
   const testProgressionEndpoints = async (action: string) => {
     setLoading(true);
     try {
-      let result;
+      let result: any;
       
       switch (action) {
         case 'progression-test':
@@ -46,11 +46,13 @@ export const ProgressionPanel: React.FC = () => {
           result = { success: false, message: 'Unknown action' };
       }
       
-      setResponse(result);
+      setResponse(result || { success: false, message: 'No response received' });
     } catch (error) {
+      console.error('Progression endpoint error:', error);
       setResponse({ 
         success: false, 
-        message: error instanceof Error ? error.message : 'Unknown error' 
+        message: error instanceof Error ? error.message : 'Unknown error',
+        error: String(error)
       });
     } finally {
       setLoading(false);
