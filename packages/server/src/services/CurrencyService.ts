@@ -1,19 +1,21 @@
 import { eq, desc, sql } from 'drizzle-orm';
 import { db } from '../database/config';
 import { characters, transactions } from '../database/schema';
-import { redis } from '../utils/redis';
+import { CacheService } from './CacheService';
 import { Transaction, TransactionType, TransactionMetadata } from '../types/currency';
 import { logger } from '../utils/logger';
 
 export class CurrencyService {
   private readonly CACHE_TTL = 300; // 5 minutes
+  
+  constructor(private cacheService: CacheService) {}
 
   async getBalance(characterId: string): Promise<number> {
     const cacheKey = `currency:balance:${characterId}`;
-    const cached = await redis.get(cacheKey);
+    const cached = await this.cacheService.get<number>(cacheKey);
     
     if (cached !== null) {
-      return parseInt(cached);
+      return cached;
     }
 
     const [character] = await db
@@ -25,7 +27,7 @@ export class CurrencyService {
       throw new Error('Character not found');
     }
 
-    await redis.setex(cacheKey, this.CACHE_TTL, character.gold.toString());
+    await this.cacheService.set(cacheKey, character.gold, this.CACHE_TTL);
     return character.gold;
   }
 

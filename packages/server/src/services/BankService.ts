@@ -1,18 +1,20 @@
 import { eq, and } from 'drizzle-orm';
 import { db } from '../database/config';
 import { personalBanks, sharedBanks, characters, transactions } from '../database/schema';
-import { redis } from '../utils/redis';
+import { CacheService } from './CacheService';
 import { BankSlot, BankTransferRequest, PersonalBank, SharedBank } from '../types/bank';
 import { logger } from '../utils/logger';
 
 export class BankService {
   private readonly CACHE_TTL = 300; // 5 minutes
+  
+  constructor(private cacheService: CacheService) {}
   private readonly SLOT_COST = BigInt(1000); // Gold per slot
   private readonly MAX_SLOTS = 100;
 
   async getPersonalBank(characterId: string): Promise<PersonalBank> {
     const cacheKey = `bank:personal:${characterId}`;
-    const cached = await redis.get(cacheKey);
+    const cached = await this.cacheService.get<PersonalBank>(cacheKey);
     
     if (cached) {
       return JSON.parse(cached);
@@ -41,16 +43,16 @@ export class BankService {
       maxSlots: character.bankSlots,
     };
 
-    await redis.setex(cacheKey, this.CACHE_TTL, JSON.stringify(bankData));
+    await this.cacheService.set(cacheKey, bankData, this.CACHE_TTL);
     return bankData;
   }
 
   async getSharedBank(userId: string): Promise<SharedBank> {
     const cacheKey = `bank:shared:${userId}`;
-    const cached = await redis.get(cacheKey);
+    const cached = await this.cacheService.get<SharedBank>(cacheKey);
     
     if (cached) {
-      return JSON.parse(cached);
+      return cached;
     }
 
     const slots = await db
@@ -66,7 +68,7 @@ export class BankService {
       lastAccessedAt: slots[0]?.updatedAt || undefined,
     };
 
-    await redis.setex(cacheKey, this.CACHE_TTL, JSON.stringify(bankData));
+    await this.cacheService.set(cacheKey, bankData, this.CACHE_TTL);
     return bankData;
   }
 

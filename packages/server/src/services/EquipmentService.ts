@@ -56,7 +56,7 @@ export class EquipmentService {
         stats: await this.calculateEquipmentStats(equipment, itemsWithStats),
       };
 
-      await this.cache.setex(cacheKey, 300, JSON.stringify(equipmentSet));
+      await this.cache.set(cacheKey, equipmentSet, 300);
       return equipmentSet;
     } catch (error) {
       logger.error('Error fetching character equipment:', error);
@@ -221,7 +221,7 @@ export class EquipmentService {
         maxWeight: 1000, // TODO: Calculate based on character stats
       };
 
-      await this.cache.setex(cacheKey, 300, JSON.stringify(inventoryData));
+      await this.cache.set(cacheKey, inventoryData, 300);
       return inventoryData;
     } catch (error) {
       logger.error('Error fetching character inventory:', error);
@@ -462,9 +462,9 @@ export class EquipmentService {
 
   private async clearCharacterCaches(charId: string): Promise<void> {
     await Promise.all([
-      this.cache.del(`equipment:${charId}`),
-      this.cache.del(`inventory:${charId}`),
-      this.cache.del(`character:${charId}`), // Character stats may have changed
+      this.cache.delete(`equipment:${charId}`),
+      this.cache.delete(`inventory:${charId}`),
+      this.cache.delete(`character:${charId}`), // Character stats may have changed
     ]);
   }
 
