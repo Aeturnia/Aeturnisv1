@@ -22,4 +22,7 @@ router.get('/spawn-points/:zoneId', monsterController.getSpawnPointsByZone);
 // Spawn a monster (admin only)
 router.post('/spawn', authenticate, monsterController.spawnMonster);
 
+// Kill a monster (DELETE endpoint)
+router.delete('/:monsterId', monsterController.killMonster);
+
 export default router;

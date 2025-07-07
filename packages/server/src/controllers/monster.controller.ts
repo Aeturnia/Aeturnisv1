@@ -177,6 +177,85 @@ export const spawnMonster = async (req: Request, res: Response) => {
 };
 
 /**
+ * Kill a monster
+ */
+export const killMonster = async (req: Request, res: Response) => {
+  try {
+    const { monsterId } = req.params;
+    
+    // For mock implementation, simulate killing the monster
+    const monster = await mockMonsterService.getMonsterById(monsterId);
+    
+    if (!monster) {
+      return res.status(404).json({
+        success: false,
+        error: 'Monster not found'
+      });
+    }
+    
+    // Simulate monster death
+    const killResult = {
+      action: 'kill',
+      monsterId: monsterId,
+      monsterName: monster.displayName || monster.name,
+      success: true,
+      message: `${monster.displayName || monster.name} has been defeated!`,
+      timestamp: new Date().toISOString(),
+      rewards: {
+        experience: Math.floor(Math.random() * 100) + 50,
+        gold: Math.floor(Math.random() * 50) + 25,
+        items: [] // Could add random loot here
+      }
+    };
+    
+    console.log(`Monster killed: ${monsterId} - ${monster.displayName || monster.name}`);
+    
+    res.json({
+      success: true,
+      data: killResult
+    });
+  } catch (error) {
+    console.error('Error killing monster:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to kill monster'
+    });
+  }
+};
+
+/**
+ * Test monster system
+ */
+export const testMonsterSystem = async (req: Request, res: Response) => {
+  try {
+    const testData = {
+      system: "Monster Management System",
+      status: "operational",
+      timestamp: new Date().toISOString(),
+      features: {
+        monsterRetrieval: "enabled",
+        zoneFiltering: "enabled", 
+        spawnPointManagement: "enabled",
+        monsterTypes: "enabled"
+      },
+      mockData: {
+        monstersInTutorialArea: 2,
+        spawnPointsInTutorialArea: 2,
+        monsterTypesAvailable: 6
+      }
+    };
+    
+    res.json(testData);
+  } catch (error) {
+    console.error('Error testing monster system:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to test monster system'
+    });
+  }
+};
+
+/**
  * Test monster system
  */
 export const testMonsterSystem = async (req: Request, res: Response) => {
