@@ -50,7 +50,7 @@ export const getMonsterById = async (req: Request, res: Response) => {
       });
     }
     
-    res.json({ 
+    return res.json({ 
       success: true, 
       data: {
         ...monster,
@@ -61,7 +61,7 @@ export const getMonsterById = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Error getting monster by ID:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to get monster'
     });

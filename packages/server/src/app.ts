@@ -187,7 +187,7 @@ export const createApp = () => {
     }
     
     // Serve React app for all other routes
-    res.sendFile(path.join(__dirname, '../public/index.html'));
+    return res.sendFile(path.join(__dirname, '../public/index.html'));
   });
 
   // Error handling middleware (must be last)
