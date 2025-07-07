@@ -326,7 +326,7 @@ router.get(
         });
       }
       
-      res.json({
+      return res.json({
         success: true,
         message: 'Item details retrieved successfully',
         data: item,
@@ -334,7 +334,7 @@ router.get(
       });
     } catch (error) {
       logger.error('Error fetching item details:', error);
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: 'Failed to fetch item details',
         error: error instanceof Error ? error.message : 'Unknown error',

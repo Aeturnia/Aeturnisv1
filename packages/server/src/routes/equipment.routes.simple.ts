@@ -165,7 +165,7 @@ router.get('/:charId', (req, res) => {
       },
     };
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Equipment retrieved successfully (demo data)',
       data: mockEquipment,
@@ -173,7 +173,7 @@ router.get('/:charId', (req, res) => {
     });
   } catch (error) {
     logger.error('Error fetching equipment:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to fetch equipment',
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -253,7 +253,7 @@ router.get('/:charId/inventory', (req, res) => {
       maxWeight: 1000,
     };
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Inventory retrieved successfully (demo data)',
       data: mockInventory,
@@ -261,7 +261,7 @@ router.get('/:charId/inventory', (req, res) => {
     });
   } catch (error) {
     logger.error('Error fetching inventory:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to fetch inventory',
       error: error instanceof Error ? error.message : 'Unknown error',

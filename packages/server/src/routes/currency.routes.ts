@@ -75,7 +75,7 @@ router.post('/transfer',
         true // includeFee
       );
 
-      res.json({
+      return res.json({
         success: true,
         transfer: {
           from: fromCharacterId,
@@ -126,7 +126,7 @@ router.get('/characters/:characterId/transactions',
         offset
       );
 
-      res.json({
+      return res.json({
         characterId: req.params.characterId,
         transactions: transactions.map(tx => ({
           id: tx.id,
@@ -176,7 +176,7 @@ router.get('/characters/:characterId/stats',
         transactionCount: 0
       };
       
-      res.json({
+      return res.json({
         characterId: req.params.characterId,
         stats: {
           totalEarned: stats.totalEarned.toString(),
@@ -220,7 +220,7 @@ router.post('/admin/reward',
         metadata?.description
       );
 
-      res.json({
+      return res.json({
         success: true,
         transaction: {
           id: transaction.id,
