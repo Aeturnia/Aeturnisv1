@@ -87,7 +87,30 @@ router.get('/resources/:charId',
 // Test endpoints for test monsters (no auth required)
 router.get('/test-stats/:charId', combatController.getCharacterStats);
 router.get('/test-resources/:charId', combatController.getResources);
-router.post('/test-start', combatController.startTestCombat);
+// Simple mock start combat endpoint (bypassing complex service layer)
+router.post('/test-start', (req, res) => {
+  const { targetIds, battleType } = req.body;
+  const mockSessionId = `test_combat_${Date.now()}`;
+  
+  const mockStartResult = {
+    sessionId: mockSessionId,
+    status: 'active',
+    battleType: battleType || 'pve',
+    targets: targetIds || ['test_goblin_001'],
+    message: `Combat started against ${targetIds?.[0] || 'Training Goblin'}!`,
+    participants: [
+      { id: 'player-test-001', name: 'Player', hp: 100, maxHp: 100 },
+      { id: targetIds?.[0] || 'test_goblin_001', name: 'Training Goblin', hp: 45, maxHp: 45 }
+    ],
+    timestamp: Date.now()
+  };
+  
+  res.json({
+    success: true,
+    data: mockStartResult,
+    message: mockStartResult.message
+  });
+});
 // Simple mock endpoints for testing (bypassing complex service layer)
 router.post('/test-action', (req, res) => {
   const { sessionId, action, targetId } = req.body;
