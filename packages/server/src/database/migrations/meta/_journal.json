@@ -8,6 +8,20 @@
       "when": 1751606100404,
       "tag": "0000_rainy_pride",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1751815835367,
+      "tag": "0001_flimsy_red_ghost",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1751815893547,
+      "tag": "0002_sleepy_masque",
+      "breakpoints": true
     }
   ]
 }

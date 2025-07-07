@@ -60,6 +60,21 @@ export interface CombatParticipant {
   status: 'active' | 'defeated' | 'fled';
   buffs: CombatBuff[];
   debuffs: CombatDebuff[];
+  // Combat stats from AIPE
+  level: number;
+  attack: number;
+  defense: number;
+  magicalAttack: number;
+  magicalDefense: number;
+  speed: number;
+  criticalChance: number;
+  criticalDamage: number;
+  dodgeChance: number;
+  blockChance: number;
+  accuracy: number;
+  // Weapon damage range
+  weaponMinDamage: number;
+  weaponMaxDamage: number;
 }
 
 export interface CombatBuff {

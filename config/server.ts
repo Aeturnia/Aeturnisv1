@@ -15,6 +15,7 @@ export interface ServerConfig {
   jwtRefreshSecret: string;
   jwtExpiry: string;
   jwtRefreshExpiry: string;
+  useMocks: boolean;
 }
 
 export const serverConfig: ServerConfig = {
@@ -31,6 +32,7 @@ export const serverConfig: ServerConfig = {
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'your-super-secret-refresh-key',
   jwtExpiry: process.env.JWT_EXPIRY || '15m',
   jwtRefreshExpiry: process.env.JWT_REFRESH_EXPIRY || '7d',
+  useMocks: process.env.USE_MOCKS === 'true',
 };
 
 export default serverConfig;

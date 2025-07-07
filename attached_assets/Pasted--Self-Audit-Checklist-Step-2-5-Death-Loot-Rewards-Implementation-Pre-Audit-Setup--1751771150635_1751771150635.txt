@@ -1,0 +1,365 @@
+# 🔍 Self-Audit Checklist: Step 2.5 — Death, Loot & Rewards Implementation
+
+## 📋 Pre-Audit Setup
+```bash
+# Ensure all dependencies are installed
+npm install
+
+# Run database migrations
+npm run db:migrate
+
+# Build TypeScript
+npm run build
+
+# Start Redis if not running
+docker-compose up -d redis
+```
+
+## 1️⃣ File Structure Verification
+
+### ✅ Check New Files Exist
+```bash
+# Run this command to verify all required files were created
+ls -la src/types/death.ts src/types/loot.ts \
+  src/controllers/death.controller.ts src/controllers/loot.controller.ts \
+  src/services/death.service.ts src/services/loot.service.ts \
+  src/services/respawn.service.ts \
+  src/repositories/death.repository.ts src/repositories/loot.repository.ts \
+  src/routes/death.routes.ts src/routes/loot.routes.ts \
+  src/sockets/death.events.ts src/sockets/loot.events.ts
+```
+
+### ✅ Check Modified Files
+```bash
+# Verify these files contain death/loot related changes
+grep -l "isDead\|death\|loot" src/types/character.ts src/services/combat.service.ts src/routes/index.ts
+```
+
+### ✅ Check Migration Files
+```bash
+# List recent migrations - should include death_loot_tables migration
+ls -la src/database/migrations/ | tail -5
+```
+
+## 2️⃣ Database Schema Validation
+
+### ✅ Verify Tables Created
+```sql
+-- Run these queries in your PostgreSQL client
+-- Check respawn_points table
+\d respawn_points
+
+-- Check loot_tables table  
+\d loot_tables
+
+-- Check loot_entries table
+\d loot_entries
+
+-- Check loot_history table
+\d loot_history
+
+-- Check character death columns
+\d characters
+-- Should show: is_dead, death_at, death_count, last_respawn_at
+```
+
+### ✅ Verify Indexes
+```sql
+-- Check all indexes were created
+SELECT indexname, tablename 
+FROM pg_indexes 
+WHERE tablename IN ('respawn_points', 'loot_entries', 'loot_history')
+ORDER BY tablename, indexname;
+```
+
+## 3️⃣ TypeScript Interface Compliance
+
+### ✅ Naming Convention Check
+```bash
+# Check for incorrect naming patterns
+# Should return NO results if naming is correct
+grep -r "CharName\|character_name\|charNames" src/types/death.ts src/types/loot.ts
+
+# Verify correct naming exists
+grep -r "charName\|characterId\|zoneId" src/types/death.ts src/types/loot.ts
+```
+
+### ✅ Enum Validation
+```typescript
+// Verify these enums exist in the correct files:
+// In src/types/death.ts:
+- DeathReason (COMBAT, FALL_DAMAGE, ENVIRONMENTAL, ADMIN, UNKNOWN)
+- ReviveType (SELF_RESPAWN, ITEM_REVIVE, SPELL_REVIVE, PLAYER_ASSIST, ADMIN_REVIVE)
+
+// In src/types/loot.ts:
+- ItemRarity (COMMON, UNCOMMON, RARE, EPIC, LEGENDARY)
+```
+
+## 4️⃣ API Endpoint Testing
+
+### ✅ Death Endpoints
+```bash
+# Test character death endpoint
+curl -X POST http://localhost:3000/api/character/test-char-id/death \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reason": "combat",
+    "killerId": "enemy-char-id",
+    "context": {
+      "damageType": "physical",
+      "combatSessionId": "session-123"
+    }
+  }'
+
+# Test respawn endpoint
+curl -X POST http://localhost:3000/api/character/test-char-id/respawn \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Test death status endpoint
+curl -X GET http://localhost:3000/api/character/test-char-id/death_status \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### ✅ Loot Endpoints
+```bash
+# Test loot claim endpoint
+curl -X POST http://localhost:3000/api/combat/session-id/claim_loot \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "characterId": "test-char-id"
+  }'
+```
+
+## 5️⃣ Validation & Error Handling
+
+### ✅ Test Validation Rules
+```bash
+# Run specific validation tests
+npm test -- death.service.test.ts --verbose
+npm test -- loot.service.test.ts --verbose
+
+# Check for proper error types
+grep -r "NotFoundError\|ConflictError\|ValidationError\|ForbiddenError" \
+  src/services/death.service.ts src/services/loot.service.ts
+```
+
+### ✅ Transaction Safety
+```bash
+# Verify atomic transactions in death penalty application
+grep -A 5 -B 5 "transaction\|BEGIN\|COMMIT\|ROLLBACK" \
+  src/services/death.service.ts src/repositories/death.repository.ts
+```
+
+## 6️⃣ Real-Time Socket Events
+
+### ✅ Event Pattern Compliance
+```bash
+# Verify socket events follow entity:action pattern
+grep -r "death:occurred\|character:respawned\|loot:assigned\|loot:claimed" \
+  src/sockets/death.events.ts src/sockets/loot.events.ts
+
+# Check for incorrect patterns (should return no results)
+grep -r "deathOccurred\|characterRespawned\|lootAssigned" \
+  src/sockets/death.events.ts src/sockets/loot.events.ts
+```
+
+### ✅ Socket Room Management
+```bash
+# Verify proper room emission patterns
+grep -r "io.to.*emit\|socket.to.*emit" \
+  src/services/death.service.ts src/services/loot.service.ts
+```
+
+## 7️⃣ Redis Key Conventions
+
+### ✅ Key Pattern Validation
+```bash
+# Check Redis key patterns follow namespace:identifier format
+grep -r "respawn:cooldown:\|loot:claimed:\|death:counter:" \
+  src/services/death.service.ts src/services/loot.service.ts src/services/respawn.service.ts
+
+# Verify TTL settings
+grep -r "setex\|expire\|TTL" \
+  src/services/death.service.ts src/services/loot.service.ts
+```
+
+## 8️⃣ Test Coverage
+
+### ✅ Run Coverage Report
+```bash
+# Generate coverage report
+npm test -- --coverage
+
+# Check specific coverage for new files
+npm test -- --coverage --collectCoverageFrom="src/services/death.service.ts"
+npm test -- --coverage --collectCoverageFrom="src/services/loot.service.ts"
+npm test -- --coverage --collectCoverageFrom="src/controllers/death.controller.ts"
+npm test -- --coverage --collectCoverageFrom="src/controllers/loot.controller.ts"
+```
+
+### ✅ Coverage Threshold Check
+```
+Expected coverage for each file: ≥80%
+- Line Coverage: ≥80%
+- Branch Coverage: ≥80%
+- Function Coverage: ≥80%
+- Statement Coverage: ≥80%
+```
+
+## 9️⃣ Code Quality
+
+### ✅ TypeScript Strict Mode
+```bash
+# Run TypeScript compiler with strict checks
+npm run lint:ts -- --max-warnings=0
+
+# Check for any implicit any
+grep -r "any" src/types/death.ts src/types/loot.ts src/services/*.ts | grep -v "// eslint-disable"
+```
+
+### ✅ ESLint Compliance
+```bash
+# Run ESLint on new files
+npm run lint -- src/services/death.service.ts src/services/loot.service.ts
+npm run lint -- src/controllers/death.controller.ts src/controllers/loot.controller.ts
+```
+
+## 🔟 Business Logic Verification
+
+### ✅ Death Penalty Calculations
+```javascript
+// Verify in death.service.ts:
+- XP loss is 10% of current XP
+- XP never goes below 0
+- Durability damage is 10% per equipped item
+- Death count increments properly
+```
+
+### ✅ Loot Drop Calculations
+```javascript
+// Verify in loot.service.ts:
+- Drop rates properly calculated with modifiers
+- Deterministic seeding works correctly
+- Party bonus multipliers apply
+- Level scaling functions properly
+```
+
+### ✅ Respawn Logic
+```javascript
+// Verify in respawn.service.ts:
+- 30-second cooldown enforced
+- Nearest respawn point selection works
+- Zone restrictions respected
+- Graveyard flag properly handled
+```
+
+## 📊 Performance Checks
+
+### ✅ Query Performance
+```sql
+-- Check query execution plans
+EXPLAIN ANALYZE 
+SELECT * FROM respawn_points 
+WHERE zone_id = 'test-zone-id' 
+ORDER BY ST_Distance(ST_MakePoint(x, y), ST_MakePoint(100, 100));
+
+EXPLAIN ANALYZE
+SELECT * FROM loot_history 
+WHERE character_id = 'test-char-id' 
+ORDER BY timestamp DESC 
+LIMIT 10;
+```
+
+### ✅ Redis Performance
+```bash
+# Check Redis memory usage for death/loot keys
+redis-cli --scan --pattern "respawn:*" | wc -l
+redis-cli --scan --pattern "loot:*" | wc -l
+redis-cli --scan --pattern "death:*" | wc -l
+```
+
+## 🛡️ Security Audit
+
+### ✅ Authorization Checks
+```bash
+# Verify all endpoints check character ownership
+grep -B 5 -A 5 "req.user\|userId\|authentication" \
+  src/controllers/death.controller.ts src/controllers/loot.controller.ts
+```
+
+### ✅ Input Validation
+```bash
+# Check for validation middleware usage
+grep -r "validateRequest\|body()\|param()\|query()" \
+  src/routes/death.routes.ts src/routes/loot.routes.ts
+```
+
+## 📝 Final Checklist Summary
+
+```markdown
+## Implementation Complete?
+- [ ] All required files created
+- [ ] Database migrations successful
+- [ ] All tables and indexes created
+- [ ] TypeScript interfaces follow naming conventions
+- [ ] All API endpoints respond correctly
+- [ ] Validation rules enforced
+- [ ] Socket events follow pattern
+- [ ] Redis keys follow convention
+- [ ] Test coverage ≥80%
+- [ ] Zero TypeScript errors
+- [ ] Zero ESLint warnings
+- [ ] Business logic matches spec
+- [ ] Performance indexes in place
+- [ ] Security checks pass
+```
+
+## 🚨 Common Issues to Check
+
+1. **Character State Sync**
+   - Ensure `isDead` flag syncs with combat service
+   - Verify death state prevents actions
+
+2. **Race Conditions**
+   - Multiple death sources handled correctly
+   - Loot claim atomicity guaranteed
+
+3. **Memory Leaks**
+   - Socket listeners properly cleaned up
+   - Redis keys have appropriate TTLs
+
+4. **Edge Cases**
+   - Empty loot tables handled
+   - Missing respawn points fallback
+   - Negative XP prevention
+
+---
+
+### 📤 Audit Results Template
+```markdown
+## Audit Results - Step 2.5 Death & Loot System
+
+**Date:** [DATE]
+**Auditor:** Replit Agent
+
+### Coverage Report
+- Overall Coverage: X%
+- death.service.ts: X%
+- loot.service.ts: X%
+- Controllers: X%
+
+### TypeScript Results
+- Errors: X
+- Warnings: X
+
+### Failed Tests
+[List any failing tests]
+
+### Issues Found
+[List any issues discovered]
+
+### Recommendations
+[Any improvements suggested]
+```

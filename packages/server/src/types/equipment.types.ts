@@ -62,6 +62,8 @@ export const STAT_TYPES = {
   MANA: 'mana',
   STAMINA: 'stamina',
   DAMAGE: 'damage',
+  MIN_DAMAGE: 'min_damage',
+  MAX_DAMAGE: 'max_damage',
   DEFENSE: 'defense',
   CRITICAL_CHANCE: 'critical_chance',
   CRITICAL_DAMAGE: 'critical_damage',

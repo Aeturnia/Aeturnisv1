@@ -1,0 +1,75 @@
+Connecting Socket.IO to: https://37879258-1e1b-446e-9103-49c674048c55-00-i6xpafwar3qe.spock.replit.dev
+index-N6G-vwBU.js:66 === DEBUG: Fetching monsters for zone: tutorial_area
+index-N6G-vwBU.js:66 Spawn points API response: {success: true, data: {…}}
+index-N6G-vwBU.js:66 Full result object: {
+  "success": true,
+  "data": {
+    "spawnPoints": [
+      {
+        "id": "spawn_001",
+        "name": "Forest Clearing",
+        "zone": "tutorial_area",
+        "x": 100,
+        "y": 200,
+        "spawnRadius": 25,
+        "maxMonsters": 3,
+        "respawnTime": 300,
+        "monsterTypes": [
+          "goblin",
+          "wolf"
+        ],
+        "isActive": true
+      },
+      {
+        "id": "spawn_002",
+        "name": "Dark Cave Entrance",
+        "zone": "tutorial_area",
+        "x": 300,
+        "y": 150,
+        "spawnRadius": 15,
+        "maxMonsters": 2,
+        "respawnTime": 600,
+        "monsterTypes": [
+          "orc",
+          "skeleton"
+        ],
+        "isActive": true
+      }
+    ],
+    "count": 2,
+    "zone": "tutorial_area"
+  }
+}
+index-N6G-vwBU.js:66 Extracted spawn points: (2) [{…}, {…}]
+index-N6G-vwBU.js:66 Is array? true
+index-N6G-vwBU.js:66  Uncaught TypeError: Cannot read properties of undefined (reading 'x')
+    at index-N6G-vwBU.js:66:4629
+    at Array.map (<anonymous>)
+    at Py (index-N6G-vwBU.js:66:4271)
+    at au (index-N6G-vwBU.js:48:34129)
+    at Tu (index-N6G-vwBU.js:48:62111)
+    at hf (index-N6G-vwBU.js:48:72613)
+    at Yf (index-N6G-vwBU.js:48:106640)
+    at Ym (index-N6G-vwBU.js:48:105705)
+    at Zu (index-N6G-vwBU.js:48:105537)
+    at Bf (index-N6G-vwBU.js:48:102647)
+(anonymous) @ index-N6G-vwBU.js:66
+Py @ index-N6G-vwBU.js:66
+au @ index-N6G-vwBU.js:48
+Tu @ index-N6G-vwBU.js:48
+hf @ index-N6G-vwBU.js:48
+Yf @ index-N6G-vwBU.js:48
+Ym @ index-N6G-vwBU.js:48
+Zu @ index-N6G-vwBU.js:48
+Bf @ index-N6G-vwBU.js:48
+If @ index-N6G-vwBU.js:48
+Fe @ index-N6G-vwBU.js:25
+index-N6G-vwBU.js:66 === DEBUG: Monsters API raw response: {success: true, data: {…}}
+index-N6G-vwBU.js:66 === DEBUG: Raw monsters before transformation: (2) [{…}, {…}]
+index-N6G-vwBU.js:66 === DEBUG: Processing monster: {id: 'monster-001', monsterTypeId: 'goblin', zoneId: 'test-zone', position: {…}, currentHp: 45, …}
+index-N6G-vwBU.js:66 === DEBUG: Monster position: {x: 110, y: 0, z: 95}
+index-N6G-vwBU.js:66 === DEBUG: Transformed monster: {id: 'monster-001', name: 'Forest Goblin', currentHp: 45, maxHp: 100, state: 'idle', …}
+index-N6G-vwBU.js:66 === DEBUG: Processing monster: {id: 'monster-002', monsterTypeId: 'orc', zoneId: 'test-zone', position: {…}, currentHp: 80, …}
+index-N6G-vwBU.js:66 === DEBUG: Monster position: {x: 145, y: 2, z: 80}
+index-N6G-vwBU.js:66 === DEBUG: Transformed monster: {id: 'monster-002', name: 'Cave Orc', currentHp: 80, maxHp: 150, state: 'patrolling', …}
+index-N6G-vwBU.js:66 === DEBUG: Transformed monsters: (2) [{…}, {…}]

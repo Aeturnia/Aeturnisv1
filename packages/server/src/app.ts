@@ -20,6 +20,11 @@ import currencyRoutes from './routes/currency.routes';
 import bankRoutes from './routes/bank.routes';
 import equipmentRoutes from './routes/equipment.routes.simple';
 import combatRoutes from './routes/combat.routes';
+import { deathRoutes } from './routes/death.routes';
+import { lootRoutes } from './routes/loot.routes';
+import monsterRoutes from './routes/monster.routes';
+import npcRoutes from './routes/npc.routes';
+import { debugRoutes } from './routes/debug.routes';
 
 // Services
 // import { shutdownServices } from './services/index';
@@ -104,11 +109,18 @@ export const createApp = () => {
   // API routes
   app.use('/api/v1/auth', authLimiter, authRoutes);
   app.use('/api/v1/sessions', generalLimiter, sessionRoutes);
+  
+  // Debug routes for ServiceProvider troubleshooting
+  app.use('/api/debug', debugRoutes);
   app.use('/api/v1/characters', generalLimiter, characterRoutes);
   app.use('/api/v1/currency', generalLimiter, currencyRoutes);
   app.use('/api/v1/bank', generalLimiter, bankRoutes);
   app.use('/api/v1/equipment', generalLimiter, equipmentRoutes);
   app.use('/api/v1/combat', generalLimiter, combatRoutes);
+  app.use('/api/v1/death', generalLimiter, deathRoutes);
+  app.use('/api/v1/loot', generalLimiter, lootRoutes);
+  app.use('/api/v1/monsters', generalLimiter, monsterRoutes);
+  app.use('/api/v1/npcs', generalLimiter, npcRoutes);
 
   // Legacy auth routes (for backward compatibility)
   app.use('/api/auth', authLimiter, authRoutes);
@@ -118,8 +130,8 @@ export const createApp = () => {
     res.json({
       message: 'Aeturnis Online API',
       status: 'operational',
-      version: '2.2.0',
-      architecture: 'MMORPG Backend',
+      version: '2.6.0',
+      architecture: 'MMORPG Backend with Monster & NPC Systems',
       uptime: Math.floor(process.uptime()),
       timestamp: new Date().toISOString(),
       endpoints: {
@@ -131,6 +143,10 @@ export const createApp = () => {
         characters: '/api/v1/characters',
         equipment: '/api/v1/equipment',
         combat: '/api/v1/combat',
+        death: '/api/v1/death',
+        loot: '/api/v1/loot',
+        monsters: '/api/v1/monsters',
+        npcs: '/api/v1/npcs',
       },
       services: {
         database: 'connected',
