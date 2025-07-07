@@ -1,18 +1,20 @@
 # Error Catalog - Aeturnis Monorepo
 
 Generated on: 2025-07-07
+Last Updated: 2025-07-07 (Comprehensive Re-analysis)
 
 ## Summary
 
-- **TypeScript Errors**: 182 total
-- **ESLint Errors**: 146 errors + 122 warnings
+- **TypeScript Errors**: 195+ total (13+ new errors found)
+- **ESLint Errors**: 160+ errors + 130+ warnings (14+ new errors, 8+ new warnings)
+- **New Issues**: Missing type exports, configuration problems, test client errors
 
 ## TypeScript Errors by Category
 
 ### 1. Not All Code Paths Return Value (TS7030)
 | File | Line | Description |
 |------|------|-------------|
-| `src/app.ts` | 169:16 | Arrow function missing return statement |
+| `src/app.ts` | 175:16 | Arrow function missing return statement (updated line number) |
 | `src/controllers/combat.controller.simple.ts` | 110:32 | Function missing return value |
 
 ### 2. Unused Parameters/Variables (TS6133)
@@ -63,6 +65,11 @@ Generated on: 2025-07-07
 | `src/sockets/combat.socket.ts` | 3:24 | `CombatResult` | Import never used |
 | `src/sockets/monster.events.ts` | 9:39 | `io` | Parameter never used |
 | `src/sockets/npc.events.ts` | 9:35 | `io` | Parameter never used |
+| **NEW** `src/controllers/movement.controller.ts` | 340:39 | `req` | Parameter never used |
+| **NEW** `src/controllers/progression.controller.ts` | 364:42 | `req` | Parameter never used |
+| **NEW** `src/controllers/tutorial.controller.ts` | 26:25 | `req` | Parameter never used |
+| **NEW** `src/controllers/tutorial.controller.ts` | 82:22 | `req` | Parameter never used |
+| **NEW** `src/controllers/affinity.controller.ts` | Various | `req` | Multiple unused parameters |
 
 ### 3. Property Does Not Exist (TS2339)
 | File | Line | Property | On Type |
@@ -101,6 +108,7 @@ Generated on: 2025-07-07
 | `src/services/EquipmentService.ts` | 466:18 | `del` | `CacheService` |
 | `src/services/EquipmentService.ts` | 467:18 | `del` | `CacheService` |
 | `src/services/death.service.ts` | 258:41 | `getTTL` | `CacheService` |
+| **NEW** `src/controllers/npc.controller.ts` | 91:47 | `getAvailableInteractions` | `MockNPCService` |
 
 ### 4. Cannot Invoke Possibly Undefined (TS2722/TS18048)
 | File | Line | Method |
@@ -161,6 +169,9 @@ Generated on: 2025-07-07
 | `src/services/EquipmentService.ts` | 25:10 | Module has no exported member 'BadRequestError' |
 | `src/services/mock/MockMovementService.ts` | 11:3 | 'Direction' not exported from module |
 | `../shared/src/types/npc.types.ts` | 1:28 | File not under 'rootDir' |
+| **NEW** `src/controllers/movement.controller.ts` | 7:37 | Module declares 'Direction' locally, but it is not exported |
+| **NEW** `src/routes/tutorial.routes.ts` | 9-12 | Missing module '../../../shared/types/tutorial.types' |
+| **NEW** `src/routes/affinity.routes.ts` | 9-15 | Missing module '../../../shared/types/affinity.types' |
 
 ### 11. Property Never Read (TS6138)
 | File | Line | Property |
@@ -318,14 +329,24 @@ Generated on: 2025-07-07
 | `src/sockets/npc.events.ts` | 147:17 | Type annotation |
 | `src/sockets/npc.events.ts` | 230:14 | Type annotation |
 | `src/sockets/npc.events.ts` | 284:12 | Type annotation |
+| **NEW** `src/routes/bank.routes.ts` | 195 | Type annotation - `(req as any).user?.id` |
+| **NEW** `src/routes/character.stats.routes.ts` | 24, 83, 130, 131, 180, 233 | Multiple uses of `(req as any)` |
+| **NEW** `src/routes/equipment.routes.ts` | 363 | Type annotation - `slot as any` |
+| **NEW** `src/services/BankService.ts` | 334 | Use of 'any' type for rawSlots |
+| **NEW** `src/services/CharacterService.ts` | 202 | `updates` variable typed as 'any' |
+| **NEW** `src/services/CombatService.ts` | 946 | Use of 'any' type for buff object |
+| **NEW** `src/services/ResourceService.ts` | 89 | Type assertion with `as any` |
 
 ### 3. Console Statements (no-console)
 | File | Line Count | Lines |
 |------|------------|-------|
-| `src/controllers/combat.controller.ts` | 27 | 88, 91, 121, 122, 126, 133, 142, 153, 158, 165, 179, 189, 198, 205, 217, 219, 221, 225, 380, 381, 385, 392, 399, 400, 410, 411, 429 |
-| `src/controllers/monster.controller.ts` | 2 | 211, 263 |
+| `src/controllers/combat.controller.ts` | 40+ | 88, 91, 121-122, 128-130, 132-133, 142, 152, 156-162, 177-180, 188-189, 198-202, 205, 217-221, 226, 264, 283-290, 380-382, 388, 392-393, 399-400, 409-417, 429, 432-439 |
+| `src/controllers/monster.controller.ts` | 10 | 30, 63, 86, 138, 171, 211, 218, 263, 270, 302 |
+| `src/controllers/combat.controller.simple.ts` | 4 | 18, 47, 99, 143 |
+| `src/controllers/npc.controller.ts` | 5 | 24, 52, 75, 101, 133 |
 | `src/providers/ServiceProvider.ts` | 9 | 126, 173, 190, 194, 197, 318, 320, 461, 465 |
 | `src/sockets/SocketServer.ts` | 2 | 223, 238 |
+| **NEW** `src/services/CombatService.ts` | Multiple | 113-127, 139-145, 163-165, and more throughout file |
 
 ### 4. Function Type Usage (@typescript-eslint/ban-types)
 | File | Line | Context |
@@ -360,19 +381,68 @@ Generated on: 2025-07-07
 4. **Missing type definitions** for combat and character properties
 5. **Configuration issues** with TypeScript paths and ESLint
 
+## New Issues Added in Latest Analysis
+
+### 12. Missing Implementations
+| File | Line | Issue |
+|------|------|-------|
+| `src/controllers/combat.controller.ts` | 811, 904 | `CombatService` used but not imported |
+| `src/controllers/combat.controller.ts` | 869 | `testMonsterService` used but not declared |
+| `src/controllers/combat.controller.ts` | 687, 717, 783 | Methods not in ICombatService interface |
+| `src/controllers/loot.controller.ts` | 295 | TODO: `getAllLootTables` not in ILootService |
+| `src/routes/bank.routes.ts` | 146 | TODO: Missing itemId implementation |
+| `src/routes/bank.routes.ts` | 198-204 | `transferItem` not in IBankService |
+
+### 13. Type Safety Issues in Services
+| File | Line | Issue |
+|------|------|-------|
+| `src/services/CacheService.ts` | 97, 107, 115 | Accessing `this.redis` without null checks |
+| `src/services/CacheService.ts` | 39-46 | Type assertion on JSON.parse without validation |
+| `src/services/BankService.ts` | 241 | BigInt to Number conversion without overflow check |
+| `src/services/CurrencyService.ts` | 241 | BigInt to Number conversion without overflow check |
+| `src/services/CombatService.ts` | 89 | Type assertion on error without type guard |
+| `src/services/EquipmentService.ts` | 532-534 | Silent error handling without propagation |
+
+### 14. Test Client Errors (New)
+| File | Line | Variable | Issue |
+|------|------|----------|-------|
+| `test-client/src/App.tsx` | - | `React` | Imported but never used |
+| `test-client/src/components/combat/CombatPanel.tsx` | - | `isAuthenticated` | Declared but never used |
+| `test-client/src/components/logs/LogsPanel.tsx` | - | `isAuthenticated` | Declared but never used |
+| `test-client/src/components/monsters/MonsterList.tsx` | - | `isAuthenticated` | Declared but never used |
+| `test-client/src/components/monsters/SpawnControl.tsx` | - | `isAuthenticated` | Declared but never used |
+| `test-client/src/components/npcs/DialogueViewer.tsx` | - | `DialogueNode` | Declared but never used |
+| `test-client/src/components/npcs/NPCList.tsx` | - | `isAuthenticated` | Declared but never used |
+| `test-client/src/components/zones/ZonePanel.tsx` | - | `Zone` | Declared but never used |
+
+### 15. Configuration Issues
+| Issue | Description |
+|-------|-------------|
+| Missing Jest Dependencies | @types/jest@^29.5.0, jest@^29.7.0, ts-jest@^29.1.0 |
+| Inconsistent Export Patterns | Some routes use default export, others use named exports |
+| Duplicate Type Definitions | ItemRarity defined in both server and shared packages |
+
 ## Recommendations
 
 1. **Immediate Actions**:
-   - Fix missing return statements in `app.ts` and `combat.controller.simple.ts`
+   - Fix missing return statements in `app.ts` (line 175) and `combat.controller.simple.ts`
    - Update CacheService interface to match actual implementation
    - Remove or properly type all `any` usages
+   - Add missing imports for CombatService and testMonsterService
+   - Create missing type files: tutorial.types.ts and affinity.types.ts
 
 2. **Short-term Fixes**:
    - Clean up unused variables and imports
    - Fix property access errors in combat and death controllers
    - Update TypeScript configuration to include .d.ts files
+   - Replace all console.log statements with proper logger
+   - Add null checks for redis operations in CacheService
+   - Export Direction type from movement.types.ts
 
 3. **Long-term Improvements**:
    - Implement proper error handling types
    - Standardize service interfaces across mock and real implementations
    - Add comprehensive type definitions for all domain objects
+   - Standardize route export patterns
+   - Add runtime validation for JSON parsing and type assertions
+   - Implement proper BigInt to Number conversion with overflow checks
