@@ -154,6 +154,25 @@ export async function initializeProviders(useMocks: boolean): Promise<void> {
   } catch (error) {
     console.error('❌ Failed to register ProgressionService:', error);
   }
+
+  // Register Tutorial & Affinity System services (Step 2.8)
+  try {
+    console.log('Registering MockTutorialService...');
+    const { MockTutorialService } = await import('../services/mock/MockTutorialService');
+    provider.register('TutorialService', new MockTutorialService());
+    console.log('✅ TutorialService registered');
+  } catch (error) {
+    console.error('❌ Failed to register TutorialService:', error);
+  }
+
+  try {
+    console.log('Registering MockAffinityService...');
+    const { MockAffinityService } = await import('../services/mock/MockAffinityService');
+    provider.register('AffinityService', new MockAffinityService());
+    console.log('✅ AffinityService registered');
+  } catch (error) {
+    console.error('❌ Failed to register AffinityService:', error);
+  }
   
   const registeredServices = provider.getRegisteredServices();
   console.log(`Service Provider initialized with ${registeredServices.length} MOCK services: ${registeredServices.join(', ')}`);

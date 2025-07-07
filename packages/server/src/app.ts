@@ -27,6 +27,8 @@ import npcRoutes from './routes/npc.routes';
 import zoneRoutes from './routes/zone.routes';
 import movementRoutes from './routes/movement.routes';
 import progressionRoutes from './routes/progression.routes';
+import { tutorialRoutes } from './routes/tutorial.routes';
+import { affinityRoutes } from './routes/affinity.routes';
 import { debugRoutes } from './routes/debug.routes';
 
 // Services
@@ -127,6 +129,8 @@ export const createApp = () => {
   app.use('/api/v1/zones', generalLimiter, zoneRoutes);
   app.use('/api/v1/movement', generalLimiter, movementRoutes);
   app.use('/api/v1/progression', generalLimiter, progressionRoutes);
+  app.use('/api/v1/tutorial', generalLimiter, tutorialRoutes);
+  app.use('/api/v1/affinity', generalLimiter, affinityRoutes);
 
   // Legacy auth routes (for backward compatibility)
   app.use('/api/auth', authLimiter, authRoutes);
@@ -136,8 +140,8 @@ export const createApp = () => {
     res.json({
       message: 'Aeturnis Online API',
       status: 'operational',
-      version: '2.7.0',
-      architecture: 'MMORPG Backend with World & Movement System',
+      version: '2.8.0',
+      architecture: 'MMORPG Backend with Tutorial & Affinity Systems',
       uptime: Math.floor(process.uptime()),
       timestamp: new Date().toISOString(),
       endpoints: {
@@ -156,6 +160,8 @@ export const createApp = () => {
         zones: '/api/v1/zones',
         movement: '/api/v1/movement',
         progression: '/api/v1/progression',
+        tutorial: '/api/v1/tutorial',
+        affinity: '/api/v1/affinity',
       },
       services: {
         database: 'connected',
