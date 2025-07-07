@@ -86,7 +86,7 @@ export class ResourceService {
       charId,
       timestamp: Date.now(),
       updates,
-      source: updates[0]?.reason as any || 'unknown'
+      source: updates[0]?.reason || 'unknown'
     };
 
     const history = this.eventHistory.get(charId) || [];

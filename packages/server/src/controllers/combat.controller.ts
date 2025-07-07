@@ -382,11 +382,10 @@ export const startTestCombat = async (req: Request, res: Response): Promise<Resp
     console.log('=== START TEST COMBAT DEBUG ===');
     console.log('Request body:', JSON.stringify(req.body, null, 2));
     
-    const { targetIds, battleType } = req.body;
+    const { targetIds } = req.body;
     
     console.log('Extracted values:', {
-      targetIds,
-      battleType
+      targetIds
     });
     
     // For test monsters, use a mock user ID
@@ -483,7 +482,7 @@ export const startCombat = async (req: AuthRequest, res: Response): Promise<Resp
       });
     }
 
-    const { targetIds, battleType }: CombatStartRequest = req.body;
+    const { targetIds }: CombatStartRequest = req.body;
 
     // Validate that user is not targeting themselves
     if (targetIds.includes(userId)) {

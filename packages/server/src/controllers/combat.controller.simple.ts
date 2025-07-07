@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 /**
  * Test Combat System - Simple Mock Implementation
  */
-export const testCombatSystem = async (req: Request, res: Response) => {
+export const testCombatSystem = async (_req: Request, res: Response) => {
   try {
     res.json({
       success: true,
@@ -26,7 +26,7 @@ export const testCombatSystem = async (req: Request, res: Response) => {
 /**
  * Get Engine Info - Simple Mock Implementation
  */
-export const getEngineInfo = async (req: Request, res: Response) => {
+export const getEngineInfo = async (_req: Request, res: Response) => {
   try {
     res.json({
       success: true,
@@ -55,7 +55,7 @@ export const getEngineInfo = async (req: Request, res: Response) => {
 /**
  * Get Test Monsters - Simple Mock Implementation
  */
-export const getTestMonsters = async (req: Request, res: Response) => {
+export const getTestMonsters = async (_req: Request, res: Response) => {
   try {
     const testMonsters = [
       {

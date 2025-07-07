@@ -345,7 +345,7 @@ export class CharacterService {
     return { isValid: true };
   }
 
-  async getRandomStartingAppearance(race: CharacterRace): Promise<any> {
+  async getRandomStartingAppearance(race: CharacterRace): Promise<Record<string, string | number>> {
     // Generate random appearance based on race
     const appearances = {
       [CharacterRace.HUMAN]: {

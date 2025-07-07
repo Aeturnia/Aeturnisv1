@@ -63,7 +63,7 @@ export class NPCService {
   /**
    * Start interaction with an NPC
    */
-  async startInteraction(npcId: string, characterId: string): Promise<any> {
+  async startInteraction(npcId: string, characterId: string): Promise<{ interaction: any; dialogue: any }> {
     try {
       logger.info(`Starting interaction between character ${characterId} and NPC ${npcId}`);
       
@@ -95,7 +95,7 @@ export class NPCService {
         .returning();
 
       // Get initial dialogue from NPC's metadata
-      const metadata = npc[0].metadata as any;
+      const metadata = npc[0].metadata as Record<string, unknown>;
       const dialogueTree = metadata?.dialogueTree;
       const initialDialogue = dialogueTree?.root || {
         nodeId: 'greeting',
@@ -128,7 +128,7 @@ export class NPCService {
   /**
    * Advance dialogue with an NPC
    */
-  async advanceDialogue(npcId: string, characterId: string, choiceId: string): Promise<any> {
+  async advanceDialogue(npcId: string, characterId: string, choiceId: string): Promise<{ dialogue: any; choices: any[] }> {
     try {
       logger.info(`Advancing dialogue for character ${characterId} and NPC ${npcId} with choice: ${choiceId}`);
       
@@ -144,14 +144,14 @@ export class NPCService {
       }
 
       // Get dialogue tree and find next node
-      const metadata = npc[0].metadata as any;
+      const metadata = npc[0].metadata as Record<string, unknown>;
       const dialogueTree = metadata?.dialogueTree;
       let nextDialogue;
 
       // Simple dialogue logic based on choice
       switch (choiceId) {
         case 'services':
-          const services = (npc[0].metadata as any)?.services || ['general'];
+          const services = (npc[0].metadata as Record<string, unknown>)?.services as string[] || ['general'];
           nextDialogue = {
             nodeId: 'services',
             text: `I offer the following services: ${services.join(', ')}. What interests you?`,
@@ -331,7 +331,7 @@ export class NPCService {
       }
 
       // Check for any blocking conditions in metadata
-      const metadata = npc[0].metadata as any;
+      const metadata = npc[0].metadata as Record<string, unknown>;
       if (metadata?.disabled || metadata?.maintenance) {
         return false;
       }
@@ -367,7 +367,7 @@ export class NPCService {
       }
 
       // Verify NPC is a merchant
-      const metadata = npc[0].metadata as any;
+      const metadata = npc[0].metadata as Record<string, unknown>;
       const services = metadata?.services || [];
       if (!services.includes('shop') && !services.includes('trade')) {
         throw new Error(`NPC ${npcId} is not a merchant`);
@@ -403,7 +403,7 @@ export class NPCService {
   /**
    * Get NPC by ID
    */
-  async getNPCById(npcId: string): Promise<any> {
+  async getNPCById(npcId: string): Promise<Record<string, unknown> | null> {
     try {
       const result = await db
         .select()

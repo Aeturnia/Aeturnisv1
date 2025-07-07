@@ -391,7 +391,7 @@ export class StatsService {
    */
   static validateStatModification(
     character: Character, 
-    statUpdates: Record<string, any>,
+    statUpdates: Record<string, number | bigint>,
     requestSource: 'server' | 'client' = 'client'
   ): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
