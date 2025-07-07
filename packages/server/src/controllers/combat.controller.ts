@@ -222,21 +222,22 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
     
     // Handle CombatService errors with helpful messages
     if ('error' in result) {
-      console.log('Combat service returned error:', result.error, 'Code:', result.code);
+      const errorResult = result as { error: string; code?: string };
+      console.log('Combat service returned error:', errorResult.error, 'Code:', errorResult.code);
       
-      let userMessage = result.error;
+      let userMessage = errorResult.error;
       let statusCode = 400;
       let hint = '';
       
-      switch (result.code) {
+      switch (errorResult.code) {
         case 'INVALID_ACTION':
-          if (result.error.includes('not found in combat')) {
+          if (errorResult.error.includes('not found in combat')) {
             userMessage = '🚫 You are not participating in this combat session!';
             hint = 'Join a combat session first or check your session ID';
-          } else if (result.error.includes('not active')) {
+          } else if (errorResult.error.includes('not active')) {
             userMessage = '⏸️ You cannot act right now! Combat may be paused or ended.';
             hint = 'Wait for your turn or check combat status';
-          } else if (result.error.includes('session is not active')) {
+          } else if (errorResult.error.includes('session is not active')) {
             userMessage = '🔒 This combat session has ended or is not active.';
             hint = 'Start a new combat session to continue fighting';
           }
@@ -248,20 +249,20 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
           break;
           
         case 'INSUFFICIENT_RESOURCES':
-          if (result.error.includes('stamina')) {
+          if (errorResult.error.includes('stamina')) {
             userMessage = '😴 Not enough stamina! You need to rest or use a lighter action.';
             hint = 'Try defending (costs less stamina) or wait to recover';
-          } else if (result.error.includes('mana')) {
+          } else if (errorResult.error.includes('mana')) {
             userMessage = '🔮 Not enough mana! You cannot cast this skill right now.';
             hint = 'Use basic attacks or wait for mana to regenerate';
           } else {
-            userMessage = `💪 Insufficient resources! ${result.error}`;
+            userMessage = `💪 Insufficient resources! ${errorResult.error}`;
             hint = 'Check your health, mana, and stamina levels';
           }
           break;
           
         default:
-          userMessage = `⚔️ Combat Error: ${result.error}`;
+          userMessage = `⚔️ Combat Error: ${errorResult.error}`;
           hint = 'Please try again or contact support if this persists';
       }
       
@@ -269,8 +270,8 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
         success: false,
         message: userMessage,
         hint: hint,
-        errorCode: result.code,
-        originalError: result.error
+        errorCode: errorResult.code,
+        originalError: errorResult.error
       });
     }
     
@@ -330,15 +331,16 @@ export const fleeTestCombat = async (req: Request, res: Response): Promise<Respo
     
     // Handle flee-specific errors with helpful messages
     if ('error' in result) {
-      let userMessage = result.error;
+      const errorResult = result as { error: string; code?: string };
+      let userMessage = errorResult.error;
       let hint = '';
       
-      switch (result.code) {
+      switch (errorResult.code) {
         case 'INVALID_ACTION':
-          if (result.error.includes('not found in combat')) {
+          if (errorResult.error.includes('not found in combat')) {
             userMessage = '🏃 You are not in combat! Nothing to flee from.';
             hint = 'Start a combat session first to use flee action';
-          } else if (result.error.includes('not active')) {
+          } else if (errorResult.error.includes('not active')) {
             userMessage = '🔒 Combat is not active! Cannot flee from inactive combat.';
             hint = 'Check combat status or start a new combat session';
           }
@@ -348,7 +350,7 @@ export const fleeTestCombat = async (req: Request, res: Response): Promise<Respo
           hint = 'Wait for stamina to recover or try other actions';
           break;
         default:
-          userMessage = `🏃 Flee Error: ${result.error}`;
+          userMessage = `🏃 Flee Error: ${errorResult.error}`;
           hint = 'Try again or check your combat status';
       }
       
@@ -356,7 +358,7 @@ export const fleeTestCombat = async (req: Request, res: Response): Promise<Respo
         success: false,
         message: userMessage,
         hint: hint,
-        errorCode: result.code
+        errorCode: errorResult.code
       });
     }
 
