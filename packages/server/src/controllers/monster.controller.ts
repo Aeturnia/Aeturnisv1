@@ -224,6 +224,58 @@ export const killMonster = async (req: Request, res: Response) => {
 };
 
 /**
+ * Update monster state
+ */
+export const updateMonsterState = async (req: Request, res: Response) => {
+  try {
+    const { monsterId } = req.params;
+    const { state, targetId } = req.body;
+
+    if (!monsterId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Monster ID is required'
+      });
+    }
+
+    if (!state) {
+      return res.status(400).json({
+        success: false,
+        error: 'New state is required'
+      });
+    }
+
+    // Update monster state using mock service
+    const updatedMonster = await mockMonsterService.updateMonsterState(monsterId, state, targetId);
+    
+    const result = {
+      success: true,
+      message: `Monster ${monsterId} state updated to ${state}`,
+      data: {
+        monsterId: updatedMonster.id,
+        newState: updatedMonster.state,
+        targetId: updatedMonster.targetId,
+        position: updatedMonster.position,
+        health: `${updatedMonster.currentHp}/${updatedMonster.maxHp}`
+      }
+    };
+
+    console.log(`Monster state updated: ${monsterId} -> ${state}`);
+    
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    console.error('Error updating monster state:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update monster state'
+    });
+  }
+};
+
+/**
  * Test monster system
  */
 export const testMonsterSystem = async (req: Request, res: Response) => {

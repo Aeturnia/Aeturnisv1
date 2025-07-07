@@ -283,4 +283,75 @@ export class MockNPCService implements INPCService {
       metadata: npc.metadata
     }));
   }
+
+  /**
+   * Interact with NPC - Main interaction method
+   */
+  async interactWithNPC(npcId: string, characterId: string, interactionType?: string): Promise<any> {
+    logger.info(`MockNPCService: ${characterId} interacting with ${npcId}, type: ${interactionType || 'default'}`);
+    
+    const npc = this.mockNPCs.find(n => n.id === npcId);
+    if (!npc) {
+      throw new Error(`NPC ${npcId} not found`);
+    }
+
+    // Create interaction record
+    const interaction = {
+      id: `interaction-${Date.now()}`,
+      npcId,
+      characterId,
+      interactionType: interactionType || 'dialogue',
+      timestamp: new Date(),
+      metadata: {}
+    };
+
+    this.mockInteractions.push(interaction);
+
+    // Return interaction result based on NPC type
+    const result = {
+      success: true,
+      interaction,
+      npc: {
+        id: npc.id,
+        name: npc.displayName || npc.name,
+        type: npc.type
+      },
+      message: '',
+      data: {}
+    };
+
+    switch (npc.type) {
+      case 'QUEST_GIVER':
+        result.message = `${npc.displayName}: Welcome, adventurer! I have quests available for you.`;
+        result.data = {
+          availableQuests: [
+            { id: 'kill_goblins', name: 'Goblin Slayer', description: 'Kill 5 goblins in the forest' },
+            { id: 'collect_herbs', name: 'Herb Gatherer', description: 'Collect 10 healing herbs' }
+          ]
+        };
+        break;
+      case 'MERCHANT':
+        result.message = `${npc.displayName}: Welcome to my shop! What can I get for you today?`;
+        result.data = {
+          shopItems: [
+            { id: 'sword', name: 'Iron Sword', price: 100, type: 'weapon' },
+            { id: 'potion', name: 'Health Potion', price: 25, type: 'consumable' }
+          ]
+        };
+        break;
+      case 'GUARD':
+        result.message = `${npc.displayName}: Stay safe out there, citizen. The roads can be dangerous.`;
+        result.data = {
+          warnings: ['Goblins spotted near the forest', 'Travel in groups when possible']
+        };
+        break;
+      default:
+        result.message = `${npc.displayName}: Hello there! How can I help you?`;
+        result.data = {
+          dialogue: ['Nice weather today', 'The town is peaceful', 'Safe travels!']
+        };
+    }
+
+    return result;
+  }
 }
