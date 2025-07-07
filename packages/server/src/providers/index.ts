@@ -27,6 +27,10 @@ export { MockBankService } from './mock/MockBankService';
 export { MockCurrencyService } from './mock/MockCurrencyService';
 export { MockDialogueService } from './mock/MockDialogueService';
 export { MockSpawnService } from './mock/MockSpawnService';
+// TODO: Enable after fixing module paths
+// export { MockZoneService } from './mock/MockZoneService';
+// export { MockMovementService } from './mock/MockMovementService';  
+// export { MockProgressionService } from './mock/MockProgressionService';
 
 // Real implementations - exported dynamically in initializeProviders()
 // Commented out to prevent static import errors when repositories are missing
@@ -122,6 +126,16 @@ export async function initializeProviders(useMocks: boolean): Promise<void> {
   } catch (error) {
     console.error('❌ Failed to register SpawnService:', error);
   }
+
+  // TODO: Register World & Movement System services after fixing module paths
+  // try {
+  //   console.log('Registering MockZoneService...');
+  //   const { MockZoneService } = await import('./mock/MockZoneService');
+  //   provider.register('ZoneService', new MockZoneService());
+  //   console.log('✅ ZoneService registered');
+  // } catch (error) {
+  //   console.error('❌ Failed to register ZoneService:', error);
+  // }
   
   const registeredServices = provider.getRegisteredServices();
   console.log(`Service Provider initialized with ${registeredServices.length} MOCK services: ${registeredServices.join(', ')}`);

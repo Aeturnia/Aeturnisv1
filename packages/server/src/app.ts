@@ -24,6 +24,9 @@ import { deathRoutes } from './routes/death.routes';
 import { lootRoutes } from './routes/loot.routes';
 import monsterRoutes from './routes/monster.routes';
 import npcRoutes from './routes/npc.routes';
+import zoneRoutes from './routes/zone.routes';
+import movementRoutes from './routes/movement.routes';
+import progressionRoutes from './routes/progression.routes';
 import { debugRoutes } from './routes/debug.routes';
 
 // Services
@@ -121,6 +124,9 @@ export const createApp = () => {
   app.use('/api/v1/loot', generalLimiter, lootRoutes);
   app.use('/api/v1/monsters', generalLimiter, monsterRoutes);
   app.use('/api/v1/npcs', generalLimiter, npcRoutes);
+  app.use('/api/v1/zones', generalLimiter, zoneRoutes);
+  app.use('/api/v1/movement', generalLimiter, movementRoutes);
+  app.use('/api/v1/progression', generalLimiter, progressionRoutes);
 
   // Legacy auth routes (for backward compatibility)
   app.use('/api/auth', authLimiter, authRoutes);
@@ -130,8 +136,8 @@ export const createApp = () => {
     res.json({
       message: 'Aeturnis Online API',
       status: 'operational',
-      version: '2.6.0',
-      architecture: 'MMORPG Backend with Monster & NPC Systems',
+      version: '2.7.0',
+      architecture: 'MMORPG Backend with World & Movement System',
       uptime: Math.floor(process.uptime()),
       timestamp: new Date().toISOString(),
       endpoints: {
@@ -147,6 +153,9 @@ export const createApp = () => {
         loot: '/api/v1/loot',
         monsters: '/api/v1/monsters',
         npcs: '/api/v1/npcs',
+        zones: '/api/v1/zones',
+        movement: '/api/v1/movement',
+        progression: '/api/v1/progression',
       },
       services: {
         database: 'connected',
