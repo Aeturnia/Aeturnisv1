@@ -399,21 +399,25 @@ export const startTestCombat = async (req: Request, res: Response): Promise<Resp
     
     // Use the shared combatService instance with force start for testing
     const combatService = ServiceProvider.getInstance().get<ICombatService>('CombatService');
-    const session = await combatService.initiateCombat(mockUserId, combatRequest.targetIds[0]);
+    if (!combatService) {
+      throw new Error('CombatService not available');
+    }
+    
+    const session = await combatService.initiateCombat('player-test-001', combatRequest.targetIds[0]);
 
-    console.log(`Combat session created successfully: ${session.sessionId}`);
+    console.log(`Combat session created successfully: ${session.id}`);
     console.log('Session details:', JSON.stringify({
-      sessionId: session.sessionId,
-      status: session.status,
+      sessionId: session.id,
+      status: session.state,
       participantCount: session.participants.length,
-      participants: session.participants.map(p => p.charId)
+      participants: session.participants.map(p => p.id)
     }, null, 2));
 
     const response = {
       success: true,
       message: 'Combat started successfully!',
       data: {
-        sessionId: session.sessionId,
+        sessionId: session.id,
         session: session,
         combatMessage: 'Battle has begun! Choose your action.',
         status: 'active'

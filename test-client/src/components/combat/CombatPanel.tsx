@@ -33,9 +33,9 @@ export const CombatPanel: React.FC = () => {
       console.log('Monsters API result:', result);
       console.log('Full API response:', JSON.stringify(result, null, 2));
       
-      if (result && result.success && result.data) {
-        // Ensure we're getting an array
-        const monstersData = Array.isArray(result.data) ? result.data : [];
+      if (result && result.success && result.data && result.data.monsters) {
+        // Access the monsters array from result.data.monsters
+        const monstersData = Array.isArray(result.data.monsters) ? result.data.monsters : [];
         console.log('Setting monsters:', monstersData);
         console.log('Is array?', Array.isArray(monstersData));
         setTestMonsters(monstersData);
@@ -121,8 +121,8 @@ export const CombatPanel: React.FC = () => {
 
     try {
       const result = await api.post('/api/v1/combat/test-start', {
-        playerId: 'player-test-001',
-        enemyId: monsterToFight
+        targetIds: [monsterToFight],
+        battleType: 'pve'
       });
 
       if (result.success && result.data?.sessionId) {
