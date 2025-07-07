@@ -44,13 +44,13 @@ export const getNPCById = async (req: Request, res: Response) => {
       });
     }
     
-    res.json({ 
+    return res.json({ 
       success: true, 
       data: npc
     });
   } catch (error) {
     console.error('Error getting NPC by ID:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to get NPC'
     });

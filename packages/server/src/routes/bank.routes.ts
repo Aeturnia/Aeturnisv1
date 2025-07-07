@@ -34,7 +34,7 @@ router.get('/characters/:characterId/bank',
     try {
       const bankService = ServiceProvider.getInstance().get<IBankService>('BankService');
       const bank = await bankService.getBankContents(req.params.characterId, BankType.PERSONAL);
-      res.json(bank);
+      return res.json(bank);
     } catch (error) {
       logger.error('Failed to get personal bank', { 
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -60,7 +60,7 @@ router.get('/users/:userId/shared-bank',
       const bankService = ServiceProvider.getInstance().get<IBankService>('BankService');
       // Note: Shared bank uses userId, not characterId - need to handle this
       const bank = await bankService.getBankContents(req.params.userId, BankType.SHARED);
-      res.json(bank);
+      return res.json(bank);
     } catch (error) {
       logger.error('Failed to get shared bank', { 
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -98,7 +98,7 @@ router.post('/characters/:characterId/bank/items',
         quantity
       );
 
-      res.json({
+      return res.json({
         success: true,
         message: 'Item added to bank',
         slot,
@@ -148,7 +148,7 @@ router.delete('/characters/:characterId/bank/items/:slot',
         quantity
       );
 
-      res.json({
+      return res.json({
         success: true,
         message: 'Item removed from bank',
         slot,
@@ -243,7 +243,7 @@ router.post('/characters/:characterId/bank/expand',
         BankType.PERSONAL
       );
 
-      res.json({
+      return res.json({
         success: true,
         message: 'Bank expanded successfully',
         newTotalSlots: result.newTotalSlots,

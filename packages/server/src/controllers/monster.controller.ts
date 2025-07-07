@@ -210,13 +210,13 @@ export const killMonster = async (req: Request, res: Response) => {
     
     console.log(`Monster killed: ${monsterId} - ${monster.displayName || monster.name}`);
     
-    res.json({
+    return res.json({
       success: true,
       data: killResult
     });
   } catch (error) {
     console.error('Error killing monster:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to kill monster'
     });
@@ -262,13 +262,13 @@ export const updateMonsterState = async (req: Request, res: Response) => {
 
     console.log(`Monster state updated: ${monsterId} -> ${state}`);
     
-    res.json({
+    return res.json({
       success: true,
       data: result
     });
   } catch (error) {
     console.error('Error updating monster state:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to update monster state'
     });

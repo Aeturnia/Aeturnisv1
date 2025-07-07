@@ -120,7 +120,7 @@ export const startTestCombat = async (req: Request, res: Response) => {
 
     const sessionId = `test_combat_${Date.now()}`;
     
-    res.json({
+    return res.json({
       success: true,
       data: {
         sessionId,
