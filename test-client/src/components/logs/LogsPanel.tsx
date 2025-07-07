@@ -12,7 +12,7 @@ interface LogEvent {
 }
 
 export const LogsPanel: React.FC = () => {
-  const { token, isAuthenticated } = useAuth();
+  const { token } = useAuth();
   const [events, setEvents] = useState<LogEvent[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [eventFilter, setEventFilter] = useState<string>('all');

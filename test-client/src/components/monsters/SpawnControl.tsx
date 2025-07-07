@@ -15,14 +15,12 @@ interface SpawnControlProps {
   spawnPoints: SpawnPoint[];
   onSpawn: (spawnPointId: string) => void;
   loading: boolean;
-  isAuthenticated: boolean;
 }
 
 export const SpawnControl: React.FC<SpawnControlProps> = ({
   spawnPoints,
   onSpawn,
   loading,
-  isAuthenticated,
 }) => {
   return (
     <div className="spawn-control">

@@ -15,7 +15,6 @@ interface NPCListProps {
   npcs: NPC[];
   onInteract: (npcId: string) => void;
   loading: boolean;
-  isAuthenticated: boolean;
   selectedNpcId?: string;
 }
 
@@ -23,7 +22,6 @@ export const NPCList: React.FC<NPCListProps> = ({
   npcs,
   onInteract,
   loading,
-  isAuthenticated,
   selectedNpcId,
 }) => {
   const getNPCIcon = (type: string) => {

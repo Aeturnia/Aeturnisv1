@@ -299,7 +299,6 @@ export const MonsterPanel: React.FC = () => {
             spawnPoints={spawnPoints}
             onSpawn={handleSpawn}
             loading={monsterTest.loading}
-            isAuthenticated={isAuthenticated}
           />
         </div>
       </div>
