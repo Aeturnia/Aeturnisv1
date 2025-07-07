@@ -106,7 +106,7 @@ export class LootService {
   /**
    * Get loot history for a character
    */
-  async getLootHistory(characterId: string, limit: number = 50): Promise<any[]> {
+  async getLootHistory(characterId: string, limit: number = 50): Promise<Array<{ id: string; timestamp: Date; items: unknown[]; source: string }>> {
     const history = await this.lootRepository.getLootHistoryForCharacter(characterId, limit);
     
     return history.map(record => ({

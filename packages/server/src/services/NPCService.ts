@@ -18,12 +18,12 @@ export class NPCService {
   /**
    * Get all NPCs in a specific zone
    */
-  async getNPCsInZone(zoneIdOrName: string): Promise<any[]> {
+  async getNPCsInZone(zoneIdOrName: string): Promise<Array<{ id: string; name: string; type: string; position: { x: number; y: number } }>> {
     try {
       logger.info(`Fetching NPCs for zone: ${zoneIdOrName}`);
       
       const cacheKey = `npcs:zone:${zoneIdOrName}`;
-      const cached = await this.cache.get<any[]>(cacheKey);
+      const cached = await this.cache.get<Array<{ id: string; name: string; type: string; position: { x: number; y: number } }>>(cacheKey);
       if (cached) {
         logger.info(`Cache hit for NPCs in zone: ${zoneIdOrName}`);
         return cached;
@@ -269,12 +269,12 @@ export class NPCService {
   /**
    * Get all quest-giving NPCs
    */
-  async getQuestGivers(): Promise<any[]> {
+  async getQuestGivers(): Promise<Array<{ id: string; name: string; questIds: string[]; location: { zone: string; position: { x: number; y: number } } }>> {
     try {
       logger.info('Fetching quest-giving NPCs');
       
       const cacheKey = 'npcs:quest-givers';
-      const cached = await this.cache.get<any[]>(cacheKey);
+      const cached = await this.cache.get<Array<{ id: string; name: string; questIds: string[]; location: { zone: string; position: { x: number; y: number } } }>>(cacheKey);
       if (cached) {
         logger.info('Cache hit for quest-giving NPCs');
         return cached;
@@ -297,7 +297,7 @@ export class NPCService {
   /**
    * Get interaction history for a character
    */
-  async getInteractionHistory(characterId: string): Promise<any[]> {
+  async getInteractionHistory(characterId: string): Promise<Array<{ id: string; npcId: string; timestamp: Date; interactionType: string; data: Record<string, unknown> }>> {
     try {
       logger.info(`Fetching interaction history for character: ${characterId}`);
       
@@ -421,12 +421,12 @@ export class NPCService {
   /**
    * Get all merchant NPCs
    */
-  async getMerchants(): Promise<any[]> {
+  async getMerchants(): Promise<Array<{ id: string; name: string; shopType: string; inventory: unknown[]; location: { zone: string; position: { x: number; y: number } } }>> {
     try {
       logger.info('Fetching merchant NPCs');
       
       const cacheKey = 'npcs:merchants';
-      const cached = await this.cache.get<any[]>(cacheKey);
+      const cached = await this.cache.get<Array<{ id: string; name: string; shopType: string; inventory: unknown[]; location: { zone: string; position: { x: number; y: number } } }>>(cacheKey);
       if (cached) {
         logger.info('Cache hit for merchant NPCs');
         return cached;

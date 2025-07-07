@@ -295,7 +295,7 @@ export const getLootTables = async (req: Request, res: Response): Promise<Respon
     // TODO: Add getAllLootTables to ILootService interface and implementations
     // const lootService = ServiceProvider.getInstance().get<ILootService>('LootService');
     // const tables = await lootService.getAllLootTables();
-    const tables = [] as any[]; // Temporary until interface is updated
+    const tables = [] as Array<{ id: string; name: string; dropChance: number; items: unknown[] }>; // Temporary until interface is updated
 
     return res.status(200).json({
       success: true,
