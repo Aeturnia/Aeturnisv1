@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { MockMonsterService } from '../providers/mock/MockMonsterService';
+import { logger } from '../utils/logger';
 
 // Create a singleton instance for all controller methods
 const mockMonsterService = new MockMonsterService();
@@ -27,7 +28,7 @@ export const getMonstersInZone = async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    console.error('Error getting monsters in zone:', error);
+    logger.error('Error getting monsters in zone:', error);
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to get monsters'
@@ -60,7 +61,7 @@ export const getMonsterById = async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    console.error('Error getting monster by ID:', error);
+    logger.error('Error getting monster by ID:', error);
     return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to get monster'
@@ -83,7 +84,7 @@ export const getMonsterTypes = async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    console.error('Error getting monster types:', error);
+    logger.error('Error getting monster types:', error);
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to get monster types'
@@ -135,7 +136,7 @@ export const getSpawnPointsByZone = async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    console.error('Error getting spawn points:', error);
+    logger.error('Error getting spawn points:', error);
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to get spawn points'
@@ -168,7 +169,7 @@ export const spawnMonster = async (req: Request, res: Response) => {
       message: 'Monster spawned successfully'
     });
   } catch (error) {
-    console.error('Error spawning monster:', error);
+    logger.error('Error spawning monster:', error);
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to spawn monster'
@@ -208,14 +209,14 @@ export const killMonster = async (req: Request, res: Response) => {
       }
     };
     
-    console.log(`Monster killed: ${monsterId} - ${monster.displayName || monster.name}`);
+    logger.info(`Monster killed: ${monsterId} - ${monster.displayName || monster.name}`);
     
     return res.json({
       success: true,
       data: killResult
     });
   } catch (error) {
-    console.error('Error killing monster:', error);
+    logger.error('Error killing monster:', error);
     return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to kill monster'
@@ -260,14 +261,14 @@ export const updateMonsterState = async (req: Request, res: Response) => {
       }
     };
 
-    console.log(`Monster state updated: ${monsterId} -> ${state}`);
+    logger.info(`Monster state updated: ${monsterId} -> ${state}`);
     
     return res.json({
       success: true,
       data: result
     });
   } catch (error) {
-    console.error('Error updating monster state:', error);
+    logger.error('Error updating monster state:', error);
     return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to update monster state'
@@ -299,7 +300,7 @@ export const testMonsterSystem = async (req: Request, res: Response) => {
     
     res.json(testData);
   } catch (error) {
-    console.error('Error testing monster system:', error);
+    logger.error('Error testing monster system:', error);
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to test monster system'

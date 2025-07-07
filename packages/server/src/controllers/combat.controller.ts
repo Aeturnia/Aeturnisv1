@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { ServiceProvider, ICombatService } from '../providers';
 import { CombatStartRequest, CombatActionRequest, CombatActionType } from '../types/combat.types';
+import { logger } from '../utils/logger';
 
 // Extend Request type for authenticated requests
 interface AuthRequest extends Request {
@@ -85,10 +86,10 @@ export const getCombatSession = async (req: Request, res: Response): Promise<Res
       });
     }
 
-    console.log(`Looking for combat session: ${sessionId}`);
+    logger.debug(`Looking for combat session: ${sessionId}`);
     const combatService = ServiceProvider.getInstance().get<ICombatService>('CombatService');
     const session = await combatService.getActiveCombat(sessionId);
-    console.log(`Session found: ${session ? 'Yes' : 'No'}`);
+    logger.debug(`Session found: ${session ? 'Yes' : 'No'}`);
     
     if (!session) {
       return res.status(404).json({
@@ -118,19 +119,19 @@ export const getCombatSession = async (req: Request, res: Response): Promise<Res
  */
 export const performTestAction = async (req: Request, res: Response): Promise<Response> => {
   try {
-    console.log('=== COMBAT ACTION DEBUG START ===');
-    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    logger.debug('=== COMBAT ACTION DEBUG START ===');
+    logger.debug('Request body:', JSON.stringify(req.body, null, 2));
     
     const { sessionId, action, targetId } = req.body;
     
-    console.log('Extracted values:', {
+    logger.debug('Extracted values:', {
       sessionId,
       action,
       targetId
     });
     
     if (!sessionId) {
-      console.log('Validation failed: missing sessionId');
+      logger.debug('Validation failed: missing sessionId');
       return res.status(400).json({
         success: false,
         message: '🆔 Combat session ID is required!',
@@ -139,7 +140,7 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
     }
     
     if (!action) {
-      console.log('Validation failed: missing action');
+      logger.debug('Validation failed: missing action');
       return res.status(400).json({
         success: false,
         message: '⚡ Action is required!',
@@ -150,19 +151,19 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
 
     // Use mock player ID for testing
     const actorId = '550e8400-e29b-41d4-a716-446655440000';
-    console.log('Using actor ID:', actorId);
+    logger.debug('Using actor ID:', actorId);
     
     // Validate action type
     const validActions = Object.values(CombatActionType);
     const actionType = action.toLowerCase();
-    console.log('Action type validation:', {
+    logger.debug('Action type validation:', {
       provided: actionType,
       valid: validActions,
       isValid: validActions.includes(actionType as CombatActionType)
     });
     
     if (!validActions.includes(actionType as CombatActionType)) {
-      console.log('Invalid action type provided');
+      logger.debug('Invalid action type provided');
       return res.status(400).json({
         success: false,
         message: `⚔️ Invalid combat action! Available actions: ${validActions.join(', ')}`,
@@ -176,7 +177,7 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
     if (['attack', 'useSkill'].includes(actionType) && !targetId) {
       // Auto-select first enemy in session for test attacks
       finalTargetId = 'test_goblin_001'; // Default test target
-      console.log('Auto-selected target for action:', finalTargetId);
+      logger.debug('Auto-selected target for action:', finalTargetId);
     }
 
     // Create proper action object with proper enum values
@@ -186,7 +187,7 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
       timestamp: Date.now()
     };
     
-    console.log('Combat action object:', JSON.stringify(combatAction, null, 2));
+    logger.debug('Combat action object:', JSON.stringify(combatAction, null, 2));
     
     // Check if session exists before processing action
     const combatService = ServiceProvider.getInstance().get<ICombatService>('CombatService');
@@ -195,14 +196,14 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
     }
     
     const session = await combatService.getActiveCombat(sessionId);
-    console.log('Session lookup result:', {
+    logger.debug('Session lookup result:', {
       sessionId,
       exists: !!session,
       status: session?.status || 'N/A'
     });
     
     if (!session) {
-      console.log('Session not found');
+      logger.debug('Session not found');
       // Check if this is because the player is dead (session ended)
       // In a real implementation, we'd check character death status from database
       // For testing, we assume session not found after combat = player is dead
@@ -214,16 +215,16 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
       });
     }
     
-    console.log('Processing action with combat service...');
+    logger.debug('Processing action with combat service...');
     const result = await combatService.processCombatAction(sessionId, actorId, combatAction);
-    console.log('Combat service result:', JSON.stringify(result, null, 2));
+    logger.debug('Combat service result:', JSON.stringify(result, null, 2));
 
-    console.log('=== COMBAT ACTION DEBUG END ===');
+    logger.debug('=== COMBAT ACTION DEBUG END ===');
     
     // Handle CombatService errors with helpful messages
     if ('error' in result) {
       const errorResult = result as { error: string; code?: string };
-      console.log('Combat service returned error:', errorResult.error, 'Code:', errorResult.code);
+      logger.debug('Combat service returned error:', errorResult.error, 'Code:', errorResult.code);
       
       let userMessage = errorResult.error;
       let statusCode = 400;
@@ -281,14 +282,14 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
       ...result  // Spread result to include message, combatStatus, etc. at top level
     });
   } catch (error) {
-    console.error('=== COMBAT ACTION ERROR ===');
-    console.error('Error details:', {
+    logger.error('=== COMBAT ACTION ERROR ===');
+    logger.error('Error details:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : 'No stack trace',
       name: error instanceof Error ? error.name : 'Unknown error type'
     });
-    console.error('Request body at error:', JSON.stringify(req.body, null, 2));
-    console.error('=== END COMBAT ACTION ERROR ===');
+    logger.error('Request body at error:', JSON.stringify(req.body, null, 2));
+    logger.error('=== END COMBAT ACTION ERROR ===');
     
     return res.status(500).json({
       success: false,
@@ -379,26 +380,26 @@ export const fleeTestCombat = async (req: Request, res: Response): Promise<Respo
  */
 export const startTestCombat = async (req: Request, res: Response): Promise<Response> => {
   try {
-    console.log('=== START TEST COMBAT DEBUG ===');
-    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    logger.debug('=== START TEST COMBAT DEBUG ===');
+    logger.debug('Request body:', JSON.stringify(req.body, null, 2));
     
     const { targetIds } = req.body;
     
-    console.log('Extracted values:', {
+    logger.debug('Extracted values:', {
       targetIds
     });
     
     // For test monsters, use a mock user ID
     const mockUserId = '550e8400-e29b-41d4-a716-446655440000';
-    console.log('Using mock user ID:', mockUserId);
+    logger.debug('Using mock user ID:', mockUserId);
     
     const combatRequest = {
       targetIds: targetIds || ['test_goblin_001'],
       battleType: battleType || 'pve'
     };
     
-    console.log('Combat request:', JSON.stringify(combatRequest, null, 2));
-    console.log('Calling combatService.startCombat...');
+    logger.debug('Combat request:', JSON.stringify(combatRequest, null, 2));
+    logger.debug('Calling combatService.startCombat...');
     
     // Use the shared combatService instance with force start for testing
     const combatService = ServiceProvider.getInstance().get<ICombatService>('CombatService');
@@ -408,8 +409,8 @@ export const startTestCombat = async (req: Request, res: Response): Promise<Resp
     
     const session = await combatService.initiateCombat('player-test-001', combatRequest.targetIds[0]);
 
-    console.log(`Combat session created successfully: ${session.id}`);
-    console.log('Session details:', JSON.stringify({
+    logger.debug(`Combat session created successfully: ${session.id}`);
+    logger.debug('Session details:', JSON.stringify({
       sessionId: session.id,
       status: session.state,
       participantCount: session.participants.length,
@@ -427,17 +428,17 @@ export const startTestCombat = async (req: Request, res: Response): Promise<Resp
       }
     };
 
-    console.log('=== START TEST COMBAT SUCCESS ===');
+    logger.debug('=== START TEST COMBAT SUCCESS ===');
     return res.status(201).json(response);
   } catch (error) {
-    console.error('=== START TEST COMBAT ERROR ===');
-    console.error('Error details:', {
+    logger.error('=== START TEST COMBAT ERROR ===');
+    logger.error('Error details:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : 'No stack trace',
       name: error instanceof Error ? error.name : 'Unknown error type'
     });
-    console.error('Request body at error:', JSON.stringify(req.body, null, 2));
-    console.error('=== END START TEST COMBAT ERROR ===');
+    logger.error('Request body at error:', JSON.stringify(req.body, null, 2));
+    logger.error('=== END START TEST COMBAT ERROR ===');
     
     let userMessage = 'Failed to start combat session';
     let statusCode = 500;
