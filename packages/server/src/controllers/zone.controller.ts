@@ -5,7 +5,7 @@
 
 import { Request, Response } from 'express';
 import { ZoneListResponse, ZoneDetailsResponse } from '@aeturnis/shared/types/zone.types';
-import logger from '../utils/logger';
+import { logger } from '../utils/logger';
 
 /**
  * Get all zones

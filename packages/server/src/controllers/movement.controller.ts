@@ -5,7 +5,7 @@
 
 import { Request, Response } from 'express';
 import { MoveRequest, MoveResponse, Direction } from '@aeturnis/shared/types/movement.types';
-import logger from '../utils/logger';
+import { logger } from '../utils/logger';
 
 /**
  * Execute character movement
