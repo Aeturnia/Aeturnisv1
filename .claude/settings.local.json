@@ -10,7 +10,11 @@
       "Bash(done)",
       "Bash(ls:*)",
       "Bash(npx tsc:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm test)",
+      "Bash(npm run dev:*)"
     ],
     "deny": []
   }

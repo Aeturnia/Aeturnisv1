@@ -1,11 +1,8 @@
-"use strict";
 /**
  * Tutorial System Type Definitions
  * Comprehensive types for tutorial zones, quests, and progress tracking
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.TutorialHelpCategory = exports.TutorialUrgency = exports.TutorialDifficulty = exports.TutorialRewardType = exports.TutorialObjectiveType = void 0;
-var TutorialObjectiveType;
+export var TutorialObjectiveType;
 (function (TutorialObjectiveType) {
     TutorialObjectiveType["TALK_TO_NPC"] = "talk_to_npc";
     TutorialObjectiveType["MOVE_TO_LOCATION"] = "move_to_location";
@@ -15,28 +12,28 @@ var TutorialObjectiveType;
     TutorialObjectiveType["CAST_SPELL"] = "cast_spell";
     TutorialObjectiveType["COLLECT_ITEM"] = "collect_item";
     TutorialObjectiveType["LEVEL_UP"] = "level_up";
-})(TutorialObjectiveType || (exports.TutorialObjectiveType = TutorialObjectiveType = {}));
-var TutorialRewardType;
+})(TutorialObjectiveType || (TutorialObjectiveType = {}));
+export var TutorialRewardType;
 (function (TutorialRewardType) {
     TutorialRewardType["EXPERIENCE"] = "experience";
     TutorialRewardType["GOLD"] = "gold";
     TutorialRewardType["ITEM"] = "item";
     TutorialRewardType["SKILL_POINT"] = "skill_point";
-})(TutorialRewardType || (exports.TutorialRewardType = TutorialRewardType = {}));
-var TutorialDifficulty;
+})(TutorialRewardType || (TutorialRewardType = {}));
+export var TutorialDifficulty;
 (function (TutorialDifficulty) {
     TutorialDifficulty["BEGINNER"] = "beginner";
     TutorialDifficulty["EASY"] = "easy";
     TutorialDifficulty["INTERMEDIATE"] = "intermediate";
-})(TutorialDifficulty || (exports.TutorialDifficulty = TutorialDifficulty = {}));
-var TutorialUrgency;
+})(TutorialDifficulty || (TutorialDifficulty = {}));
+export var TutorialUrgency;
 (function (TutorialUrgency) {
     TutorialUrgency["LOW"] = "low";
     TutorialUrgency["MEDIUM"] = "medium";
     TutorialUrgency["HIGH"] = "high";
     TutorialUrgency["CRITICAL"] = "critical";
-})(TutorialUrgency || (exports.TutorialUrgency = TutorialUrgency = {}));
-var TutorialHelpCategory;
+})(TutorialUrgency || (TutorialUrgency = {}));
+export var TutorialHelpCategory;
 (function (TutorialHelpCategory) {
     TutorialHelpCategory["NAVIGATION"] = "navigation";
     TutorialHelpCategory["COMBAT"] = "combat";
@@ -45,5 +42,5 @@ var TutorialHelpCategory;
     TutorialHelpCategory["SOCIAL"] = "social";
     TutorialHelpCategory["PROGRESSION"] = "progression";
     TutorialHelpCategory["GENERAL"] = "general";
-})(TutorialHelpCategory || (exports.TutorialHelpCategory = TutorialHelpCategory = {}));
+})(TutorialHelpCategory || (TutorialHelpCategory = {}));
 //# sourceMappingURL=tutorial.types.js.map

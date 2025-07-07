@@ -1,6 +1,11 @@
 // Export type modules
 export * from './monster.types';
 export * from './npc.types';
+export * from './affinity.types';
+export * from './tutorial.types';
+// export * from './zone.types'; // Temporarily disabled due to Zone naming conflict
+export * from './movement.types';
+export * from './progression.types';
 
 // Game-wide type definitions
 export type CharacterRace = 'human' | 'elf' | 'dwarf' | 'orc' | 'halfling' | 'gnome' | 'darkelf' | 'lizardman';

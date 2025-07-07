@@ -120,7 +120,7 @@ export class BankService {
         }
 
         // Clear cache
-        await redis.del(`bank:personal:${characterId}`);
+        await this.cacheService.delete(`bank:personal:${characterId}`);
       }
     });
 
@@ -184,7 +184,7 @@ export class BankService {
         }
 
         // Clear cache
-        await redis.del(`bank:personal:${characterId}`);
+        await this.cacheService.delete(`bank:personal:${characterId}`);
 
         logger.info('Item removed from bank', {
           characterId,
@@ -262,10 +262,10 @@ export class BankService {
       });
 
       // Clear caches
-      await redis.del(
-        `bank:personal:${characterId}`,
-        `currency:balance:${characterId}`
-      );
+      await Promise.all([
+        this.cacheService.delete(`bank:personal:${characterId}`),
+        this.cacheService.delete(`currency:balance:${characterId}`)
+      ]);
 
       logger.info('Bank slots expanded', {
         characterId,

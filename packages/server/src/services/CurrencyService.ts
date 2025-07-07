@@ -83,7 +83,7 @@ export class CurrencyService {
         .returning();
 
       // Invalidate cache
-      await redis.del(`currency:balance:${characterId}`);
+      await this.cacheService.delete(`currency:balance:${characterId}`);
 
       logger.info('Currency transaction completed', {
         characterId,
