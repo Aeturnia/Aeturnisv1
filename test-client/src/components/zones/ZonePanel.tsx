@@ -140,7 +140,12 @@ export const ZonePanel: React.FC = () => {
           </ul>
         </div>
 
-        <ResponseViewer response={response} />
+        <ResponseViewer 
+          response={response ? JSON.stringify(response, null, 2) : ''} 
+          success={!response || response.success !== false} 
+          loading={loading} 
+          title="Zone System Response" 
+        />
       </div>
     </div>
   );

@@ -188,7 +188,12 @@ export const MovementPanel: React.FC = () => {
           </ul>
         </div>
 
-        <ResponseViewer response={response} />
+        <ResponseViewer 
+          response={response ? JSON.stringify(response, null, 2) : ''} 
+          success={!response || response.success !== false} 
+          loading={loading} 
+          title="Movement System Response" 
+        />
       </div>
     </div>
   );
