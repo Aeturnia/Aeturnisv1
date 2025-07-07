@@ -7,9 +7,9 @@ import { StatsService } from '../services/StatsService';
  */
 
 interface StatModificationRequest extends Request {
-  statUpdates?: Record<string, any>;
-  character?: any;
-  validatedStats?: Record<string, any>;
+  statUpdates?: Record<string, number>;
+  character?: { id: string; level: number; statPoints: number; [key: string]: unknown };
+  validatedStats?: Record<string, number>;
 }
 
 /**

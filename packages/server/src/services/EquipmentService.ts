@@ -360,7 +360,7 @@ export class EquipmentService {
           setName: info.setName,
           equippedPieces: info.equippedPieces,
           totalPieces: info.totalPieces,
-          activeBonuses: info.bonuses.filter((bonus: any) => bonus.active),
+          activeBonuses: info.bonuses.filter((bonus: { active: boolean; bonusStats: Record<string, number> }) => bonus.active),
         });
 
         // Apply active set bonuses

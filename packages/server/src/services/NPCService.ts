@@ -351,7 +351,7 @@ export class NPCService {
   /**
    * Process trade interaction with merchant NPC
    */
-  async processTrade(npcId: string, characterId: string, tradeData: any): Promise<void> {
+  async processTrade(npcId: string, characterId: string, tradeData: { itemId: string; quantity: number; type: 'buy' | 'sell' }): Promise<void> {
     try {
       logger.info(`Processing trade between character ${characterId} and NPC ${npcId}`);
       

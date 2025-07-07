@@ -942,7 +942,7 @@ export class CombatService {
     }
     
     // Apply defender buffs (defending stance)
-    const defendBuff = target.buffs.find((b: any) => b.name === 'Defending');
+    const defendBuff = target.buffs.find((b: { name: string; modifier: number }) => b.name === 'Defending');
     if (defendBuff) {
       damage = Math.floor(damage * defendBuff.modifier);
     }
@@ -974,7 +974,7 @@ export class CombatService {
     
     // Magic attacks cannot be dodged or blocked traditionally
     // But defending stance still applies
-    const defendBuff = target.buffs.find((b: any) => b.name === 'Defending');
+    const defendBuff = target.buffs.find((b: { name: string; modifier: number }) => b.name === 'Defending');
     if (defendBuff) {
       damage = Math.floor(damage * defendBuff.modifier);
     }

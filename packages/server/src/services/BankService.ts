@@ -333,7 +333,7 @@ export class BankService {
     });
   }
 
-  private formatBankSlots(rawSlots: any[]): BankSlot[] {
+  private formatBankSlots(rawSlots: Array<{ slot: number; itemId: string | null; quantity: number | null; lastAccessedBy: string | null; updatedAt: Date }>): BankSlot[] {
     return rawSlots.map(slot => ({
       slot: slot.slot,
       itemId: slot.itemId,

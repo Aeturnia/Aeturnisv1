@@ -144,7 +144,7 @@ export class MonsterService {
     try {
       logger.info(`Updating monster state: ${monsterId} to ${newState}`);
       
-      const updateData: any = {
+      const updateData: { state: string; updatedAt: Date; metadata?: Record<string, unknown> } = {
         state: newState,
         updatedAt: new Date()
       };
