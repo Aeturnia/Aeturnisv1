@@ -40,15 +40,32 @@ export const NPCPanel: React.FC = () => {
         console.log('=== DEBUG: Raw NPCs before transformation:', rawNpcs);
         
         // Transform NPCs to match NPCList interface  
-        const transformedNpcs = rawNpcs.map((npc: any) => ({
-          id: npc.id,
-          name: npc.displayName || npc.name,
-          display_name: npc.displayName || npc.name,
-          npcType: npc.type || 'merchant',
-          position: npc.position || { x: 0, y: 0, z: 0 },
-          dialogue_tree: npc.dialogueTreeId,
-          services: npc.metadata?.shopkeeper ? { trade: true } : undefined
-        }));
+        const transformedNpcs = rawNpcs.map((npc: any) => {
+          console.log('=== DEBUG: Processing NPC:', npc);
+          console.log('=== DEBUG: NPC position:', npc.position);
+          
+          // Ensure position exists with robust fallback
+          const safePosition = npc.position && typeof npc.position === 'object' 
+            ? {
+                x: npc.position.x || 0,
+                y: npc.position.y || 0,
+                z: npc.position.z || 0
+              }
+            : { x: 0, y: 0, z: 0 };
+          
+          const result = {
+            id: npc.id || 'unknown',
+            name: npc.displayName || npc.name || 'Unknown NPC',
+            display_name: npc.displayName || npc.name || 'Unknown NPC',
+            npcType: npc.type || 'merchant',
+            position: safePosition,
+            dialogue_tree: npc.dialogueTreeId,
+            services: npc.metadata?.shopkeeper ? { trade: true } : undefined
+          };
+          
+          console.log('=== DEBUG: Transformed NPC:', result);
+          return result;
+        });
         
         console.log('=== DEBUG: Transformed NPCs:', transformedNpcs);
         setNpcs(transformedNpcs);

@@ -39,18 +39,35 @@ export const MonsterPanel: React.FC = () => {
         console.log('=== DEBUG: Raw monsters before transformation:', rawMonsters);
         
         // Transform monsters to match MonsterList interface
-        const transformedMonsters = rawMonsters.map((monster: any) => ({
-          id: monster.id,
-          name: monster.monsterTypeId === 'goblin' ? 'Forest Goblin' : 
-                monster.monsterTypeId === 'orc' ? 'Cave Orc' : 
-                monster.monsterTypeId || 'Unknown Monster',
-          currentHp: monster.currentHp || 100,
-          maxHp: monster.monsterTypeId === 'goblin' ? 100 : 
-                 monster.monsterTypeId === 'orc' ? 150 : 100,
-          state: monster.state || 'idle',
-          position: monster.position || { x: 0, y: 0, z: 0 },
-          aggroList: []
-        }));
+        const transformedMonsters = rawMonsters.map((monster: any) => {
+          console.log('=== DEBUG: Processing monster:', monster);
+          console.log('=== DEBUG: Monster position:', monster.position);
+          
+          // Ensure position exists with robust fallback
+          const safePosition = monster.position && typeof monster.position === 'object' 
+            ? {
+                x: monster.position.x || 0,
+                y: monster.position.y || 0,
+                z: monster.position.z || 0
+              }
+            : { x: 0, y: 0, z: 0 };
+          
+          const result = {
+            id: monster.id || 'unknown',
+            name: monster.monsterTypeId === 'goblin' ? 'Forest Goblin' : 
+                  monster.monsterTypeId === 'orc' ? 'Cave Orc' : 
+                  monster.monsterTypeId || 'Unknown Monster',
+            currentHp: monster.currentHp || 100,
+            maxHp: monster.monsterTypeId === 'goblin' ? 100 : 
+                   monster.monsterTypeId === 'orc' ? 150 : 100,
+            state: monster.state || 'idle',
+            position: safePosition,
+            aggroList: monster.aggroList || []
+          };
+          
+          console.log('=== DEBUG: Transformed monster:', result);
+          return result;
+        });
         
         console.log('=== DEBUG: Transformed monsters:', transformedMonsters);
         setMonsters(transformedMonsters);
