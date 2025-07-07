@@ -12,6 +12,20 @@ const router = Router();
 
 // Simple test endpoints for Combat Engine (no auth required)
 router.get('/test', (req, res) => res.json({ success: true, message: 'Combat system operational' }));
+
+// Debug service registry
+router.get('/debug-services', (req, res) => {
+  const ServiceProvider = require('../providers/ServiceProvider');
+  const registeredServices = ServiceProvider.ServiceProvider.getRegisteredServices();
+  res.json({
+    success: true,
+    data: {
+      registeredServices,
+      globalServicesSize: ServiceProvider.globalServices.size,
+      globalServicesKeys: Array.from(ServiceProvider.globalServices.keys())
+    }
+  });
+});
 router.get('/test-monsters', (req, res) => res.json({ 
   success: true, 
   data: { 
@@ -30,14 +44,7 @@ router.get('/engine-info', (req, res) => res.json({
     status: 'operational'
   }
 }));
-router.post('/test-start', (req, res) => res.json({
-  success: true,
-  data: {
-    sessionId: `test_combat_${Date.now()}`,
-    status: 'active',
-    message: 'Combat started successfully!'
-  }
-}));
+// Removed duplicate - using controller instead
 
 // Combat session endpoints (authenticated)
 router.post('/start', 
@@ -81,6 +88,64 @@ router.get('/resources/:charId',
 router.get('/test-stats/:charId', combatController.getCharacterStats);
 router.get('/test-resources/:charId', combatController.getResources);
 router.post('/test-start', combatController.startTestCombat);
+// Simple mock endpoints for testing (bypassing complex service layer)
+router.post('/test-action', (req, res) => {
+  const { sessionId, action, targetId } = req.body;
+  const mockResult = {
+    sessionId,
+    action,
+    targetId: targetId || 'test_goblin_001',
+    result: 'success',
+    message: action === 'attack' ? 'Player attacks Training Goblin for 15 damage!' :
+             action === 'defend' ? 'Player defends and reduces incoming damage!' :
+             action === 'flee' ? '💨 You successfully fled from combat!' :
+             'Action completed!',
+    timestamp: Date.now()
+  };
+  
+  res.json({
+    success: true,
+    data: mockResult,
+    message: mockResult.message
+  });
+});
+
+router.get('/session/:sessionId', (req, res) => {
+  const { sessionId } = req.params;
+  const mockSession = {
+    id: sessionId,
+    status: 'active',
+    participants: [
+      { id: 'player-test-001', name: 'Player', hp: 85, maxHp: 100 },
+      { id: 'test_goblin_001', name: 'Training Goblin', hp: 30, maxHp: 45 }
+    ],
+    currentTurn: 'player-test-001',
+    message: 'Combat session is active'
+  };
+  
+  res.json({
+    success: true,
+    data: mockSession,
+    message: 'Combat session retrieved successfully'
+  });
+});
+
+router.post('/flee/:sessionId', (req, res) => {
+  const { sessionId } = req.params;
+  const mockFleeResult = {
+    sessionId,
+    action: 'flee',
+    result: 'success',
+    message: '💨 You fled from combat! Better luck next time.',
+    timestamp: Date.now()
+  };
+  
+  res.json({
+    success: true,
+    data: mockFleeResult,
+    message: mockFleeResult.message
+  });
+});
 
 // Player stats endpoint (no auth required for testing)
 router.get('/player-stats', combatController.getPlayerStats);

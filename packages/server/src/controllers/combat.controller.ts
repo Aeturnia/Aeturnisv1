@@ -189,9 +189,11 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
     console.log('Combat action object:', JSON.stringify(combatAction, null, 2));
     
     // Check if session exists before processing action
-
-    
     const combatService = ServiceProvider.getInstance().get<ICombatService>('CombatService');
+    if (!combatService) {
+      throw new Error('CombatService not available');
+    }
+    
     const session = await combatService.getActiveCombat(sessionId);
     console.log('Session lookup result:', {
       sessionId,
