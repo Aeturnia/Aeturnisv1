@@ -52,7 +52,7 @@ router.get(
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: result
     });
@@ -125,7 +125,7 @@ router.delete(
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Character deleted successfully'
     });
@@ -162,7 +162,7 @@ router.patch(
       id, zone, parseFloat(x), parseFloat(y), parseFloat(z), rotation ? parseFloat(rotation) : undefined
     );
 
-    res.json({
+    return res.json({
       success: true,
       data: updatedCharacter
     });
@@ -196,7 +196,7 @@ router.post(
       BigInt(Math.max(0, parseInt(amount)))
     );
 
-    res.json({
+    return res.json({
       success: true,
       data: updatedCharacter
     });
@@ -230,12 +230,12 @@ router.post(
 
     try {
       const updatedCharacter = await characterService.allocateStatPoint(id, stat, parseInt(points));
-      res.json({
+      return res.json({
         success: true,
         data: updatedCharacter
       });
     } catch (error) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         error: error instanceof Error ? error.message : 'Failed to allocate stat points'
       });
@@ -274,7 +274,7 @@ router.patch(
       stamina ? BigInt(Math.max(0, parseInt(stamina))) : undefined
     );
 
-    res.json({
+    return res.json({
       success: true,
       data: updatedCharacter
     });
@@ -301,13 +301,13 @@ router.post(
 
     try {
       const updatedCharacter = await characterService.prestigeCharacter(id);
-      res.json({
+      return res.json({
         success: true,
         data: updatedCharacter,
         message: 'Character prestige successful!'
       });
     } catch (error) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         error: error instanceof Error ? error.message : 'Failed to prestige character'
       });
@@ -345,12 +345,12 @@ router.post(
       }
 
       const updatedCharacter = await characterService.allocateParagonPoints(id, bigintDistribution);
-      res.json({
+      return res.json({
         success: true,
         data: updatedCharacter
       });
     } catch (error) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         error: error instanceof Error ? error.message : 'Failed to allocate paragon points'
       });
@@ -376,7 +376,7 @@ router.get(
     
     const validation = await characterService.validateCharacterName(name);
     
-    res.json({
+    return res.json({
       success: true,
       data: validation
     });
@@ -396,7 +396,7 @@ router.post(
     
     const validation = await characterService.validateCharacterName(name);
     
-    res.json({
+    return res.json({
       success: true,
       data: validation
     });
@@ -439,7 +439,7 @@ router.patch(
 
     await characterService.updateLastPlayed(id);
     
-    res.json({
+    return res.json({
       success: true,
       message: 'Last played timestamp updated'
     });
@@ -468,7 +468,7 @@ router.get(
     const canPrestige = StatsService.canPrestige(character);
     const hasParagon = StatsService.hasParagonUnlocked(character);
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         baseStats,

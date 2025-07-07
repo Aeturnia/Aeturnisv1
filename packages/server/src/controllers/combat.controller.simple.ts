@@ -120,7 +120,7 @@ export const startTestCombat = async (req: Request, res: Response) => {
 
     const sessionId = `test_combat_${Date.now()}`;
     
-    res.json({
+    return res.json({
       success: true,
       data: {
         sessionId,
@@ -141,7 +141,7 @@ export const startTestCombat = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Start test combat error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to start combat'
     });

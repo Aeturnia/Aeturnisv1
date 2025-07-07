@@ -30,7 +30,7 @@ router.get('/:id/stats',
       
       const derivedStats = StatsService.calculateDerivedStats(character);
       
-      res.json({
+      return res.json({
         characterId,
         effectiveStats: {
           strength: derivedStats.effectiveStrength,
@@ -65,7 +65,7 @@ router.get('/:id/stats',
       });
     } catch (error) {
       console.error('Error fetching character stats:', error);
-      res.status(500).json({ error: 'Failed to fetch character stats' });
+      return res.status(500).json({ error: 'Failed to fetch character stats' });
     }
   }
 );
@@ -92,27 +92,12 @@ router.get('/:id/stats/breakdown/:stat',
       }
       
       const breakdown = StatsService.getStatBreakdown(character, statName);
-      
-      res.json({
-        characterId,
-        statName,
-        breakdown,
-        explanation: {
-          baseStat: 'Base stat value (race + class bonuses, capped at 100)',
-          tierBonus: 'Tier bonus (50 points per tier when base stat exceeds 100)',
-          equipmentBonus: 'Equipment bonus (logarithmic scaling: log₁₀(bonus + 1) × 20)',
-          paragonBonus: 'Paragon points bonus (logarithmic scaling: log₁₀(points + 1) × 10)',
-          classScaling: 'Class scaling multiplier for this stat',
-          prestigeMultiplier: 'Prestige multiplier (1 + prestige_level × 0.1)',
-          formula: 'Complete calculation formula'
-        }
-      });
+      return res.json(breakdown);
     } catch (error) {
-      console.error('Error fetching stat breakdown:', error);
-      res.status(500).json({ error: 'Failed to fetch stat breakdown' });
+      console.error('Error in stat breakdown:', error);
+      return res.status(500).json({ error: 'Failed to get stat breakdown' });
     }
-  }
-);
+  });
 
 /**
  * POST /api/v1/characters/:id/stats/update
@@ -144,7 +129,7 @@ router.post('/:id/stats/update',
       // Return updated effective stats
       const derivedStats = StatsService.calculateDerivedStats(updatedCharacter);
       
-      res.json({
+      return res.json({
         success: true,
         message: 'Character stats updated successfully',
         characterId,
@@ -160,7 +145,7 @@ router.post('/:id/stats/update',
       });
     } catch (error) {
       console.error('Error updating character stats:', error);
-      res.status(500).json({ error: 'Failed to update character stats' });
+      return res.status(500).json({ error: 'Failed to update character stats' });
     }
   }
 );
@@ -202,7 +187,7 @@ router.post('/:id/paragon/redistribute',
         return res.status(500).json({ error: 'Failed to redistribute paragon points' });
       }
       
-      res.json({
+      return res.json({
         success: true,
         message: 'Paragon points redistributed successfully',
         characterId,
@@ -210,7 +195,7 @@ router.post('/:id/paragon/redistribute',
       });
     } catch (error) {
       console.error('Error redistributing paragon points:', error);
-      res.status(500).json({ 
+      return res.status(500).json({ 
         error: 'Failed to redistribute paragon points',
         message: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -251,7 +236,7 @@ router.post('/:id/prestige',
         return res.status(500).json({ error: 'Failed to prestige character' });
       }
       
-      res.json({
+      return res.json({
         success: true,
         message: 'Character prestiged successfully',
         characterId,
@@ -261,7 +246,7 @@ router.post('/:id/prestige',
       });
     } catch (error) {
       console.error('Error prestiging character:', error);
-      res.status(500).json({ 
+      return res.status(500).json({ 
         error: 'Failed to prestige character',
         message: error instanceof Error ? error.message : 'Unknown error'
       });
