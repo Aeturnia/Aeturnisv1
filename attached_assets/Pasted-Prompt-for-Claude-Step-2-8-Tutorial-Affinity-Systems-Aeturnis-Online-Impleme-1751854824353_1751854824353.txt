@@ -1,0 +1,113 @@
+Prompt for Claude (Step 2.8: Tutorial & Affinity Systems) — Aeturnis Online           │
+│   Implement the following using the Aeturnis project’s strict API/Contract-First        │
+│   methodology with a clean service layer, all logic using mock data only. Follow the    │
+│   same structure, quality, and self-audit requirements as in previous prompts.          │
+│                                                                                         │
+│   Scope & Requirements                                                                  │
+│   Tutorial Framework                                                                    │
+│   Tutorial Zone Creation                                                                │
+│                                                                                         │
+│   Mock at least one dedicated tutorial zone with its own boundaries, entry/exit logic,  │
+│   and NPCs.                                                                             │
+│                                                                                         │
+│   Expose zone and tutorial metadata via GET /api/v1/tutorial/zone and GET               │
+│   /api/v1/tutorial/status/:characterId.                                                 │
+│                                                                                         │
+│   Tutorial Quest Chain                                                                  │
+│                                                                                         │
+│   Define a linear sequence of at least 3 mock tutorial quests with step requirements,   │
+│   progression, and completion.                                                          │
+│                                                                                         │
+│   API: GET /api/v1/tutorial/quests and POST /api/v1/tutorial/progress                   │
+│                                                                                         │
+│   Each quest step must validate prerequisites and completion, returning result status   │
+│   and next instructions.                                                                │
+│                                                                                         │
+│   Guided Progression System                                                             │
+│                                                                                         │
+│   Service method to return the current tutorial step for a character and next           │
+│   guidance/hints.                                                                       │
+│                                                                                         │
+│   Mock a “guided progression” state, exposing recommended actions for new players.      │
+│                                                                                         │
+│   API: GET /api/v1/tutorial/guidance/:characterId                                       │
+│                                                                                         │
+│   Help Message Framework                                                                │
+│                                                                                         │
+│   Service function to fetch help/contextual messages based on tutorial step or          │
+│   gameplay context.                                                                     │
+│                                                                                         │
+│   API: GET /api/v1/tutorial/help?context=...                                            │
+│                                                                                         │
+│   Affinity Tracking                                                                     │
+│   Weapon Affinity Schema                                                                │
+│                                                                                         │
+│   Define full mock schema for weapon affinity: weapon type, current level (0–100),      │
+│   usage count, affinity rank (Novice, Apprentice, Journeyman, Expert, Master), and      │
+│   associated bonuses.                                                                   │
+│                                                                                         │
+│   Magic School Affinity                                                                 │
+│                                                                                         │
+│   Same schema as above, with 8+ magic schools (fire, ice, arcane, etc).                 │
+│                                                                                         │
+│   Usage Tracking System                                                                 │
+│                                                                                         │
+│   Service functions to track usage of weapon/magic types per character and update       │
+│   affinity levels (simulated progression).                                              │
+│                                                                                         │
+│   API: POST /api/v1/affinity/weapon/use and POST /api/v1/affinity/magic/use             │
+│                                                                                         │
+│   Returns: updated affinity level, any new rank, and bonus.                             │
+│                                                                                         │
+│   Mastery Progression                                                                   │
+│                                                                                         │
+│   Mock progression from 0 to 100, triggering rank/badge/title at milestones             │
+│   (25/50/75/100).                                                                       │
+│                                                                                         │
+│   Service should simulate diminishing returns at high levels.                           │
+│                                                                                         │
+│   API: GET /api/v1/affinity/summary/:characterId (returns all affinities and ranks).    │
+│                                                                                         │
+│   General Implementation                                                                │
+│   Strict Service Layer: all logic goes through services, with all data mocked.          │
+│                                                                                         │
+│   TypeScript only, strict mode, no any or @ts-ignore.                                   │
+│                                                                                         │
+│   Define all API endpoints, interfaces, and mock data up front.                         │
+│                                                                                         │
+│   Controllers must call services only. No database access.                              │
+│                                                                                         │
+│   Error handling for all endpoints (invalid step, already completed, affinity cap,      │
+│   etc.).                                                                                │
+│                                                                                         │
+│   Unit tests (Jest) for all service logic, mock-only.                                   │
+│                                                                                         │
+│   Self-audit footer (TS errors/coverage pasted) at the end.                             │
+│                                                                                         │
+│   API Examples                                                                          │
+│   GET /api/v1/tutorial/zone                                                             │
+│                                                                                         │
+│   GET /api/v1/tutorial/quests                                                           │
+│                                                                                         │
+│   POST /api/v1/tutorial/progress                                                        │
+│                                                                                         │
+│   GET /api/v1/tutorial/help                                                             │
+│                                                                                         │
+│   GET /api/v1/tutorial/guidance/:characterId                                            │
+│                                                                                         │
+│   GET /api/v1/affinity/summary/:characterId                                             │
+│                                                                                         │
+│   POST /api/v1/affinity/weapon/use                                                      │
+│                                                                                         │
+│   POST /api/v1/affinity/magic/use                                                       │
+│                                                                                         │
+│   Testing & SOP                                                                         │
+│   Unit tests for all services, 80%+ coverage, zero TS errors.                           │
+│                                                                                         │
+│   All files: service, controller, routes, types, tests.                                 │
+│                                                                                         │
+│   README code comments for each function.                                               │
+│                                                                                         │
+│   Self-audit footer with TS/lint/test output required.                                  │
+│                                                                                         │
+│   No explanations, just the code files and audit footer.
