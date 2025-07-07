@@ -30,21 +30,36 @@ export const MonsterPanel: React.FC = () => {
 
   const fetchMonstersInZone = async () => {
     try {
+      console.log('=== DEBUG: Fetching monsters for zone:', selectedZone);
       const result = await api.get(`/api/v1/monsters/zone/${selectedZone}`);
-      console.log('Monsters API response:', result);
-      console.log('Full monsters result:', JSON.stringify(result, null, 2));
+      console.log('=== DEBUG: Monsters API raw response:', result);
       
       if (result && result.success && result.data && result.data.monsters) {
-        const monstersData = result.data.monsters;
-        console.log('Extracted monsters:', monstersData);
-        console.log('Is array?', Array.isArray(monstersData));
-        setMonsters(Array.isArray(monstersData) ? monstersData : []);
+        const rawMonsters = result.data.monsters;
+        console.log('=== DEBUG: Raw monsters before transformation:', rawMonsters);
+        
+        // Transform monsters to match MonsterList interface
+        const transformedMonsters = rawMonsters.map((monster: any) => ({
+          id: monster.id,
+          name: monster.monsterTypeId === 'goblin' ? 'Forest Goblin' : 
+                monster.monsterTypeId === 'orc' ? 'Cave Orc' : 
+                monster.monsterTypeId || 'Unknown Monster',
+          currentHp: monster.currentHp || 100,
+          maxHp: monster.monsterTypeId === 'goblin' ? 100 : 
+                 monster.monsterTypeId === 'orc' ? 150 : 100,
+          state: monster.state || 'idle',
+          position: monster.position || { x: 0, y: 0, z: 0 },
+          aggroList: []
+        }));
+        
+        console.log('=== DEBUG: Transformed monsters:', transformedMonsters);
+        setMonsters(transformedMonsters);
       } else {
-        console.log('No monsters data found in response');
+        console.log('=== DEBUG: No monsters data found, clearing array');
         setMonsters([]);
       }
     } catch (error) {
-      console.error('Failed to fetch monsters:', error);
+      console.error('=== DEBUG: Failed to fetch monsters:', error);
       setMonsters([]);
     }
   };

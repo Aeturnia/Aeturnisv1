@@ -31,12 +31,34 @@ export const NPCPanel: React.FC = () => {
 
   const fetchNPCsInZone = async () => {
     try {
+      console.log('=== DEBUG: Fetching NPCs for zone:', selectedZone);
       const result = await api.get(`/api/v1/npcs/zone/${selectedZone}`);
-      if (result.success && result.data?.npcs) {
-        setNpcs(result.data.npcs);
+      console.log('=== DEBUG: NPCs API raw response:', result);
+      
+      if (result && result.success && result.data && result.data.npcs) {
+        const rawNpcs = result.data.npcs;
+        console.log('=== DEBUG: Raw NPCs before transformation:', rawNpcs);
+        
+        // Transform NPCs to match NPCList interface  
+        const transformedNpcs = rawNpcs.map((npc: any) => ({
+          id: npc.id,
+          name: npc.displayName || npc.name,
+          display_name: npc.displayName || npc.name,
+          npcType: npc.type || 'merchant',
+          position: npc.position || { x: 0, y: 0, z: 0 },
+          dialogue_tree: npc.dialogueTreeId,
+          services: npc.metadata?.shopkeeper ? { trade: true } : undefined
+        }));
+        
+        console.log('=== DEBUG: Transformed NPCs:', transformedNpcs);
+        setNpcs(transformedNpcs);
+      } else {
+        console.log('=== DEBUG: No NPCs data found, clearing array');
+        setNpcs([]);
       }
     } catch (error) {
-      console.error('Failed to fetch NPCs:', error);
+      console.error('=== DEBUG: Failed to fetch NPCs:', error);
+      setNpcs([]);
     }
   };
 
