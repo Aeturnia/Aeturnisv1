@@ -4,12 +4,22 @@ import { personalBanks, sharedBanks, characters, transactions } from '../databas
 import { CacheService } from './CacheService';
 import { BankSlot, BankTransferRequest, PersonalBank, SharedBank } from '../types/bank';
 import { logger } from '../utils/logger';
+import { 
+  ServiceError,
+  ValidationError,
+  DatabaseError
+} from '../utils/errors';
+import { 
+  safeBigIntToNumber,
+  safeNumberToBigInt,
+  assertServiceDefined
+} from '../utils/validators';
 
 export class BankService {
   private readonly CACHE_TTL = 300; // 5 minutes
   
   constructor(private cacheService: CacheService) {}
-  private readonly SLOT_COST = BigInt(1000); // Gold per slot
+  private readonly SLOT_COST = 1000; // Gold per slot (using safe number)
   private readonly MAX_SLOTS = 100;
 
   async getPersonalBank(characterId: string): Promise<PersonalBank> {

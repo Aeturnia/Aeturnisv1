@@ -16,6 +16,15 @@ import {
   StatType 
 } from '@aeturnis/shared/types/progression.types';
 import { logger } from '../../utils/logger';
+import { 
+  ServiceError,
+  ValidationError
+} from '../../utils/errors';
+import { 
+  safeBigIntToNumber,
+  safeNumberToBigInt,
+  validateSchema
+} from '../../utils/validators';
 
 export class MockProgressionService {
   private characterProgressions: Map<string, CharacterProgression> = new Map();

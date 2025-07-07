@@ -4,6 +4,16 @@ import { characters, transactions } from '../database/schema';
 import { CacheService } from './CacheService';
 import { Transaction, TransactionType, TransactionMetadata } from '../types/currency';
 import { logger } from '../utils/logger';
+import { 
+  ServiceError,
+  ValidationError,
+  DatabaseError
+} from '../utils/errors';
+import { 
+  safeBigIntToNumber,
+  safeNumberToBigInt,
+  assertServiceDefined
+} from '../utils/validators';
 
 export class CurrencyService {
   private readonly CACHE_TTL = 300; // 5 minutes

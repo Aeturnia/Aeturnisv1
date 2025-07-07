@@ -137,7 +137,7 @@ export interface Buff {
   name: string;
   duration: number;
   stacks?: number;
-  modifier: any;
+  modifier: Record<string, unknown>;
 }
 
 export interface Debuff extends Buff {}

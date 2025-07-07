@@ -2,6 +2,18 @@ import { Request, Response } from 'express';
 import { ServiceProvider, ICombatService } from '../providers';
 import { CombatStartRequest, CombatActionRequest, CombatActionType } from '../types/combat.types';
 import { logger } from '../utils/logger';
+import { 
+  ServiceError,
+  ValidationError,
+  formatErrorResponse,
+  isServiceError 
+} from '../utils/errors';
+import { 
+  assertServiceDefined,
+  withServiceGuard,
+  validateCombatAction,
+  safeBigIntToNumber
+} from '../utils/validators';
 
 // Extend Request type for authenticated requests
 interface AuthRequest extends Request {
@@ -88,7 +100,11 @@ export const getCombatSession = async (req: Request, res: Response): Promise<Res
 
     logger.debug(`Looking for combat session: ${sessionId}`);
     const combatService = ServiceProvider.getInstance().get<ICombatService>('CombatService');
-    const session = await combatService.getActiveCombat(sessionId);
+    assertServiceDefined(combatService, 'CombatService');
+    
+    const session = await withServiceGuard(combatService, 'CombatService', 
+      service => service.getActiveCombat!(sessionId)
+    );
     logger.debug(`Session found: ${session ? 'Yes' : 'No'}`);
     
     if (!session) {
@@ -216,7 +232,11 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
     }
     
     logger.debug('Processing action with combat service...');
-    const result = await combatService.processCombatAction(sessionId, actorId, combatAction);
+    assertServiceDefined(combatService, 'CombatService');
+    
+    const result = await withServiceGuard(combatService, 'CombatService', 
+      service => service.processCombatAction!(sessionId, combatAction)
+    );
     logger.debug('Combat service result:', JSON.stringify(result, null, 2));
 
     logger.debug('=== COMBAT ACTION DEBUG END ===');
@@ -326,9 +346,11 @@ export const fleeTestCombat = async (req: Request, res: Response): Promise<Respo
     };
     
     const combatService = ServiceProvider.getInstance().get<ICombatService>('CombatService');
-
+    assertServiceDefined(combatService, 'CombatService');
     
-    const result = await combatService.processCombatAction(sessionId, actorId, fleeAction);
+    const result = await withServiceGuard(combatService, 'CombatService', 
+      service => service.processCombatAction!(sessionId, fleeAction)
+    );
     
     // Handle flee-specific errors with helpful messages
     if ('error' in result) {
@@ -601,7 +623,11 @@ export const performAction = async (req: AuthRequest, res: Response): Promise<Re
       });
     }
 
-    const result = await combatService.processCombatAction(sessionId, userId, action);
+    assertServiceDefined(combatService, 'CombatService');
+    
+    const result = await withServiceGuard(combatService, 'CombatService', 
+      service => service.processCombatAction!(sessionId, action)
+    );
 
     // Get updated session state
     const session = await combatService.getActiveCombat(sessionId);
