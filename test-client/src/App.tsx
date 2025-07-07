@@ -9,6 +9,9 @@ import { MonsterPanel } from './components/monsters/MonsterPanel';
 import { NPCPanel } from './components/npcs/NPCPanel';
 import { DeathPanel } from './components/death/DeathPanel';
 import { LootPanel } from './components/loot/LootPanel';
+import { ZonePanel } from './components/zones/ZonePanel';
+import { MovementPanel } from './components/movement/MovementPanel';
+import { ProgressionPanel } from './components/progression/ProgressionPanel';
 import { LogsPanel } from './components/logs/LogsPanel';
 import { useApi } from './hooks/useApi';
 
@@ -61,6 +64,12 @@ function App() {
         return <DeathPanel />;
       case 'loot':
         return <LootPanel />;
+      case 'zones':
+        return <ZonePanel />;
+      case 'movement':
+        return <MovementPanel />;
+      case 'progression':
+        return <ProgressionPanel />;
       case 'logs':
         return <LogsPanel />;
       default:

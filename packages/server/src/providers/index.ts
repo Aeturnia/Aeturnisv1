@@ -27,6 +27,10 @@ export { MockBankService } from './mock/MockBankService';
 export { MockCurrencyService } from './mock/MockCurrencyService';
 export { MockDialogueService } from './mock/MockDialogueService';
 export { MockSpawnService } from './mock/MockSpawnService';
+// World & Movement System Services (Step 2.7)
+export { MockZoneService } from '../services/mock/MockZoneService';
+export { MockMovementService } from '../services/mock/MockMovementService';  
+export { MockProgressionService } from '../services/mock/MockProgressionService';
 
 // Real implementations - exported dynamically in initializeProviders()
 // Commented out to prevent static import errors when repositories are missing
@@ -121,6 +125,34 @@ export async function initializeProviders(useMocks: boolean): Promise<void> {
     console.log('✅ SpawnService registered');
   } catch (error) {
     console.error('❌ Failed to register SpawnService:', error);
+  }
+
+  // Register World & Movement System services (Step 2.7)
+  try {
+    console.log('Registering MockZoneService...');
+    const { MockZoneService } = await import('../services/mock/MockZoneService');
+    provider.register('ZoneService', new MockZoneService());
+    console.log('✅ ZoneService registered');
+  } catch (error) {
+    console.error('❌ Failed to register ZoneService:', error);
+  }
+
+  try {
+    console.log('Registering MockMovementService...');
+    const { MockMovementService } = await import('../services/mock/MockMovementService');
+    provider.register('MovementService', new MockMovementService());
+    console.log('✅ MovementService registered');
+  } catch (error) {
+    console.error('❌ Failed to register MovementService:', error);
+  }
+
+  try {
+    console.log('Registering MockProgressionService...');
+    const { MockProgressionService } = await import('../services/mock/MockProgressionService');
+    provider.register('ProgressionService', new MockProgressionService());
+    console.log('✅ ProgressionService registered');
+  } catch (error) {
+    console.error('❌ Failed to register ProgressionService:', error);
   }
   
   const registeredServices = provider.getRegisteredServices();

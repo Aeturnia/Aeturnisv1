@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type TabType = 'auth' | 'character' | 'combat' | 'monsters' | 'npcs' | 'death' | 'loot' | 'logs';
+export type TabType = 'auth' | 'character' | 'combat' | 'monsters' | 'npcs' | 'death' | 'loot' | 'zones' | 'movement' | 'progression' | 'logs';
 
 interface NavigationProps {
   activeTab: TabType;
@@ -21,6 +21,9 @@ export const Navigation: React.FC<NavigationProps> = ({
     { id: 'npcs', label: 'NPCs', emoji: '🧙' },
     { id: 'death', label: 'Death', emoji: '💀' },
     { id: 'loot', label: 'Loot', emoji: '🎁' },
+    { id: 'zones', label: 'Zones', emoji: '🗺️' },
+    { id: 'movement', label: 'Movement', emoji: '🚶' },
+    { id: 'progression', label: 'Progression', emoji: '📈' },
     { id: 'logs', label: 'Logs', emoji: '📊' },
   ];
 
