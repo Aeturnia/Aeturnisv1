@@ -77,7 +77,7 @@ export const MonsterList: React.FC<MonsterListProps> = ({
               </div>
               
               <div className="position-info">
-                Position: ({monster.position.x}, {monster.position.y}, {monster.position.z})
+                Position: ({monster.position?.x || 0}, {monster.position?.y || 0}, {monster.position?.z || 0})
               </div>
               
               {monster.aggroList && monster.aggroList.length > 0 && (
