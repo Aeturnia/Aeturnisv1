@@ -24,8 +24,13 @@ Last Updated: 2025-07-07 (Color Coding System Implementation)
 - Mark resolved issues by changing `🔴 <span style="color: red;">` to `🟢 <span style="color: green;">`
 - Update version number after each error resolution chunk (v1.1.0, v1.2.0, etc.)
 - Update version history table with completion progress
-- Keep this legend at the top for reference during error resolution chunks
+- Keep error versioning (v1.0) to track persistence across updates
 - All issues below are currently marked as 🔴 **UNRESOLVED** until fixed
+
+**Error Versioning Legend:**
+- **v1.0** - Error first cataloged in initial analysis (current baseline)
+- **v1.1** - Error persists after CHUNK 7 completion
+- **v1.2** - Error persists after CHUNK 8 completion, etc.
 
 **Version Progression Guidelines:**
 - **Patch versions** (v1.0.x): Documentation updates, color coding changes
@@ -46,73 +51,73 @@ Last Updated: 2025-07-07 (Color Coding System Implementation)
 ## TypeScript Errors by Category
 
 ### 1. Not All Code Paths Return Value (TS7030) 🔴 **<span style="color: red;">UNRESOLVED</span>**
-| File | Line | Description | Status |
-|------|------|-------------|--------|
-| `src/app.ts` | 175:16 | Arrow function missing return statement (updated line number) | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/controllers/combat.controller.simple.ts` | 110:32 | Function missing return value | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| Ver | File | Line | Description | Status |
+|-----|------|------|-------------|--------|
+| v1.0 | `src/app.ts` | 175:16 | Arrow function missing return statement (updated line number) | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/controllers/combat.controller.simple.ts` | 110:32 | Function missing return value | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
 
 ### 2. Unused Parameters/Variables (TS6133) 🔴 **<span style="color: red;">UNRESOLVED</span>**
-| File | Line | Variable | Context | Status |
-|------|------|----------|---------|--------|
-| `src/controllers/combat.controller.simple.ts` | 6:40 | `req` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/controllers/combat.controller.simple.ts` | 29:37 | `req` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/controllers/combat.controller.simple.ts` | 58:39 | `req` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/controllers/combat.controller.ts` | 19:38 | `req` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/controllers/combat.controller.ts` | 484:24 | `battleType` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/controllers/death.controller.ts` | 26:14 | `characterId` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/controllers/death.controller.ts` | 29:20 | `locationData` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/controllers/death.controller.ts` | 29:34 | `killer` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/controllers/death.controller.ts` | 29:42 | `deathTime` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/controllers/loot.controller.ts` | 125:19 | `item` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/controllers/npc.controller.ts` | 233:30 | `distance` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/controllers/zone.controller.ts` | 89:13 | `query` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/providers/mock/MockCombatService.ts` | 186:20 | `sourceType` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/providers/mock/MockCombatService.ts` | 250:23 | `opponentType` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/providers/mock/MockMonsterService.ts` | 108:28 | `distance` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/providers/mock/MockNPCService.ts` | 108:28 | `distance` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/CharacterService.ts` | 60:11 | `existingChar` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/CharacterService.ts` | 141:18 | `updates` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/CharacterService.ts` | 171:12 | `character` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/CombatService.ts` | 123:12 | `characterId` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/CombatService.ts` | 127:12 | `characterId` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/CombatService.ts` | 161:21 | `monsterId` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/CombatService.ts` | 267:12 | `characterId` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/CombatService.ts` | 305:24 | `target` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/CombatService.ts` | 502:23 | `opponentType` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/CombatService.ts` | 566:20 | `sourceType` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/EquipmentService.ts` | 19:3 | `Equipment` | Import never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/EquipmentService.ts` | 25:42 | `ConflictError` | Import never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/ResourceService.ts` | 162:29 | `charId` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/ResourceService.ts` | 179:31 | `charId` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/SpawnService.ts` | 62:25 | `spawnPointId` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/SpawnService.ts` | 75:18 | `spawnPointId` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/SpawnService.ts` | 119:20 | `spawnPointId` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/StatsService.ts` | 393:5 | `character` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/TestMonsterService.ts` | 1:1 | `uuidv4` | Import never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/death.service.ts` | 21:27 | `DURABILITY_DAMAGE_PERCENTAGE` | Constant never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/death.service.ts` | 185:41 | `characterId` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/loot.service.ts` | 150:19 | `event` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/loot.service.ts` | 200:34 | `characterId` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/mock/MockProgressionService.ts` | 12:3 | `CharacterStats` | Import never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/mock/MockProgressionService.ts` | 16:3 | `StatType` | Import never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/services/mock/MockZoneService.ts` | 225:31 | `characterId` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/sockets/combat.socket.ts` | 3:24 | `CombatResult` | Import never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/sockets/monster.events.ts` | 9:39 | `io` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/sockets/npc.events.ts` | 9:35 | `io` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| **NEW** `src/controllers/movement.controller.ts` | 340:39 | `req` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| **NEW** `src/controllers/progression.controller.ts` | 364:42 | `req` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| **NEW** `src/controllers/tutorial.controller.ts` | 26:25 | `req` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| **NEW** `src/controllers/tutorial.controller.ts` | 82:22 | `req` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| **NEW** `src/controllers/affinity.controller.ts` | Various | `req` | Multiple unused parameters | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| Ver | File | Line | Variable | Context | Status |
+|-----|------|------|----------|---------|--------|
+| v1.0 | `src/controllers/combat.controller.simple.ts` | 6:40 | `req` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/controllers/combat.controller.simple.ts` | 29:37 | `req` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/controllers/combat.controller.simple.ts` | 58:39 | `req` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/controllers/combat.controller.ts` | 19:38 | `req` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/controllers/combat.controller.ts` | 484:24 | `battleType` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/controllers/death.controller.ts` | 26:14 | `characterId` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/controllers/death.controller.ts` | 29:20 | `locationData` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/controllers/death.controller.ts` | 29:34 | `killer` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/controllers/death.controller.ts` | 29:42 | `deathTime` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/controllers/loot.controller.ts` | 125:19 | `item` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/controllers/npc.controller.ts` | 233:30 | `distance` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/controllers/zone.controller.ts` | 89:13 | `query` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/providers/mock/MockCombatService.ts` | 186:20 | `sourceType` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/providers/mock/MockCombatService.ts` | 250:23 | `opponentType` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/providers/mock/MockMonsterService.ts` | 108:28 | `distance` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/providers/mock/MockNPCService.ts` | 108:28 | `distance` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/CharacterService.ts` | 60:11 | `existingChar` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/CharacterService.ts` | 141:18 | `updates` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/CharacterService.ts` | 171:12 | `character` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/CombatService.ts` | 123:12 | `characterId` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/CombatService.ts` | 127:12 | `characterId` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/CombatService.ts` | 161:21 | `monsterId` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/CombatService.ts` | 267:12 | `characterId` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/CombatService.ts` | 305:24 | `target` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/CombatService.ts` | 502:23 | `opponentType` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/CombatService.ts` | 566:20 | `sourceType` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/EquipmentService.ts` | 19:3 | `Equipment` | Import never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/EquipmentService.ts` | 25:42 | `ConflictError` | Import never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/ResourceService.ts` | 162:29 | `charId` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/ResourceService.ts` | 179:31 | `charId` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/SpawnService.ts` | 62:25 | `spawnPointId` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/SpawnService.ts` | 75:18 | `spawnPointId` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/SpawnService.ts` | 119:20 | `spawnPointId` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/StatsService.ts` | 393:5 | `character` | Variable declared but never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/TestMonsterService.ts` | 1:1 | `uuidv4` | Import never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/death.service.ts` | 21:27 | `DURABILITY_DAMAGE_PERCENTAGE` | Constant never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/death.service.ts` | 185:41 | `characterId` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/loot.service.ts` | 150:19 | `event` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/loot.service.ts` | 200:34 | `characterId` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/mock/MockProgressionService.ts` | 12:3 | `CharacterStats` | Import never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/mock/MockProgressionService.ts` | 16:3 | `StatType` | Import never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/services/mock/MockZoneService.ts` | 225:31 | `characterId` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/sockets/combat.socket.ts` | 3:24 | `CombatResult` | Import never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/sockets/monster.events.ts` | 9:39 | `io` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/sockets/npc.events.ts` | 9:35 | `io` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | **NEW** `src/controllers/movement.controller.ts` | 340:39 | `req` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | **NEW** `src/controllers/progression.controller.ts` | 364:42 | `req` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | **NEW** `src/controllers/tutorial.controller.ts` | 26:25 | `req` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | **NEW** `src/controllers/tutorial.controller.ts` | 82:22 | `req` | Parameter never used | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | **NEW** `src/controllers/affinity.controller.ts` | Various | `req` | Multiple unused parameters | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
 
 ### 3. Property Does Not Exist (TS2339) 🔴 **<span style="color: red;">UNRESOLVED</span>**
-| File | Line | Property | On Type | Status |
-|------|------|----------|---------|--------|
-| `src/controllers/combat.controller.ts` | 105:46 | `status` | `CombatSession` | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/controllers/combat.controller.ts` | 105:100 | `roundNumber` | `CombatSession` | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/controllers/combat.controller.ts` | 105:169 | `charId` | `Combatant` | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/controllers/combat.controller.ts` | 105:233 | `charName` | `Combatant` | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
-| `src/controllers/combat.controller.ts` | 201:24 | `status` | `CombatSession` | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| Ver | File | Line | Property | On Type | Status |
+|-----|------|------|----------|---------|--------|
+| v1.0 | `src/controllers/combat.controller.ts` | 105:46 | `status` | `CombatSession` | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/controllers/combat.controller.ts` | 105:100 | `roundNumber` | `CombatSession` | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/controllers/combat.controller.ts` | 105:169 | `charId` | `Combatant` | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/controllers/combat.controller.ts` | 105:233 | `charName` | `Combatant` | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
+| v1.0 | `src/controllers/combat.controller.ts` | 201:24 | `status` | `CombatSession` | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
 | `src/controllers/combat.controller.ts` | 225:83 | `code` | `CombatResult & Record<"error", unknown>` | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
 | `src/controllers/combat.controller.ts` | 231:22 | `code` | `CombatResult & Record<"error", unknown>` | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
 | `src/controllers/combat.controller.ts` | 272:27 | `code` | `CombatResult & Record<"error", unknown>` | 🔴 **<span style="color: red;">UNRESOLVED</span>** |
