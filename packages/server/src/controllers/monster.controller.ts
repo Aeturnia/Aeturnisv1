@@ -254,35 +254,3 @@ export const testMonsterSystem = async (req: Request, res: Response) => {
     });
   }
 };
-
-/**
- * Test monster system
- */
-export const testMonsterSystem = async (req: Request, res: Response) => {
-  try {
-    const testData = {
-      system: "Monster Management System",
-      status: "operational",
-      timestamp: new Date().toISOString(),
-      features: {
-        monsterRetrieval: "enabled",
-        zoneFiltering: "enabled", 
-        spawnPointManagement: "enabled",
-        monsterTypes: "enabled"
-      },
-      mockData: {
-        monstersInTutorialArea: 2,
-        spawnPointsInTutorialArea: 2,
-        monsterTypesAvailable: 6
-      }
-    };
-    
-    res.json(testData);
-  } catch (error) {
-    console.error('Error testing monster system:', error);
-    res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to test monster system'
-    });
-  }
-};
