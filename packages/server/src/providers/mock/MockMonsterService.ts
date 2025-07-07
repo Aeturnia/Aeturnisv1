@@ -161,6 +161,23 @@ export class MockMonsterService implements IMonsterService {
     }));
   }
 
+  /**
+   * Get monster by ID
+   */
+  async getMonsterById(monsterId: string): Promise<any | null> {
+    logger.info(`MockMonsterService: Getting monster by ID ${monsterId}`);
+    
+    const monster = this.mockMonsters.find(monster => monster.id === monsterId);
+    
+    if (monster) {
+      logger.info(`MockMonsterService: Found monster ${monster.name}`);
+    } else {
+      logger.info(`MockMonsterService: Monster not found with ID ${monsterId}`);
+    }
+    
+    return monster || null;
+  }
+
   async spawnMonster(spawnPointId: string): Promise<Monster> {
     logger.info(`MockMonsterService: Spawning monster at spawn point ${spawnPointId}`);
     
