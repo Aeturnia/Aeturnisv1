@@ -3,7 +3,7 @@ export * from './monster.types';
 export * from './npc.types';
 export * from './affinity.types';
 export * from './tutorial.types';
-// export * from './zone.types'; // Temporarily disabled due to Zone naming conflict
+export * from './zone.types';
 export * from './movement.types';
 export * from './progression.types';
 

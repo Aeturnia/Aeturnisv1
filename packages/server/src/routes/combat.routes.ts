@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
+import { asyncHandler } from '../middleware/asyncHandler';
 import { 
   validateCombatAction, 
   validateCombatStart, 
@@ -11,13 +12,15 @@ import * as combatController from '../controllers/combat.controller';
 const router = Router();
 
 // Simple test endpoints for Combat Engine (no auth required)
-router.get('/test', (req, res) => res.json({ success: true, message: 'Combat system operational' }));
+router.get('/test', (req, res) => {
+  return res.json({ success: true, message: 'Combat system operational' });
+});
 
 // Debug service registry
 router.get('/debug-services', (req, res) => {
   const ServiceProvider = require('../providers/ServiceProvider');
   const registeredServices = ServiceProvider.ServiceProvider.getRegisteredServices();
-  res.json({
+  return res.json({
     success: true,
     data: {
       registeredServices,
@@ -26,67 +29,71 @@ router.get('/debug-services', (req, res) => {
     }
   });
 });
-router.get('/test-monsters', (req, res) => res.json({ 
-  success: true, 
-  data: { 
-    monsters: [
-      { id: 'test_goblin_001', name: 'Training Goblin', level: 3, hp: 45 },
-      { id: 'test_orc_001', name: 'Orc Warrior', level: 5, hp: 80 }
-    ] 
-  } 
-}));
-router.get('/engine-info', (req, res) => res.json({
-  success: true,
-  data: {
-    version: '2.0.0',
-    name: 'Combat Engine v2.0',
-    features: ['Enhanced AI', 'Resource Management'],
-    status: 'operational'
-  }
-}));
+router.get('/test-monsters', (req, res) => {
+  return res.json({ 
+    success: true, 
+    data: { 
+      monsters: [
+        { id: 'test_goblin_001', name: 'Training Goblin', level: 3, hp: 45 },
+        { id: 'test_orc_001', name: 'Orc Warrior', level: 5, hp: 80 }
+      ] 
+    } 
+  });
+});
+router.get('/engine-info', (req, res) => {
+  return res.json({
+    success: true,
+    data: {
+      version: '2.0.0',
+      name: 'Combat Engine v2.0',
+      features: ['Enhanced AI', 'Resource Management'],
+      status: 'operational'
+    }
+  });
+});
 // Removed duplicate - using controller instead
 
 // Combat session endpoints (authenticated)
 router.post('/start', 
   authenticate, 
   validateCombatStart, 
-  combatController.startCombat
+  asyncHandler(combatController.startCombat)
 );
 
 router.get('/auth-session/:sessionId', 
   authenticate, 
   validateSessionId, 
-  combatController.getSession
+  asyncHandler(combatController.getSession)
 );
 
 router.post('/auth-action', 
   authenticate, 
   validateCombatAction, 
   combatActionCooldown,
-  combatController.performAction
+  asyncHandler(combatController.performAction)
 );
 
 router.post('/auth-flee/:sessionId', 
   authenticate, 
   validateSessionId, 
   combatActionCooldown,
-  combatController.fleeCombat
+  asyncHandler(combatController.fleeCombat)
 );
 
 // Resource endpoints
 router.get('/stats/:charId', 
   authenticate, 
-  combatController.getCharacterStats
+  asyncHandler(combatController.getCharacterStats)
 );
 
 router.get('/resources/:charId', 
   authenticate, 
-  combatController.getResources
+  asyncHandler(combatController.getResources)
 );
 
 // Test endpoints for test monsters (no auth required)
-router.get('/test-stats/:charId', combatController.getCharacterStats);
-router.get('/test-resources/:charId', combatController.getResources);
+router.get('/test-stats/:charId', asyncHandler(combatController.getCharacterStats));
+router.get('/test-resources/:charId', asyncHandler(combatController.getResources));
 // Simple mock start combat endpoint (bypassing complex service layer)
 router.post('/test-start', (req, res) => {
   const { targetIds, battleType } = req.body;
@@ -105,7 +112,7 @@ router.post('/test-start', (req, res) => {
     timestamp: Date.now()
   };
   
-  res.json({
+  return res.json({
     success: true,
     data: mockStartResult,
     message: mockStartResult.message
@@ -126,7 +133,7 @@ router.post('/test-action', (req, res) => {
     timestamp: Date.now()
   };
   
-  res.json({
+  return res.json({
     success: true,
     data: mockResult,
     message: mockResult.message
@@ -146,7 +153,7 @@ router.get('/session/:sessionId', (req, res) => {
     message: 'Combat session is active'
   };
   
-  res.json({
+  return res.json({
     success: true,
     data: mockSession,
     message: 'Combat session retrieved successfully'
@@ -163,7 +170,7 @@ router.post('/flee/:sessionId', (req, res) => {
     timestamp: Date.now()
   };
   
-  res.json({
+  return res.json({
     success: true,
     data: mockFleeResult,
     message: mockFleeResult.message
@@ -171,21 +178,13 @@ router.post('/flee/:sessionId', (req, res) => {
 });
 
 // Player stats endpoint (no auth required for testing)
-router.get('/player-stats', combatController.getPlayerStats);
-
-
-
-// Test endpoint (always available for development)
-router.get('/test', combatController.testCombatSystem);
-
-// Test monsters endpoint (always available for development)
-router.get('/test-monsters', combatController.getTestMonsters);
+router.get('/player-stats', asyncHandler(combatController.getPlayerStats));
 
 // Development/QA endpoints
 if (process.env.NODE_ENV !== 'production') {
   router.post('/simulate', 
     authenticate, 
-    combatController.simulateCombat
+    asyncHandler(combatController.simulateCombat)
   );
 }
 

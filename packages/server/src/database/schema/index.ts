@@ -569,7 +569,7 @@ export const monsterTypes = pgTable('monster_types', {
   baseAttack: integer('base_attack').notNull(),
   baseDefense: integer('base_defense').notNull(),
   experienceValue: integer('experience_value').notNull(),
-  lootTableId: integer('loot_table_id').references(() => lootTables.id),
+  lootTableId: uuid('loot_table_id').references(() => lootTables.id),
   aiBehavior: varchar('ai_behavior', { length: 50 }).notNull().default('aggressive'), // aggressive, defensive, neutral
   metadata: jsonb('metadata').default({}).$type<Record<string, unknown>>(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

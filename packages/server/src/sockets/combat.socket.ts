@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { CombatService } from '../services/CombatService';
-import { CombatAction, CombatResult } from '../types/combat.types';
+import { CombatAction } from '../types/combat.types';
 
 const combatService = new CombatService();
 
@@ -18,7 +18,7 @@ interface AuthenticatedSocket extends Socket {
 
 export function registerCombatHandlers(io: Server): void {
   io.on('connection', (socket: AuthenticatedSocket) => {
-    console.log(`Combat socket connected: ${socket.id}`);
+    // Combat socket connected
 
     // Join combat room
     socket.on('combat:join', async (data: { sessionId: string }, callback?: Function) => {
@@ -54,7 +54,7 @@ export function registerCombatHandlers(io: Server): void {
           socket.emit('combat:state', { success: true, data: session });
         }
 
-        console.log(`User ${userId} joined combat room: ${sessionId}`);
+        // User joined combat room
       } catch (error) {
         const errorResponse = { success: false, message: 'Failed to join combat' };
         socket.emit('combat:error', errorResponse);
@@ -72,7 +72,7 @@ export function registerCombatHandlers(io: Server): void {
         socket.emit('combat:left', response);
         if (callback) callback(response);
 
-        console.log(`Socket ${socket.id} left combat room: ${sessionId}`);
+        // Socket left combat room
       } catch (error) {
         const errorResponse = { success: false, message: 'Failed to leave combat' };
         if (callback) callback(errorResponse);
@@ -92,7 +92,7 @@ export function registerCombatHandlers(io: Server): void {
           return;
         }
 
-        console.log(`Combat action from ${userId}: ${action.type} in session ${sessionId}`);
+        // Processing combat action
 
         // Process action
         const result = await combatService.processAction(sessionId, userId, action);
@@ -120,7 +120,7 @@ export function registerCombatHandlers(io: Server): void {
             timestamp: Date.now()
           });
 
-          console.log(`Combat ended in session ${sessionId}, winner: ${session.winner}`);
+          // Combat ended
         }
 
         if (callback) callback({ success: true, data: result });
@@ -131,7 +131,7 @@ export function registerCombatHandlers(io: Server): void {
         socket.emit('combat:error', errorResponse);
         if (callback) callback(errorResponse);
 
-        console.error(`Combat action error: ${errorMessage}`);
+        // Combat action error occurred
       }
     });
 
@@ -220,13 +220,13 @@ export function registerCombatHandlers(io: Server): void {
 
     // Handle disconnection
     socket.on('disconnect', () => {
-      console.log(`Combat socket disconnected: ${socket.id}`);
+      // Combat socket disconnected
       // The socket will automatically leave all rooms on disconnect
     });
 
     // Error handler
     socket.on('error', (error) => {
-      console.error(`Combat socket error for ${socket.id}:`, error);
+      // Combat socket error occurred
       socket.emit('combat:error', {
         success: false,
         message: 'Socket error occurred',
@@ -235,7 +235,7 @@ export function registerCombatHandlers(io: Server): void {
     });
   });
 
-  console.log('Combat socket handlers registered');
+  // Combat socket handlers registered
 }
 
 // Helper function to broadcast resource updates to combat participants
@@ -243,7 +243,7 @@ export async function broadcastResourceUpdate(
   io: Server, 
   sessionId: string, 
   charId: string, 
-  resources: any
+  resources: Record<string, unknown>
 ): Promise<void> {
   io.to(`combat:${sessionId}`).emit('combat:resource:update', {
     success: true,
@@ -259,7 +259,7 @@ export async function broadcastResourceUpdate(
 export async function broadcastCombatState(
   io: Server, 
   sessionId: string, 
-  session: any
+  session: Record<string, unknown>
 ): Promise<void> {
   io.to(`combat:${sessionId}`).emit('combat:state:update', {
     success: true,

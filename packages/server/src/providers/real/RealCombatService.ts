@@ -3,23 +3,10 @@ import {
   CombatSession, 
   CombatAction, 
   CombatResult, 
-  DamageResult, 
-  Combatant, 
-  CombatOutcome,
-  StatusEffect,
-  Skill,
-  CombatSessionNew,
-  CombatActionNew,
-  CombatResultNew,
   CombatStartRequest,
   CombatEndResult,
   CharacterCombatStats,
-  ResourcePool,
-  DamageType,
-  LegacyCombatSession,
-  LegacyCombatant,
-  LegacyCombatAction,
-  LegacyCombatResult
+  ResourcePool
 } from '../interfaces/ICombatService';
 import { CombatService } from '../../services/CombatService';
 import { logger } from '../../utils/logger';
@@ -78,7 +65,7 @@ export class RealCombatService implements ICombatService {
     if (!session) {
       return {
         sessionId,
-        action: { type: 'flee' as any, timestamp: Date.now() },
+        action: { type: 'flee', timestamp: Date.now() },
         actorId: userId,
         message: 'Combat session not found',
         combatStatus: 'ended'
@@ -87,7 +74,7 @@ export class RealCombatService implements ICombatService {
     
     // Create a flee action and process it
     const fleeAction: CombatAction = {
-      type: 'flee' as any,
+      type: 'flee',
       timestamp: Date.now()
     };
     

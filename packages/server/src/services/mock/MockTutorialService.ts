@@ -10,7 +10,7 @@ import {
   TutorialGuidance, 
   TutorialHelpMessage,
   TutorialObjectiveType,
-  TutorialDifficulty,
+  TutorialQuestDifficulty,
   TutorialRewardType,
   TutorialUrgency,
   TutorialHelpCategory,
@@ -18,7 +18,7 @@ import {
   UpdateTutorialProgressResponse,
   TutorialHelpRequest,
   TutorialHelpResponse
-} from '../../../../shared/types/tutorial.types';
+} from '@aeturnis/shared';
 import { logger } from '../../utils/logger';
 
 export class MockTutorialService {
@@ -232,9 +232,9 @@ export class MockTutorialService {
         id: 'basic_movement',
         name: 'First Steps',
         description: 'Learn how to move around and navigate the world',
-        isMainQuest: true,
-        difficulty: TutorialDifficulty.BEGINNER,
-        estimatedDuration: 5,
+        difficulty: TutorialQuestDifficulty.BEGINNER,
+        order: 1,
+        optional: false,
         prerequisites: [],
         steps: [
           {
@@ -269,15 +269,11 @@ export class MockTutorialService {
         rewards: [
           {
             type: TutorialRewardType.EXPERIENCE,
-            quantity: 100,
-            experienceAmount: 100,
-            description: 'Experience for completing basic movement training'
+            amount: 100
           },
           {
             type: TutorialRewardType.GOLD,
-            quantity: 50,
-            goldAmount: 50,
-            description: 'Gold coins for your first quest'
+            amount: 50
           }
         ]
       },
@@ -285,9 +281,9 @@ export class MockTutorialService {
         id: 'combat_basics',
         name: 'Combat Training',
         description: 'Learn the fundamentals of combat in Aeturnis Online',
-        isMainQuest: true,
-        difficulty: TutorialDifficulty.EASY,
-        estimatedDuration: 10,
+        difficulty: TutorialQuestDifficulty.INTERMEDIATE,
+        order: 2,
+        optional: false,
         prerequisites: ['basic_movement'],
         steps: [
           {
@@ -312,15 +308,12 @@ export class MockTutorialService {
         rewards: [
           {
             type: TutorialRewardType.EXPERIENCE,
-            quantity: 200,
-            experienceAmount: 200,
-            description: 'Combat training experience'
+            amount: 200
           },
           {
             type: TutorialRewardType.ITEM,
-            quantity: 1,
-            itemId: 'health_potion_small',
-            description: 'Small health potion for emergencies'
+            amount: 1,
+            itemId: 'health_potion_small'
           }
         ]
       },
@@ -328,9 +321,9 @@ export class MockTutorialService {
         id: 'magic_fundamentals',
         name: 'Magical Arts',
         description: 'Learn about magic and spellcasting',
-        isMainQuest: true,
-        difficulty: TutorialDifficulty.INTERMEDIATE,
-        estimatedDuration: 15,
+        difficulty: TutorialQuestDifficulty.INTERMEDIATE,
+        order: 3,
+        optional: false,
         prerequisites: ['combat_basics'],
         steps: [
           {
@@ -356,15 +349,12 @@ export class MockTutorialService {
         rewards: [
           {
             type: TutorialRewardType.EXPERIENCE,
-            quantity: 300,
-            experienceAmount: 300,
-            description: 'Magical arts training experience'
+            amount: 300
           },
           {
             type: TutorialRewardType.ITEM,
-            quantity: 1,
-            itemId: 'mana_potion_small',
-            description: 'Small mana potion to restore magical energy'
+            amount: 1,
+            itemId: 'mana_potion_small'
           }
         ]
       }
@@ -453,7 +443,7 @@ export class MockTutorialService {
     return null;
   }
 
-  private getSuggestedActions(context?: string, category?: TutorialHelpCategory): string[] {
+  private getSuggestedActions(_context?: string, category?: TutorialHelpCategory): string[] {
     const actions = [
       "Talk to NPCs for quests and information",
       "Practice combat with training dummies",

@@ -6,7 +6,7 @@ import { logger } from '../utils/logger';
  * @param io The Socket.IO server instance
  * @param socket The client socket
  */
-export const registerMonsterEvents = (io: Server, socket: Socket) => {
+export const registerMonsterEvents = (_io: Server, socket: Socket) => {
   // Subscribe to zone updates for monster spawns/deaths
   socket.on('zone:subscribe', (zoneId: string) => {
     try {
@@ -80,7 +80,7 @@ export const registerMonsterEvents = (io: Server, socket: Socket) => {
  * @param zoneId The zone where the monster spawned
  * @param monsterData The spawned monster data
  */
-export const emitMonsterSpawned = (io: Server, zoneId: string, monsterData: any) => {
+export const emitMonsterSpawned = (io: Server, zoneId: string, monsterData: Record<string, unknown>) => {
   io.to(`zone:${zoneId}`).emit('monster:spawned', {
     monster: monsterData,
     timestamp: new Date().toISOString()

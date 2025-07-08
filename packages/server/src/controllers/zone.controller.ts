@@ -4,7 +4,7 @@
  */
 
 import { Request, Response } from 'express';
-import { ZoneListResponse, ZoneDetailsResponse } from '@aeturnis/shared/types/zone.types';
+import { ZoneListResponse, ZoneDetailsResponse } from '@aeturnis/shared';
 import { logger } from '../utils/logger';
 
 /**

@@ -75,7 +75,7 @@ export class DeathEventHandler {
    */
   emitPenaltyApplied(
     characterId: string, 
-    penalties: any
+    penalties: Record<string, unknown>
   ): void {
     const eventData = {
       characterId,

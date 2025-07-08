@@ -24,6 +24,7 @@ export {
   MonsterType,
   SpawnPoint,
   MonsterSpawnRequest,
-  MonsterStateUpdateRequest,
-  Zone
+  MonsterStateUpdateRequest
 } from '@aeturnis/shared';
+
+// Zone is now exported from the main @aeturnis/shared export

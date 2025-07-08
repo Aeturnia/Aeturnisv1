@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { body, param, query } from 'express-validator';
+import { body, param } from 'express-validator';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { authenticate as authenticateToken } from '../middleware/auth';
 import { EquipmentService } from '../services/EquipmentService';
@@ -7,6 +7,7 @@ import { EquipmentRepository } from '../repositories/EquipmentRepository';
 import { CharacterRepository } from '../repositories/CharacterRepository';
 import { CacheService } from '../services/CacheService';
 import { logger } from '../utils/logger';
+import { EquipmentSlotType } from '../types/equipment.types';
 
 const router = Router();
 
@@ -360,7 +361,7 @@ router.get(
       const result = await equipmentService.canEquipItem(
         charId,
         parseInt(itemId),
-        slot as any
+        slot as EquipmentSlotType
       );
       
       res.json({

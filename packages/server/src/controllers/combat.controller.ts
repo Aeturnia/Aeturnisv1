@@ -3,6 +3,8 @@ import { ServiceProvider, ICombatService } from '../providers';
 import { CombatStartRequest, CombatActionRequest, CombatActionType, CombatAction } from '../types/combat.types';
 import { logger } from '../utils/logger';
 import { assertServiceDefined } from '../utils/validators';
+import { createSuccessResponse, createErrorResponse } from '../types/api.types';
+import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../utils/response.utils';
 
 // Extend Request type for authenticated requests
 interface AuthRequest extends Request {
@@ -45,7 +47,11 @@ export const getPlayerStats = async (_req: Request, res: Response): Promise<Resp
         mana: 80,
         maxMana: 80,
         stamina: 120,
-        maxStamina: 120
+        maxStamina: 120,
+        hpRegenRate: 2,
+        manaRegenRate: 1,
+        staminaRegenRate: 3,
+        lastRegenTime: Date.now()
       },
       equipment: {
         weapon: 'Steel Sword +3',
@@ -60,16 +66,9 @@ export const getPlayerStats = async (_req: Request, res: Response): Promise<Resp
       }
     };
 
-    return res.status(200).json({
-      success: true,
-      message: 'Player stats retrieved successfully',
-      data: mockPlayerStats
-    });
+    return res.status(200).json(createSuccessResponse(mockPlayerStats, 'Player stats retrieved successfully'));
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error instanceof Error ? error.message : 'Failed to get player stats'
-    });
+    return res.status(500).json(createErrorResponse('Internal server error', error instanceof Error ? error.message : 'Failed to get player stats'));
   }
 };
 
@@ -101,14 +100,10 @@ export const getCombatSession = async (req: Request, res: Response): Promise<Res
       });
     }
 
-    return res.status(200).json({
-      success: true,
-      message: 'Combat session retrieved successfully',
-      data: {
-        session,
-        plainText: `Combat Status: ${session.status?.toUpperCase() || 'UNKNOWN'}\nRound: ${session.roundNumber || 1}\nCurrent Turn: ${session.participants?.find(p => p.charId === session.turnOrder?.[session.currentTurn || 0])?.charName || 'Unknown'}`
-      }
-    });
+    return sendSuccess(res, {
+      session,
+      plainText: `Combat Status: ${session.status?.toUpperCase() || 'UNKNOWN'}\nRound: ${session.roundNumber || 1}\nCurrent Turn: ${session.participants?.find(p => p.charId === session.turnOrder?.[session.currentTurn || 0])?.charName || 'Unknown'}`
+    }, 'Combat session retrieved successfully');
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -222,7 +217,7 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
     logger.debug('Processing action with combat service...');
     assertServiceDefined(combatService, 'CombatService');
     
-    const result = await combatService.processAction(combatAction);
+    const result = await combatService.performAction(sessionId, actorId, combatAction);
     logger.debug('Combat service result:', JSON.stringify(result, null, 2));
 
     logger.debug('=== COMBAT ACTION DEBUG END ===');
@@ -316,14 +311,11 @@ export const fleeTestCombat = async (req: Request, res: Response): Promise<Respo
     const { sessionId } = req.params;
     
     if (!sessionId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Session ID is required'
-      });
+      return sendValidationError(res, 'Session ID is required');
     }
 
     // Use mock player ID for testing
-    // const actorId = '550e8400-e29b-41d4-a716-446655440000'; // Unused variable
+    const actorId = '550e8400-e29b-41d4-a716-446655440000';
     
     // Create proper flee action object
     const fleeAction: CombatAction = {
@@ -334,7 +326,7 @@ export const fleeTestCombat = async (req: Request, res: Response): Promise<Respo
     const combatService = ServiceProvider.getInstance().get<ICombatService>('CombatService');
     assertServiceDefined(combatService, 'CombatService');
     
-    const result = await combatService.processAction(fleeAction);
+    const result = await combatService.performAction(sessionId, actorId, fleeAction);
     
     // Handle flee-specific errors with helpful messages
     if ('error' in result) {
@@ -540,10 +532,7 @@ export const getSession = async (req: Request, res: Response): Promise<Response>
     const session = await combatService.getSession(sessionId);
 
     if (!session) {
-      return res.status(404).json({
-        success: false,
-        message: 'Combat session not found'
-      });
+      return sendNotFound(res, 'Combat session', sessionId);
     }
 
     return res.json({
@@ -695,8 +684,20 @@ export const fleeCombat = async (req: AuthRequest, res: Response): Promise<Respo
  */
 export const getCharacterStats = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const { charId: _charId } = req.params;
-    const stats = /* TODO: getCharacterStats not in ICombatService */ {} as any; // await combatService.getCharacterStats(charId);
+    const { charId } = req.params;
+    // TODO: getCharacterStats not in ICombatService
+    // const stats = await combatService.getCharacterStats(charId);
+    const stats = {
+      resources: {
+        hp: 100,
+        maxHp: 100,
+        mana: 50,
+        maxMana: 50,
+        stamina: 75,
+        maxStamina: 75
+      }
+    };
+    console.log(`Getting stats for character: ${charId}`);
 
     return res.json({
       success: true,
@@ -723,16 +724,26 @@ export const getCharacterStats = async (req: Request, res: Response): Promise<Re
  */
 export const getResources = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const { charId: _charId } = req.params;
+    const { charId } = req.params;
     
-    // Get character resources via combat service to handle test monsters
-    const resources = /* TODO: getCharacterResources not in ICombatService */ {} as any; // await combatService.getCharacterResources(charId);
+    // TODO: getCharacterResources not in ICombatService
+    // const resources = await combatService.getCharacterResources(charId);
+    const resources = {
+      hp: 100,
+      maxHp: 100,
+      mana: 50,
+      maxMana: 50,
+      stamina: 75,
+      maxStamina: 75,
+      hpRegenRate: 1,
+      manaRegenRate: 0.5,
+      staminaRegenRate: 2,
+      lastRegenTime: Date.now()
+    };
+    logger.debug(`Getting resources for character: ${charId}`);
 
     if (!resources) {
-      return res.status(404).json({
-        success: false,
-        message: 'Character resources not found'
-      });
+      return sendNotFound(res, 'Character resources', charId);
     }
 
     // Calculate percentages
@@ -742,31 +753,25 @@ export const getResources = async (req: Request, res: Response): Promise<Respons
       staminaPercent: (resources.stamina / resources.maxStamina) * 100
     };
 
-    return res.json({
-      success: true,
-      data: {
-        resources,
-        percentages,
-        regeneration: {
-          hpPerSecond: resources.hpRegenRate,
-          manaPerSecond: resources.manaRegenRate,
-          staminaPerSecond: resources.staminaRegenRate,
-          lastUpdate: resources.lastRegenTime
-        },
-        combatReadiness: {
-          canFight: resources.hp > 0 && resources.stamina > 0,
-          healthStatus: percentages.healthPercent > 75 ? 'excellent' : 
-                      percentages.healthPercent > 50 ? 'good' : 
-                      percentages.healthPercent > 25 ? 'wounded' : 'critical',
-          resourceSummary: `HP: ${resources.hp}/${resources.maxHp}, MP: ${resources.mana}/${resources.maxMana}, SP: ${resources.stamina}/${resources.maxStamina}`
-        }
+    return sendSuccess(res, {
+      resources,
+      percentages,
+      regeneration: {
+        hpPerSecond: resources.hpRegenRate,
+        manaPerSecond: resources.manaRegenRate,
+        staminaPerSecond: resources.staminaRegenRate,
+        lastUpdate: resources.lastRegenTime
+      },
+      combatReadiness: {
+        canFight: resources.hp > 0 && resources.stamina > 0,
+        healthStatus: percentages.healthPercent > 75 ? 'excellent' : 
+                    percentages.healthPercent > 50 ? 'good' : 
+                    percentages.healthPercent > 25 ? 'wounded' : 'critical',
+        resourceSummary: `HP: ${resources.hp}/${resources.maxHp}, MP: ${resources.mana}/${resources.maxMana}, SP: ${resources.stamina}/${resources.maxStamina}`
       }
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error instanceof Error ? error.message : 'Failed to get character resources'
-    });
+    return sendError(res, 'Internal server error', error instanceof Error ? error.message : 'Failed to get character resources');
   }
 };
 
@@ -792,7 +797,14 @@ export const simulateCombat = async (req: AuthRequest, res: Response): Promise<R
       });
     }
 
-    const result = /* TODO: simulateCombat not in ICombatService */ {} as any; // await combatService.simulateCombat(userId, targetIds);
+    // TODO: simulateCombat not in ICombatService
+    // const result = await combatService.simulateCombat(userId, targetIds);
+    const result = {
+      duration: 0,
+      winner: 'none',
+      rewards: [],
+      experience: 0
+    };
 
     return res.json({
       success: true,

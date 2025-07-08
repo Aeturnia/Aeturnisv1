@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { requireAuth } from '../middleware/auth';
+import { asyncHandler } from '../middleware/asyncHandler';
 import { ServiceProvider, IBankService, BankType } from '../providers';
 import { body, param, validationResult } from 'express-validator';
 import { logger } from '../utils/logger';
@@ -8,7 +9,7 @@ const router = Router();
 
 // Test endpoint for visual testing interface
 router.get('/test-bank', (_req: Request, res: Response) => {
-  res.json({
+  return res.json({
     success: true,
     message: 'Banking system is operational',
     timestamp: new Date().toISOString(),
@@ -25,7 +26,7 @@ router.get('/test-bank', (_req: Request, res: Response) => {
 router.get('/characters/:characterId/bank',
   requireAuth,
   param('characterId').isUUID().withMessage('Invalid character ID'),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -45,14 +46,14 @@ router.get('/characters/:characterId/bank',
       });
       return res.status(500).json({ error: 'Failed to retrieve bank' });
     }
-  }
+  })
 );
 
 // Get shared bank
 router.get('/users/:userId/shared-bank',
   requireAuth,
   param('userId').isUUID().withMessage('Invalid user ID'),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -71,7 +72,7 @@ router.get('/users/:userId/shared-bank',
       });
       return res.status(500).json({ error: 'Failed to retrieve shared bank' });
     }
-  }
+  })
 );
 
 // Add item to bank
@@ -82,7 +83,7 @@ router.post('/characters/:characterId/bank/items',
   body('itemId').isInt({ min: 1 }).withMessage('Invalid item ID'),
   body('quantity').optional().isInt({ min: 1 }).withMessage('Quantity must be positive'),
   body('bankType').optional().isIn(['personal', 'shared']).withMessage('Invalid bank type'),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -121,7 +122,7 @@ router.post('/characters/:characterId/bank/items',
       
       return res.status(500).json({ error: 'Failed to add item to bank' });
     }
-  }
+  })
 );
 
 // Remove item from bank
@@ -131,7 +132,7 @@ router.delete('/characters/:characterId/bank/items/:slot',
   param('slot').isInt({ min: 0, max: 99 }).withMessage('Invalid slot number'),
   body('quantity').optional().isInt({ min: 1 }).withMessage('Quantity must be positive'),
   body('bankType').optional().isIn(['personal', 'shared']).withMessage('Invalid bank type'),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -175,7 +176,7 @@ router.delete('/characters/:characterId/bank/items/:slot',
       
       return res.status(500).json({ error: 'Failed to remove item from bank' });
     }
-  }
+  })
 );
 
 // Transfer item between storage locations
@@ -187,16 +188,16 @@ router.post('/characters/:characterId/bank/transfer',
   body('fromSlot').isInt({ min: 0 }).withMessage('Invalid source slot'),
   body('toSlot').isInt({ min: 0 }).withMessage('Invalid destination slot'),
   body('quantity').optional().isInt({ min: 1 }).withMessage('Quantity must be positive'),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
     try {
-      const userId = (req as any).user?.id; // From auth middleware
+      const _userId = (req as any).user?.id; // From auth middleware
       
-      const bankService = ServiceProvider.getInstance().get<IBankService>('BankService');
+      const _bankService = ServiceProvider.getInstance().get<IBankService>('BankService');
       // TODO: transferItem method not in IBankService interface
       // await bankService.transferItem(
       //   req.params.characterId,
@@ -204,12 +205,6 @@ router.post('/characters/:characterId/bank/transfer',
       //   req.body
       // );
       throw new Error('Transfer item not yet implemented in IBankService');
-
-      res.json({
-        success: true,
-        message: 'Item transferred successfully',
-        transfer: req.body
-      });
     } catch (error) {
       logger.error('Failed to transfer item', { 
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -224,7 +219,7 @@ router.post('/characters/:characterId/bank/transfer',
       
       return res.status(500).json({ error: 'Failed to transfer item' });
     }
-  }
+  })
 );
 
 // Expand bank slots
@@ -232,7 +227,7 @@ router.post('/characters/:characterId/bank/expand',
   requireAuth,
   param('characterId').isUUID().withMessage('Invalid character ID'),
   body('slots').isInt({ min: 1, max: 20 }).withMessage('Slots must be between 1 and 20'),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -270,7 +265,7 @@ router.post('/characters/:characterId/bank/expand',
       
       return res.status(500).json({ error: 'Failed to expand bank' });
     }
-  }
+  })
 );
 
 export default router;

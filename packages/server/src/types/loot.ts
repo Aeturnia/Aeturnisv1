@@ -1,3 +1,5 @@
+import { ItemRarity } from '@aeturnis/shared';
+
 export interface ILootTable {
   id: string;
   name: string;
@@ -61,13 +63,8 @@ export interface ILootClaimResponse {
   gold: number;
 }
 
-export enum ItemRarity {
-  COMMON = 'common',
-  UNCOMMON = 'uncommon',
-  RARE = 'rare',
-  EPIC = 'epic',
-  LEGENDARY = 'legendary'
-}
+// Import ItemRarity from shared package instead of duplicating
+export { ItemRarity } from '@aeturnis/shared';
 
 // Database record types
 export interface IRespawnPointRecord {
@@ -96,9 +93,9 @@ export interface ILootEntryRecord {
   itemId: string;
   minQty: number;
   maxQty: number;
-  dropRate: number;
-  rarity: ItemRarity;
-  conditions: Record<string, unknown>;
+  dropRate: string;  // Changed from number to string to match database decimal type
+  rarity: ItemRarity | string;  // Allow string to match database
+  conditions: Record<string, unknown> | null;  // Allow null to match database
   createdAt: Date;
 }
 

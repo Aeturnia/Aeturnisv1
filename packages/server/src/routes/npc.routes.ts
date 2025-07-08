@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { authenticate } from '../middleware/auth';
 import * as npcController from '../controllers/npc.controller';
 
 const router = Router();

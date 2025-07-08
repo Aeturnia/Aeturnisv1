@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config';
+import path from 'path';
 
 export default defineConfig({
   test: {
@@ -15,6 +16,21 @@ export default defineConfig({
     sequence: {
       concurrent: false, // Run tests sequentially to avoid conflicts
     },
+    // Test file patterns
+    include: [
+      'src/**/*.test.ts',
+      'src/**/*.spec.ts',
+      'src/__tests__/**/*.test.ts',
+      'src/__tests__/**/*.spec.ts'
+    ],
+    exclude: [
+      'node_modules/**',
+      'dist/**',
+      'src/__tests__/helpers/**',
+      'src/__tests__/setup/**',
+      'src/__tests__/fixtures/**'
+    ],
+    // Coverage configuration
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
@@ -24,7 +40,24 @@ export default defineConfig({
         '**/*.test.ts',
         '**/*.spec.ts',
         'src/test-utils/**',
+        'src/__tests__/**',
       ],
+      include: [
+        'src/**/*.ts'
+      ],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 70,
+        statements: 80
+      }
     },
   },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      '@test': path.resolve(__dirname, './src/__tests__'),
+      '@helpers': path.resolve(__dirname, './src/__tests__/helpers')
+    }
+  }
 });

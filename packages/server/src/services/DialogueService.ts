@@ -1,4 +1,4 @@
-import { DialogueNode, DialogueChoice, DialogueAction, DialogueCondition } from '../../../shared/src/types/npc.types';
+import { DialogueNode, DialogueAction, DialogueCondition } from '@aeturnis/shared';
 
 interface DialogueTree {
   id: string;
@@ -28,6 +28,7 @@ export class DialogueService {
     // 1. Load tree from database/cache
     // 2. Parse dialogue nodes
     // 3. Return node array
+    console.log(`Loading dialogue tree: ${treeId}`);
     throw new Error('Not implemented');
   }
 
@@ -42,6 +43,7 @@ export class DialogueService {
     // 1. Load dialogue tree
     // 2. Find specific node
     // 3. Return node data
+    console.log(`Getting dialogue node: ${nodeId} from tree: ${treeId}`);
     throw new Error('Not implemented');
   }
 
@@ -64,6 +66,7 @@ export class DialogueService {
     // 2. Check choice conditions
     // 3. Execute choice actions
     // 4. Return next node
+    console.log(`Processing dialogue choice: tree=${treeId}, node=${nodeId}, choice=${choiceId}, character=${characterId}`);
     throw new Error('Not implemented');
   }
 

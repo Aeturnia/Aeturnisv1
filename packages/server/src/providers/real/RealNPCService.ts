@@ -1,7 +1,6 @@
 import { INPCService } from '../interfaces/INPCService';
 import { NPC, NPCInteraction } from '@aeturnis/shared';
 import { NPCService } from '../../services/NPCService';
-import { CacheService } from '../../services/CacheService';
 
 /**
  * Real implementation wrapper for NPCService
@@ -10,7 +9,7 @@ import { CacheService } from '../../services/CacheService';
 export class RealNPCService implements INPCService {
   private npcService: NPCService;
 
-  constructor(cacheService?: CacheService) {
+  constructor() {
     this.npcService = new NPCService();
   }
 

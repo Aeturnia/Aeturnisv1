@@ -48,35 +48,36 @@ export { MockProgressionService } from '../services/mock/MockProgressionService'
  * Initialize providers based on configuration
  * This is a helper function that can be called during server startup
  */
-export async function initializeProviders(_useMocks: boolean): Promise<void> {
+export async function initializeProviders(useMocks: boolean): Promise<void> {
   const { ServiceProvider } = await import('./ServiceProvider');
   const provider = ServiceProvider.getInstance();
 
   // Load all mock services
-  console.log('Loading all mock services...');
+  if (useMocks) {
+    console.log('Loading all mock services...');
   
   const { MockMonsterService } = await import('./mock/MockMonsterService');
   const { MockNPCService } = await import('./mock/MockNPCService');
   const { MockDeathService } = await import('./mock/MockDeathService');
   
-  // Add remaining services incrementally
-  console.log('Loading MockLootService...');
-  const { MockLootService } = await import('./mock/MockLootService');
-  console.log('Loading MockCombatService...');
-  const { MockCombatService } = await import('./mock/MockCombatService');
-  console.log('Loading MockBankService...');
-  const { MockBankService } = await import('./mock/MockBankService');
-  console.log('Loading MockCurrencyService...');
-  const { MockCurrencyService } = await import('./mock/MockCurrencyService');
-  console.log('Loading MockDialogueService...');
-  const { MockDialogueService } = await import('./mock/MockDialogueService');
-  console.log('Loading MockSpawnService...');
-  const { MockSpawnService } = await import('./mock/MockSpawnService');
-  
-  // Register all services incrementally with error handling
-  provider.register('MonsterService', new MockMonsterService());
-  provider.register('NPCService', new MockNPCService());
-  provider.register('DeathService', new MockDeathService());
+    // Add remaining services incrementally
+    console.log('Loading MockLootService...');
+    const { MockLootService } = await import('./mock/MockLootService');
+    console.log('Loading MockCombatService...');
+    const { MockCombatService } = await import('./mock/MockCombatService');
+    console.log('Loading MockBankService...');
+    const { MockBankService } = await import('./mock/MockBankService');
+    console.log('Loading MockCurrencyService...');
+    const { MockCurrencyService } = await import('./mock/MockCurrencyService');
+    console.log('Loading MockDialogueService...');
+    const { MockDialogueService } = await import('./mock/MockDialogueService');
+    console.log('Loading MockSpawnService...');
+    const { MockSpawnService } = await import('./mock/MockSpawnService');
+    
+    // Register all services incrementally with error handling
+    provider.register('MonsterService', new MockMonsterService());
+    provider.register('NPCService', new MockNPCService());
+    provider.register('DeathService', new MockDeathService());
   
   // Try registering additional services with error handling
   try {
@@ -174,6 +175,10 @@ export async function initializeProviders(_useMocks: boolean): Promise<void> {
     console.error('❌ Failed to register AffinityService:', error);
   }
   
-  const registeredServices = provider.getRegisteredServices();
-  console.log(`Service Provider initialized with ${registeredServices.length} MOCK services: ${registeredServices.join(', ')}`);
+    const registeredServices = provider.getRegisteredServices();
+    console.log(`Service Provider initialized with ${registeredServices.length} MOCK services: ${registeredServices.join(', ')}`);
+  } else {
+    // Load real services when not using mocks
+    console.log('Loading real services (not implemented yet)...');
+  }
 }

@@ -27,7 +27,7 @@ export class RealLootService implements ILootService {
     this.lootService = new LootService(lootRepository);
   }
 
-  async generateLoot(source: LootSource, killer: any): Promise<LootTable> {
+  async generateLoot(source: LootSource, killer: { level?: number }): Promise<LootTable> {
     // Map to real service format
     const dropModifiers = {
       characterLevel: killer.level || 1,
@@ -116,11 +116,11 @@ export class RealLootService implements ILootService {
     }
   }
 
-  async distributeLoot(loot: LootTable, party: any[]): Promise<Distribution> {
+  async distributeLoot(loot: LootTable, party: { id: string }[]): Promise<Distribution> {
     // Real service may not have party distribution
     // Simulate distribution
-    const assignments = new Map<string, any[]>();
-    const unassigned: any[] = [];
+    const assignments = new Map<string, typeof loot.items>();
+    const unassigned: typeof loot.items = [];
     
     // Simple round-robin distribution
     let playerIndex = 0;
@@ -160,7 +160,7 @@ export class RealLootService implements ILootService {
   async getLootHistory(characterId: string, limit: number = 50): Promise<LootHistoryEntry[]> {
     const history = await this.lootService.getLootHistory(characterId, limit);
     // Convert to LootHistoryEntry format
-    return history.map((h: any) => ({
+    return history.map((h: { id: string; combatSessionId?: string; itemId: string; quantity?: number; gold?: number; experience?: number; timestamp: string | number | Date }) => ({
       id: h.id,
       characterId: characterId,
       sessionId: h.combatSessionId || '',
@@ -178,8 +178,7 @@ export class RealLootService implements ILootService {
   }
 
   async createTestLootTable(): Promise<string> {
-    // LootService doesn't have createTestLootTable method
-    return 'test-table-' + Date.now();
+    return await this.lootService.createTestLootTable();
   }
 
   async getAllLootTables(): Promise<LootTable[]> {

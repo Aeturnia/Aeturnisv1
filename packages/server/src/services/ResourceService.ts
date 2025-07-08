@@ -159,7 +159,7 @@ export class ResourceService {
   /**
    * Apply natural regeneration over time
    */
-  private applyRegeneration(charId: string, pool: ResourcePool): void {
+  private applyRegeneration(_charId: string, pool: ResourcePool): void {
     const now = Date.now();
     const timeDelta = (now - pool.lastRegenTime) / 1000; // seconds
 
@@ -176,7 +176,7 @@ export class ResourceService {
   /**
    * Calculate max resources based on character stats (mock implementation)
    */
-  async calculateMaxResources(charId: string, level: number, stats: Record<string, number>): Promise<Partial<ResourcePool>> {
+  async calculateMaxResources(_charId: string, level: number, stats: Record<string, number>): Promise<Partial<ResourcePool>> {
     // Mock calculation based on level and stats
     const baseHp = 100;
     const baseMana = 50;

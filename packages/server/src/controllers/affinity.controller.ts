@@ -12,8 +12,9 @@ import {
   WeaponType,
   MagicSchool,
   AffinityUsageContext
-} from '../../../shared/types/affinity.types';
+} from '@aeturnis/shared';
 import { logger } from '../utils/logger';
+import { sendValidationError } from '../utils/response.utils';
 
 export class AffinityController {
   private affinityService: MockAffinityService;
@@ -26,17 +27,13 @@ export class AffinityController {
    * Get affinity summary for character
    * GET /api/v1/affinity/summary/:characterId
    */
-  async getAffinitySummary(req: Request, res: Response): Promise<void> {
+  async getAffinitySummary(req: Request, res: Response): Promise<Response> {
     try {
       const { characterId } = req.params;
       const { includeAchievements, includeMilestones } = req.query;
       
       if (!characterId) {
-        res.status(400).json({
-          success: false,
-          error: 'Character ID is required'
-        });
-        return;
+        return sendValidationError(res, 'Character ID is required');
       }
 
       const request: GetAffinitySummaryRequest = {
@@ -47,14 +44,14 @@ export class AffinityController {
 
       const result = await this.affinityService.getAffinitySummary(request);
       
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data: result,
         message: `Affinity summary retrieved for character ${characterId}`
       });
     } catch (error) {
       logger.error('Error retrieving affinity summary:', error);
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         error: 'Failed to retrieve affinity summary',
         message: error instanceof Error ? error.message : 'Unknown error'

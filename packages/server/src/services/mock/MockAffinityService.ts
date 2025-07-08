@@ -24,7 +24,7 @@ import {
   GetAffinitySummaryRequest,
   GetAffinitySummaryResponse,
   AffinityCalculationResult
-} from '../../../../shared/types/affinity.types';
+} from '@aeturnis/shared';
 import { logger } from '../../utils/logger';
 
 export class MockAffinityService {
@@ -391,9 +391,9 @@ export class MockAffinityService {
     return specializations;
   }
 
-  private getUnlockedAchievements(characterId: string): AffinityAchievement[] {
+  private getUnlockedAchievements(_characterId: string): AffinityAchievement[] {
     // In a real implementation, this would check actual conditions
-    return this.achievements.filter(achievement => {
+    return this.achievements.filter(_achievement => {
       // Simple mock logic
       return Math.random() > 0.7; // 30% chance each achievement is unlocked
     });

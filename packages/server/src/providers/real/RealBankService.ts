@@ -96,13 +96,13 @@ export class RealBankService implements IBankService {
         slotIndex: emptySlot,
         message: 'Item deposited'
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         success: false,
         itemId,
         quantity,
         slotIndex: -1,
-        message: error.message || 'Failed to deposit item'
+        message: (error as Error).message || 'Failed to deposit item'
       };
     }
   }
@@ -137,12 +137,12 @@ export class RealBankService implements IBankService {
         quantity: result.removedQuantity,
         message: 'Item withdrawn'
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         success: false,
         itemId,
         quantity: 0,
-        message: error.message || 'Failed to withdraw item'
+        message: (error as Error).message || 'Failed to withdraw item'
       };
     }
   }

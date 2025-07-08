@@ -7,9 +7,7 @@ import {
   STAT_TYPES
 } from '../types/equipment.types';
 import type { 
-  Item,
   EquipmentItem, 
-  InventoryItem, 
   EquipmentStats,
   EquipmentSlotType,
   BindType,

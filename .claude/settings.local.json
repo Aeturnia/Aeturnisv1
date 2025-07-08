@@ -30,7 +30,13 @@
       "Bash(./scripts/complete-unit.sh:*)",
       "Bash(/scripts/start-unit.sh:*)",
       "Bash(npm run test:server:*)",
-      "Bash(npm run type-check:*)"
+      "Bash(npm run type-check:*)",
+      "Bash(npm run check:types:*)",
+      "Bash(/home/runner/workspace/scripts/start-unit.sh:*)",
+      "Bash(npx drizzle-kit push:*)",
+      "Bash(npx tsx:*)",
+      "Bash(rm:*)",
+      "Bash(npm run test:*)"
     ],
     "deny": []
   }

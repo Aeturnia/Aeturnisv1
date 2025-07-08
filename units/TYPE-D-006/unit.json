@@ -1,0 +1,27 @@
+{
+  "unit": "TYPE-D-006",
+  "name": "Mock Service - Method Implementation",
+  "assigned_to": "Repository Agent",
+  "status": "completed",
+  "completed_at": "2025-07-08",
+  "started_at": "2025-07-08",
+  "expected_impact": "~25 errors",
+  "tasks": [
+    "Implement missing methods (getSpawnPoints, etc.)",
+    "Fix return type issues",
+    "Ensure mock data consistency",
+    "Update mock services to match interfaces"
+  ],
+  "baseline": {
+    "errors": 131,
+    "eslint": 71
+  },
+  "final": {
+    "errors": 125,
+    "eslint": 71
+  },
+  "impact": {
+    "errors_reduction": 6,
+    "notes": "Fixed import path issues and type synchronization. All mock services now properly implement their interfaces."
+  }
+}

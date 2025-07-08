@@ -3,6 +3,7 @@ import { ServiceProvider, IDeathService } from '../providers';
 import { IDeathRequest } from '../types/death';
 import { ValidationError, NotFoundError } from '../utils/errors';
 import { logger } from '../utils/logger';
+import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../utils/response.utils';
 
 /**
  * Process character death
@@ -15,10 +16,7 @@ export const processCharacterDeath = async (req: Request, res: Response): Promis
     const deathService = ServiceProvider.getInstance().get<IDeathService>('DeathService');
 
     if (!characterId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Character ID is required',
-      });
+      return sendValidationError(res, 'Character ID is required');
     }
 
     const result = await deathService.processCharacterDeath(characterId, deathRequest);
@@ -28,28 +26,19 @@ export const processCharacterDeath = async (req: Request, res: Response): Promis
       reason: deathRequest.reason 
     });
 
-    return res.status(200).json(result);
+    return sendSuccess(res, result);
   } catch (error) {
     logger.error('Error processing character death', { error, params: req.params });
 
     if (error instanceof ValidationError) {
-      return res.status(400).json({
-        success: false,
-        message: error.message,
-      });
+      return sendValidationError(res, error.message);
     }
 
     if (error instanceof NotFoundError) {
-      return res.status(404).json({
-        success: false,
-        message: error.message,
-      });
+      return sendNotFound(res, 'Resource', error.message);
     }
 
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error processing character death',
-    });
+    return sendError(res, 'Internal server error', 'Internal server error processing character death');
   }
 };
 
@@ -63,38 +52,26 @@ export const processCharacterRespawn = async (req: Request, res: Response): Prom
     const deathService = ServiceProvider.getInstance().get<IDeathService>('DeathService');
 
     if (!characterId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Character ID is required',
-      });
+      return sendValidationError(res, 'Character ID is required');
     }
 
     const result = await deathService.processCharacterRespawn(characterId);
 
     logger.info('Character respawn processed via API', { characterId });
 
-    return res.status(200).json(result);
+    return sendSuccess(res, result);
   } catch (error) {
     logger.error('Error processing character respawn', { error, params: req.params });
 
     if (error instanceof ValidationError) {
-      return res.status(400).json({
-        success: false,
-        message: error.message,
-      });
+      return sendValidationError(res, error.message);
     }
 
     if (error instanceof NotFoundError) {
-      return res.status(404).json({
-        success: false,
-        message: error.message,
-      });
+      return sendNotFound(res, 'Resource', error.message);
     }
 
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error processing character respawn',
-    });
+    return sendError(res, 'Internal server error', 'Internal server error processing character respawn');
   }
 };
 
@@ -108,32 +85,20 @@ export const getCharacterDeathStatus = async (req: Request, res: Response): Prom
     const deathService = ServiceProvider.getInstance().get<IDeathService>('DeathService');
 
     if (!characterId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Character ID is required',
-      });
+      return sendValidationError(res, 'Character ID is required');
     }
 
     const status = await deathService.getCharacterDeathStatus(characterId);
 
-    return res.status(200).json({
-      success: true,
-      status,
-    });
+    return sendSuccess(res, { status });
   } catch (error) {
     logger.error('Error getting character death status', { error, params: req.params });
 
     if (error instanceof NotFoundError) {
-      return res.status(404).json({
-        success: false,
-        message: error.message,
-      });
+      return sendNotFound(res, 'Resource', error.message);
     }
 
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error getting death status',
-    });
+    return sendError(res, 'Internal server error', 'Internal server error getting death status');
   }
 };
 
@@ -177,15 +142,11 @@ export const testDeathSystem = async (_req: Request, res: Response): Promise<Res
       }
     };
 
-    return res.status(200).json(testData);
+    return sendSuccess(res, testData);
   } catch (error) {
     logger.error('Error in death system test endpoint', { error });
 
-    return res.status(500).json({
-      success: false,
-      message: 'Death system test failed',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    return sendError(res, 'Death system test failed', error instanceof Error ? error.message : 'Unknown error');
   }
 };
 
@@ -211,19 +172,14 @@ export const testCharacterDeath = async (_req: Request, res: Response): Promise<
 
     logger.info('Death system test completed', { mockCharacterId });
 
-    return res.status(200).json({
-      message: 'Death system test completed successfully',
+    return sendSuccess(res, {
       testData: mockResponse,
       note: 'This is a test endpoint with mock data - no actual character was harmed'
-    });
+    }, 'Death system test completed successfully');
   } catch (error) {
     logger.error('Error in test character death', { error });
 
-    return res.status(500).json({
-      success: false,
-      message: 'Test character death failed',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    return sendError(res, 'Test character death failed', error instanceof Error ? error.message : 'Unknown error');
   }
 };
 
@@ -296,19 +252,13 @@ export const testCharacterDeathStatus = async (_req: Request, res: Response): Pr
 
     logger.info('Death status test completed', { mockCharacterId });
 
-    return res.status(200).json({
-      success: true,
+    return sendSuccess(res, {
       status: mockStatus,
-      message: 'Death status test completed successfully',
       note: 'This is a test endpoint with mock data'
-    });
+    }, 'Death status test completed successfully');
   } catch (error) {
     logger.error('Error in test character death status', { error });
 
-    return res.status(500).json({
-      success: false,
-      message: 'Test character death status failed',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    return sendError(res, 'Test character death status failed', error instanceof Error ? error.message : 'Unknown error');
   }
 };

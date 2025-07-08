@@ -265,14 +265,15 @@ export class MockLootService implements ILootService {
     }
   }
 
-  private getRarity(sourceLevel: number, _characterLevel: number): ItemRarity {
+  private getRarity(sourceLevel: number, characterLevel: number): ItemRarity {
     const roll = Math.random();
     const levelBonus = sourceLevel / 100;
+    const charLevelBonus = characterLevel / 200; // Use character level for additional bonus
     
-    if (roll < 0.01 + levelBonus / 10) return 'legendary';
-    if (roll < 0.05 + levelBonus / 5) return 'epic';
-    if (roll < 0.15 + levelBonus / 3) return 'rare';
-    if (roll < 0.35 + levelBonus / 2) return 'uncommon';
+    if (roll < 0.01 + levelBonus / 10 + charLevelBonus / 20) return 'legendary';
+    if (roll < 0.05 + levelBonus / 5 + charLevelBonus / 10) return 'epic';
+    if (roll < 0.15 + levelBonus / 3 + charLevelBonus / 5) return 'rare';
+    if (roll < 0.35 + levelBonus / 2 + charLevelBonus / 3) return 'uncommon';
     return 'common';
   }
 

@@ -11,7 +11,7 @@ import {
   AllocateStatResponse, 
   PowerScoreResponse,
   CharacterProgression
-} from '@aeturnis/shared/types/progression.types';
+} from '@aeturnis/shared';
 import { logger } from '../utils/logger';
 
 // Mock character progressions for testing

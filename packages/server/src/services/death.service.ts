@@ -18,7 +18,6 @@ export class DeathService {
   private static readonly RESPAWN_COOLDOWN_MS = 30000; // 30 seconds
   private static readonly XP_LOSS_PERCENTAGE = 0.8; // 80% experience loss - SEVERE PENALTY
   private static readonly GOLD_LOSS_PERCENTAGE = 1.0; // 100% gold loss - COMPLETE GOLD LOSS
-  private static readonly DURABILITY_DAMAGE_PERCENTAGE = 0.15; // 15% durability damage
 
   constructor(
     private deathRepository: DeathRepository,
@@ -173,7 +172,7 @@ export class DeathService {
     if (request.killerId) {
       try {
         await this.deathRepository.getCharacterDeathStatus(request.killerId);
-      } catch (error) {
+      } catch (_error) {
         throw new ValidationError('Invalid killer ID');
       }
     }
@@ -184,6 +183,7 @@ export class DeathService {
    */
   private async calculateDeathPenalties(characterId: string): Promise<IPenaltyBreakdown> {
     // TODO: Get character level and experience from character repository
+    console.log(`Calculating death penalties for character: ${characterId}`);
     const mockExperience = 5000; // Mock data for now
     const mockGold = 1000; // Mock data for now
     

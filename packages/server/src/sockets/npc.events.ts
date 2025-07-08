@@ -6,7 +6,7 @@ import { logger } from '../utils/logger';
  * @param io The Socket.IO server instance
  * @param socket The client socket
  */
-export const registerNPCEvents = (io: Server, socket: Socket) => {
+export const registerNPCEvents = (_io: Server, socket: Socket) => {
   // Watch an NPC for interaction updates
   socket.on('npc:watch', (npcId: string) => {
     try {
@@ -144,7 +144,7 @@ export const emitDialogueUpdated = (
   io: Server, 
   sessionId: string, 
   npcId: string, 
-  dialogueNode: any
+  dialogueNode: Record<string, unknown>
 ) => {
   const eventData = {
     sessionId,
@@ -227,7 +227,7 @@ export const emitTradeCompleted = (
   merchantId: string, 
   characterId: string, 
   tradeId: string, 
-  tradeData: any
+  tradeData: Record<string, unknown>
 ) => {
   const eventData = {
     merchantId,
@@ -281,7 +281,7 @@ export const emitQuestCompleted = (
   npcId: string, 
   characterId: string, 
   questId: string, 
-  rewards: any
+  rewards: Record<string, unknown>
 ) => {
   const eventData = {
     npcId,

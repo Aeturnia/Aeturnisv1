@@ -4,33 +4,26 @@
  */
 
 import { Request, Response } from 'express';
-import { MoveRequest, MoveResponse, Direction } from '@aeturnis/shared/types/movement.types';
+import { MoveRequest, MoveResponse, Direction, Zone } from '@aeturnis/shared';
 import { logger } from '../utils/logger';
+import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../utils/response.utils';
 
 /**
  * Execute character movement
  * POST /api/v1/movement/move
  */
-export const executeMovement = async (req: Request, res: Response): Promise<void> => {
+export const executeMovement = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { characterId, currentZoneId, direction }: MoveRequest = req.body;
 
     // Validate request data
     if (!characterId || !currentZoneId || !direction) {
-      res.status(400).json({
-        error: 'Invalid movement request',
-        message: 'Character ID, current zone ID, and direction are required'
-      });
-      return;
+      return sendValidationError(res, 'Character ID, current zone ID, and direction are required');
     }
 
     const validDirections: Direction[] = ['north', 'south', 'east', 'west'];
     if (!validDirections.includes(direction)) {
-      res.status(400).json({
-        error: 'Invalid direction',
-        message: 'Direction must be north, south, east, or west'
-      });
-      return;
+      return sendValidationError(res, 'Direction must be north, south, east, or west');
     }
 
     // Mock zone map for movement validation
@@ -85,7 +78,14 @@ export const executeMovement = async (req: Request, res: Response): Promise<void
       }
     };
 
-    const zoneData: Record<string, any> = {
+    interface ZoneData extends Omit<Zone, 'exits' | 'levelRequirement'> {
+      exits: Record<string, string>;
+      levelRequirement: number;
+      dangerLevel?: number;
+      monsters?: string[];
+    }
+
+    const zoneData: Record<string, ZoneData> = {
       "starter_city": {
         id: "starter_city",
         displayName: "Haven's Rest",
@@ -93,7 +93,7 @@ export const executeMovement = async (req: Request, res: Response): Promise<void
         coordinates: { x: 0, y: 0 },
         boundaries: { minX: -50, maxX: 50, minY: -50, maxY: 50 },
         exits: { north: "forest_edge", east: "trade_road" },
-        type: "city",
+        type: "city" as const,
         features: ["shops", "trainers", "bank"],
         levelRequirement: 1
       },
@@ -104,7 +104,7 @@ export const executeMovement = async (req: Request, res: Response): Promise<void
         coordinates: { x: 0, y: 100 },
         boundaries: { minX: -50, maxX: 50, minY: 50, maxY: 150 },
         exits: { south: "starter_city", north: "deep_forest", east: "goblin_camp" },
-        type: "normal",
+        type: "normal" as const,
         features: ["monsters", "gathering_nodes"],
         levelRequirement: 2
       },
@@ -115,7 +115,7 @@ export const executeMovement = async (req: Request, res: Response): Promise<void
         coordinates: { x: 100, y: 0 },
         boundaries: { minX: 50, maxX: 150, minY: -50, maxY: 50 },
         exits: { west: "starter_city", north: "crossroads", east: "mining_outpost" },
-        type: "normal",
+        type: "normal" as const,
         features: ["merchants", "caravans"],
         levelRequirement: 1
       },
@@ -126,7 +126,7 @@ export const executeMovement = async (req: Request, res: Response): Promise<void
         coordinates: { x: 0, y: 200 },
         boundaries: { minX: -75, maxX: 75, minY: 150, maxY: 275 },
         exits: { south: "forest_edge", east: "ancient_ruins" },
-        type: "normal",
+        type: "normal" as const,
         features: ["elite_monsters", "rare_herbs"],
         levelRequirement: 5
       },
@@ -137,7 +137,7 @@ export const executeMovement = async (req: Request, res: Response): Promise<void
         coordinates: { x: 100, y: 100 },
         boundaries: { minX: 50, maxX: 150, minY: 50, maxY: 150 },
         exits: { west: "forest_edge", south: "crossroads", north: "ancient_ruins" },
-        type: "normal",
+        type: "normal" as const,
         features: ["goblin_monsters", "loot_chests"],
         levelRequirement: 3
       }
@@ -145,31 +145,19 @@ export const executeMovement = async (req: Request, res: Response): Promise<void
 
     // Check if current zone exists
     if (!zoneExits[currentZoneId]) {
-      res.status(404).json({
-        error: 'Zone not found',
-        message: `Current zone '${currentZoneId}' does not exist`
-      });
-      return;
+      return sendNotFound(res, 'Current zone', currentZoneId);
     }
 
     // Check if movement direction is valid
     const targetZoneId = zoneExits[currentZoneId][direction];
     if (!targetZoneId) {
-      res.status(400).json({
-        error: 'Invalid movement',
-        message: `Cannot move ${direction} from ${currentZoneId}. No exit available in that direction.`
-      });
-      return;
+      return sendValidationError(res, `Cannot move ${direction} from ${currentZoneId}. No exit available in that direction.`);
     }
 
     // Check if target zone exists
     const targetZone = zoneData[targetZoneId];
     if (!targetZone) {
-      res.status(404).json({
-        error: 'Target zone not found',
-        message: `Target zone '${targetZoneId}' does not exist`
-      });
-      return;
+      return sendNotFound(res, 'Target zone', targetZoneId);
     }
 
     // Mock movement cooldown check (2 seconds)
@@ -180,12 +168,7 @@ export const executeMovement = async (req: Request, res: Response): Promise<void
 
     if (timeSinceLastMove < cooldownMs) {
       const remainingCooldown = cooldownMs - timeSinceLastMove;
-      res.status(429).json({
-        error: 'Movement on cooldown',
-        message: `Please wait ${Math.ceil(remainingCooldown / 1000)} seconds before moving again`,
-        cooldownRemaining: remainingCooldown
-      });
-      return;
+      return sendError(res, 'Movement on cooldown', `Please wait ${Math.ceil(remainingCooldown / 1000)} seconds before moving again`, 429, { cooldownRemaining: remainingCooldown });
     }
 
     // Execute movement (set cooldown)
@@ -209,15 +192,12 @@ export const executeMovement = async (req: Request, res: Response): Promise<void
       timestamp: Date.now()
     };
 
-    res.status(200).json(response);
     logger.info(`Character ${characterId} moved ${direction} from ${currentZoneId} to ${targetZoneId}`);
+    return sendSuccess(res, response, response.message);
 
   } catch (error) {
     logger.error('Error executing movement:', error);
-    res.status(500).json({
-      error: 'Movement failed',
-      message: 'An error occurred while processing movement'
-    });
+    return sendError(res, 'Movement failed', 'An error occurred while processing movement');
   }
 };
 
@@ -225,16 +205,12 @@ export const executeMovement = async (req: Request, res: Response): Promise<void
  * Validate movement
  * POST /api/v1/movement/validate
  */
-export const validateMovement = async (req: Request, res: Response): Promise<void> => {
+export const validateMovement = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { characterId, fromZoneId, toZoneId, direction } = req.body;
 
     if (!characterId || !fromZoneId || !toZoneId || !direction) {
-      res.status(400).json({
-        error: 'Invalid validation request',
-        message: 'Character ID, from/to zone IDs, and direction are required'
-      });
-      return;
+      return sendValidationError(res, 'Character ID, from/to zone IDs, and direction are required');
     }
 
     // Mock validation logic
@@ -259,7 +235,7 @@ export const validateMovement = async (req: Request, res: Response): Promise<voi
     else if (hasCooldown) reason = 'Movement on cooldown';
     else if (!meetsLevelRequirement) reason = 'Insufficient level for target zone';
 
-    res.status(200).json({
+    return sendSuccess(res, {
       allowed,
       reason,
       cooldownRemaining: hasCooldown ? 1500 : 0,
@@ -273,10 +249,7 @@ export const validateMovement = async (req: Request, res: Response): Promise<voi
 
   } catch (error) {
     logger.error('Error validating movement:', error);
-    res.status(500).json({
-      error: 'Validation failed',
-      message: 'An error occurred while validating movement'
-    });
+    return sendError(res, 'Validation failed', 'An error occurred while validating movement');
   }
 };
 
@@ -284,20 +257,23 @@ export const validateMovement = async (req: Request, res: Response): Promise<voi
  * Get character position
  * GET /api/v1/movement/position/:characterId
  */
-export const getCharacterPosition = async (req: Request, res: Response): Promise<void> => {
+export const getCharacterPosition = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { characterId } = req.params;
 
     if (!characterId) {
-      res.status(400).json({
-        error: 'Character ID required',
-        message: 'Character ID parameter is required'
-      });
-      return;
+      return sendValidationError(res, 'Character ID parameter is required');
     }
 
     // Mock character position
-    const mockPositions: Record<string, any> = {
+    interface CharacterPosition {
+      characterId: string;
+      zoneId: string;
+      coordinates: { x: number; y: number };
+      lastMovement: number;
+    }
+
+    const mockPositions: Record<string, CharacterPosition> = {
       "char_001": {
         characterId: "char_001",
         zoneId: "starter_city",
@@ -314,22 +290,15 @@ export const getCharacterPosition = async (req: Request, res: Response): Promise
 
     const position = mockPositions[characterId];
     if (!position) {
-      res.status(404).json({
-        error: 'Character not found',
-        message: `No position data found for character '${characterId}'`
-      });
-      return;
+      return sendNotFound(res, 'Character position', characterId);
     }
 
-    res.status(200).json(position);
+    return sendSuccess(res, position);
     logger.info(`Retrieved position for character ${characterId}: ${position.zoneId} (${position.coordinates.x}, ${position.coordinates.y})`);
 
   } catch (error) {
     logger.error('Error getting character position:', error);
-    res.status(500).json({
-      error: 'Failed to get position',
-      message: 'An error occurred while retrieving character position'
-    });
+    return sendError(res, 'Failed to get position', 'An error occurred while retrieving character position');
   }
 };
 
@@ -337,7 +306,7 @@ export const getCharacterPosition = async (req: Request, res: Response): Promise
  * Get movement test data
  * GET /api/v1/movement/test
  */
-export const getMovementTest = async (_req: Request, res: Response): Promise<void> => {
+export const getMovementTest = async (_req: Request, res: Response): Promise<Response> => {
   try {
     const testData = {
       message: "Movement Service Test - Mock Data",
@@ -375,14 +344,11 @@ export const getMovementTest = async (_req: Request, res: Response): Promise<voi
       }
     };
 
-    res.status(200).json(testData);
+    return sendSuccess(res, testData, 'Movement test data retrieved');
     logger.info('Movement service test data retrieved');
 
   } catch (error) {
     logger.error('Error in movement test endpoint:', error);
-    res.status(500).json({
-      error: 'Movement test failed',
-      message: 'An error occurred during movement service testing'
-    });
+    return sendError(res, 'Movement test failed', 'An error occurred during movement service testing');
   }
 };

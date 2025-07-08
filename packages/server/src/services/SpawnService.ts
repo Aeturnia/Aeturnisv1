@@ -1,4 +1,4 @@
-import { SpawnPoint } from '../../../shared/src/types/monster.types';
+import { SpawnPoint } from '@aeturnis/shared';
 
 interface SpawnTimer {
   timer: NodeJS.Timeout;
@@ -64,6 +64,7 @@ export class SpawnService {
     // 1. Query monsters table for active monsters at spawn point
     // 2. Count non-deleted monsters
     // 3. Return active count
+    console.log(`Getting active spawns for point: ${spawnPointId}`);
     throw new Error('Not implemented');
   }
 
@@ -75,6 +76,7 @@ export class SpawnService {
   async canSpawn(spawnPointId: string): Promise<boolean> {
     // TODO: Implement spawn capacity check
     // 1. Get spawn point max spawns
+    console.log(`Checking if spawn point can spawn: ${spawnPointId}`);
     // 2. Get current active spawns
     // 3. Check if spawn point is active
     // 4. Return whether can spawn

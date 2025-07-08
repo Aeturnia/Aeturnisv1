@@ -4,16 +4,6 @@ import { personalBanks, sharedBanks, characters, transactions } from '../databas
 import { CacheService } from './CacheService';
 import { BankSlot, BankTransferRequest, PersonalBank, SharedBank } from '../types/bank';
 import { logger } from '../utils/logger';
-import { 
-  ServiceError,
-  ValidationError,
-  DatabaseError
-} from '../utils/errors';
-import { 
-  safeBigIntToNumber,
-  safeNumberToBigInt,
-  assertServiceDefined
-} from '../utils/validators';
 
 export class BankService {
   private readonly CACHE_TTL = 300; // 5 minutes

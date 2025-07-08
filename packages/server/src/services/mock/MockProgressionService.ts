@@ -9,22 +9,11 @@ import {
   AwardXPResponse, 
   AllocateStatRequest, 
   AllocateStatResponse, 
-  CharacterStats, 
   PowerScoreResponse, 
   ExperienceGain, 
-  StatAllocation, 
-  StatType 
-} from '@aeturnis/shared/types/progression.types';
+  StatAllocation
+} from '@aeturnis/shared';
 import { logger } from '../../utils/logger';
-import { 
-  ServiceError,
-  ValidationError
-} from '../../utils/errors';
-import { 
-  safeBigIntToNumber,
-  safeNumberToBigInt,
-  validateSchema
-} from '../../utils/validators';
 
 export class MockProgressionService {
   private characterProgressions: Map<string, CharacterProgression> = new Map();

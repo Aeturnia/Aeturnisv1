@@ -15,10 +15,10 @@ import { generalLimiter, authLimiter } from './middleware/rateLimiter';
 // Routes
 import authRoutes from './routes/auth.routes';
 import sessionRoutes from './routes/session.routes';
-import characterRoutes from './routes/character.routes.simple';
+import characterRoutes from './routes/character.routes';
 import currencyRoutes from './routes/currency.routes';
 import bankRoutes from './routes/bank.routes';
-import equipmentRoutes from './routes/equipment.routes.simple';
+import equipmentRoutes from './routes/equipment.routes';
 import combatRoutes from './routes/combat.routes';
 import { deathRoutes } from './routes/death.routes';
 import { lootRoutes } from './routes/loot.routes';

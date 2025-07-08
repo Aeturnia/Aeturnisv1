@@ -1,19 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '../utils/logger';
 import { 
-  ServiceError,
-  ValidationError,
-  isServiceError,
-  formatErrorResponse
-} from '../utils/errors';
-import { 
-  validateCombatAction,
-  validateCombatStartRequest,
-  assertServiceDefined,
-  withServiceGuard,
-  safeBigIntToNumber
-} from '../utils/validators';
-import { 
   CombatSession, 
   CombatAction, 
   CombatResult, 
