@@ -197,3 +197,28 @@ If you are expecting the function to accept certain arguments, you should explic
 > @aeturnis/shared@1.0.0 lint
 > eslint src/**/*.ts
 
+
+/home/runner/workspace/packages/shared/src/types/monster.types.d.ts
+  0:0  error  Parsing error: ESLint was configured to run on `<tsconfigRootDir>/packages/shared/src/types/monster.types.d.ts` using `parserOptions.project`: 
+- <tsconfigRootDir>/tsconfig.base.json
+- <tsconfigRootDir>/packages/server/tsconfig.json
+- <tsconfigRootDir>/packages/shared/tsconfig.json
+However, none of those TSConfigs include this file. Either:
+- Change ESLint's list of included files to not include this file
+- Change one of those TSConfigs to include this file
+- Create a new TSConfig that includes this file and include it in your parserOptions.project
+See the typescript-eslint docs for more info: https://typescript-eslint.io/linting/troubleshooting#i-get-errors-telling-me-eslint-was-configured-to-run--however-that-tsconfig-does-not--none-of-those-tsconfigs-include-this-file
+
+/home/runner/workspace/packages/shared/src/types/npc.types.d.ts
+  0:0  error  Parsing error: ESLint was configured to run on `<tsconfigRootDir>/packages/shared/src/types/npc.types.d.ts` using `parserOptions.project`: 
+- <tsconfigRootDir>/tsconfig.base.json
+- <tsconfigRootDir>/packages/server/tsconfig.json
+- <tsconfigRootDir>/packages/shared/tsconfig.json
+However, none of those TSConfigs include this file. Either:
+- Change ESLint's list of included files to not include this file
+- Change one of those TSConfigs to include this file
+- Create a new TSConfig that includes this file and include it in your parserOptions.project
+See the typescript-eslint docs for more info: https://typescript-eslint.io/linting/troubleshooting#i-get-errors-telling-me-eslint-was-configured-to-run--however-that-tsconfig-does-not--none-of-those-tsconfigs-include-this-file
+
+✖ 2 problems (2 errors, 0 warnings)
+

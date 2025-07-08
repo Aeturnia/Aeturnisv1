@@ -13,7 +13,7 @@ export const getNPCsInZone = async (req: Request, res: Response) => {
     const { zoneId } = req.params;
     const npcs = await mockNPCService.getNPCsInZone(zoneId);
     
-    res.json({ 
+    return res.json({ 
       success: true, 
       data: { 
         npcs,
@@ -23,7 +23,7 @@ export const getNPCsInZone = async (req: Request, res: Response) => {
     });
   } catch (error) {
     logger.error('Error getting NPCs in zone:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to get NPCs'
     });
@@ -68,13 +68,13 @@ export const interactWithNPC = async (req: Request, res: Response) => {
     
     const interaction = await mockNPCService.interactWithNPC(npcId, characterId, action);
     
-    res.json({ 
+    return res.json({ 
       success: true, 
       data: interaction
     });
   } catch (error) {
     logger.error('Error interacting with NPC:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to interact with NPC'
     });
@@ -93,7 +93,7 @@ export const getNPCInteractions = async (_req: Request, res: Response) => {
     // const interactions = await mockNPCService.getAvailableInteractions(npcId, characterId as string);
     const interactions: any[] = [];
     
-    res.json({ 
+    return res.json({ 
       success: true, 
       data: { 
         interactions,
@@ -102,7 +102,7 @@ export const getNPCInteractions = async (_req: Request, res: Response) => {
     });
   } catch (error) {
     logger.error('Error getting NPC interactions:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to get NPC interactions'
     });
@@ -131,10 +131,10 @@ export const testNPCSystem = async (_req: Request, res: Response) => {
       }
     };
     
-    res.json(testData);
+    return res.json(testData);
   } catch (error) {
     logger.error('Error testing NPC system:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to test NPC system'
     });

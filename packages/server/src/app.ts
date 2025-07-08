@@ -171,6 +171,39 @@ export const createApp = () => {
     });
   });
 
+  // Testing environment endpoint
+  app.get('/testing', (req, res) => {
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Aeturnis Online Testing Environment</title>
+        <style>
+          body { margin: 0; padding: 20px; background-color: #111827; color: #f3f4f6; font-family: Arial, sans-serif; }
+          .container { max-width: 1200px; margin: 0 auto; }
+          h1 { color: #06b6d4; }
+          .info { background: #374151; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+          .button { background: #06b6d4; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 10px 0; }
+          .button:hover { background: #0891b2; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>🧪 Aeturnis Online Testing Environment</h1>
+          <div class="info">
+            <p><strong>Status:</strong> Testing Environment has been moved to App-Testing.tsx</p>
+            <p><strong>Note:</strong> The main page now has a clean solid background for UI/UX development</p>
+            <p><strong>To restore full testing:</strong> Replace App.tsx with App-Testing.tsx content</p>
+          </div>
+          <button class="button" onclick="window.location.href='/'">Return to Main Page</button>
+        </div>
+      </body>
+      </html>
+    `);
+  });
+
   // SPA fallback route - serve React app for all non-API routes
   app.get('*', (req, res) => {
     if (req.path.startsWith('/api/')) {

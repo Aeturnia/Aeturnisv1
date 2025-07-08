@@ -1,6 +1,18 @@
 {
-  "id": "TYPE-E-006",
-  "agent": "Route Handler Agent",
-  "startTime": "2025-07-08T20:06:05Z",
-  "status": "in-progress"
+  "unit": "TYPE-E-006",
+  "name": "NPC & Dialogue Routes - Interaction Flows",
+  "assigned_to": "Route Handler Agent",
+  "status": "started",
+  "started_at": "2025-07-08",
+  "expected_impact": "~5 errors",
+  "tasks": [
+    "Fix dialogue state response handling",
+    "Fix NPC interaction returns",
+    "Fix quest acceptance responses",
+    "Fix trade completion handling"
+  ],
+  "baseline": {
+    "errors": 52,
+    "eslint": 69
+  }
 }
