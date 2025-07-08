@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { param, body } from 'express-validator';
+import { asyncHandler } from '../middleware/asyncHandler';
 import { logger } from '../utils/logger';
 
 const router = Router();
@@ -12,9 +12,9 @@ const router = Router();
  * GET /api/v1/equipment/test
  * Test endpoint for equipment system
  */
-router.get('/test', (req, res) => {
+router.get('/test', asyncHandler((req, res) => {
   try {
-    res.json({
+    return res.json({
       success: true,
       message: 'Equipment system is operational',
       timestamp: new Date().toISOString(),
@@ -42,19 +42,19 @@ router.get('/test', (req, res) => {
     });
   } catch (error) {
     logger.error('Error in equipment test endpoint:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Equipment test failed',
       error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}));
 
 /**
  * GET /api/v1/equipment/:charId
  * Get character's equipped items (placeholder)
  */
-router.get('/:charId', (req, res) => {
+router.get('/:charId', asyncHandler((req, res) => {
   try {
     const { charId } = req.params;
     
@@ -179,13 +179,13 @@ router.get('/:charId', (req, res) => {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}));
 
 /**
  * GET /api/v1/equipment/:charId/inventory
  * Get character's inventory (placeholder)
  */
-router.get('/:charId/inventory', (req, res) => {
+router.get('/:charId/inventory', asyncHandler((req, res) => {
   try {
     const { charId } = req.params;
     
@@ -267,18 +267,18 @@ router.get('/:charId/inventory', (req, res) => {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}));
 
 /**
  * POST /api/v1/equipment/:charId/equip
  * Equip an item (placeholder)
  */
-router.post('/:charId/equip', (req, res) => {
+router.post('/:charId/equip', asyncHandler((req, res) => {
   try {
     const { charId } = req.params;
     const { inventorySlot, equipmentSlot } = req.body;
     
-    res.json({
+    return res.json({
       success: true,
       message: `Equipment system ready - equip functionality coming soon`,
       data: {
@@ -292,24 +292,24 @@ router.post('/:charId/equip', (req, res) => {
     });
   } catch (error) {
     logger.error('Error in equip endpoint:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to process equip request',
       error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}));
 
 /**
  * POST /api/v1/equipment/:charId/unequip
  * Unequip an item (placeholder)
  */
-router.post('/:charId/unequip', (req, res) => {
+router.post('/:charId/unequip', asyncHandler((req, res) => {
   try {
     const { charId } = req.params;
     const { equipmentSlot } = req.body;
     
-    res.json({
+    return res.json({
       success: true,
       message: `Equipment system ready - unequip functionality coming soon`,
       data: {
@@ -322,12 +322,12 @@ router.post('/:charId/unequip', (req, res) => {
     });
   } catch (error) {
     logger.error('Error in unequip endpoint:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to process unequip request',
       error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}));
 
 export default router;

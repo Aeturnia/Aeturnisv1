@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { requireAuth } from '../middleware/auth';
+import { asyncHandler } from '../middleware/asyncHandler';
 import { ServiceProvider, ICurrencyService } from '../providers';
 import { body, param, query, validationResult } from 'express-validator';
 import { logger } from '../utils/logger';
@@ -7,8 +8,8 @@ import { logger } from '../utils/logger';
 const router = Router();
 
 // Test endpoint for visual testing interface
-router.get('/test-balance', (req: Request, res: Response) => {
-  res.json({
+router.get('/test-balance', (_req: Request, res: Response) => {
+  return res.json({
     success: true,
     message: 'Currency system is operational',
     timestamp: new Date().toISOString(),
@@ -24,7 +25,7 @@ router.get('/test-balance', (req: Request, res: Response) => {
 router.get('/characters/:characterId/balance', 
   requireAuth,
   param('characterId').isUUID().withMessage('Invalid character ID'),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -49,7 +50,7 @@ router.get('/characters/:characterId/balance',
       });
       return res.status(500).json({ error: 'Failed to retrieve balance' });
     }
-  }
+  })
 );
 
 // Transfer gold between characters
@@ -59,7 +60,7 @@ router.post('/transfer',
   body('toCharacterId').isUUID().withMessage('Invalid recipient character ID'),
   body('amount').isInt({ min: 1 }).withMessage('Amount must be positive'),
   body('description').optional().isString().isLength({ max: 200 }),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -72,7 +73,8 @@ router.post('/transfer',
         fromCharacterId,
         toCharacterId,
         BigInt(amount),
-        true // includeFee
+        description,
+        true // applyFee
       );
 
       return res.json({
@@ -81,8 +83,8 @@ router.post('/transfer',
           from: fromCharacterId,
           to: toCharacterId,
           amount: amount.toString(),
-          senderNewBalance: result.fromBalance.toString(),
-          receiverNewBalance: result.toBalance.toString(),
+          senderNewBalance: result.senderNewBalance.toString(),
+          receiverNewBalance: result.recipientNewBalance.toString(),
           fee: result.fee.toString(),
           timestamp: new Date().toISOString(),
         }
@@ -100,7 +102,7 @@ router.post('/transfer',
       
       return res.status(500).json({ error: 'Transfer failed' });
     }
-  }
+  })
 );
 
 // Get transaction history
@@ -109,7 +111,7 @@ router.get('/characters/:characterId/transactions',
   param('characterId').isUUID().withMessage('Invalid character ID'),
   query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
   query('offset').optional().isInt({ min: 0 }).withMessage('Offset must be non-negative'),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -135,8 +137,8 @@ router.get('/characters/:characterId/transactions',
           balanceBefore: tx.balanceBefore.toString(),
           balanceAfter: tx.balanceAfter.toString(),
           description: tx.description,
-          source: tx.source,
-          timestamp: tx.timestamp,
+          metadata: tx.metadata,
+          timestamp: tx.createdAt.toISOString(),
         })),
         pagination: {
           limit,
@@ -152,14 +154,14 @@ router.get('/characters/:characterId/transactions',
       });
       return res.status(500).json({ error: 'Failed to retrieve transaction history' });
     }
-  }
+  })
 );
 
 // Get transaction statistics
 router.get('/characters/:characterId/stats',
   requireAuth,
   param('characterId').isUUID().withMessage('Invalid character ID'),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -193,7 +195,7 @@ router.get('/characters/:characterId/stats',
       });
       return res.status(500).json({ error: 'Failed to retrieve transaction statistics' });
     }
-  }
+  })
 );
 
 // Admin: Reward gold
@@ -204,7 +206,7 @@ router.post('/admin/reward',
   body('amount').isInt({ min: 1 }).withMessage('Amount must be positive'),
   body('source').isString().isLength({ min: 1, max: 100 }).withMessage('Source is required'),
   body('metadata').optional().isObject(),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -213,22 +215,21 @@ router.post('/admin/reward',
     try {
       const { characterId, amount, source, metadata } = req.body;
       const currencyService = ServiceProvider.getInstance().get<ICurrencyService>('CurrencyService');
-      const transaction = await currencyService.addCurrency(
+      const result = await currencyService.addCurrency(
         characterId,
         BigInt(amount),
         source,
-        metadata?.description
+        metadata
       );
 
       return res.json({
         success: true,
         transaction: {
-          id: transaction.id,
-          characterId: transaction.characterId,
+          transactionId: result.transactionId,
+          characterId: characterId,
           amount: amount.toString(),
-          newBalance: transaction.newBalance.toString(),
+          newBalance: result.newBalance.toString(),
           source,
-          transactionId: transaction.transactionId,
           timestamp: new Date().toISOString(),
         }
       });
@@ -240,7 +241,7 @@ router.post('/admin/reward',
       });
       return res.status(500).json({ error: 'Failed to reward gold' });
     }
-  }
+  })
 );
 
 export default router;

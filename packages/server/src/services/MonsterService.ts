@@ -19,12 +19,12 @@ export class MonsterService {
   /**
    * Get all monsters in a specific zone
    */
-  async getMonstersInZone(zoneIdOrName: string): Promise<any[]> {
+  async getMonstersInZone(zoneIdOrName: string): Promise<Array<{ id: string; name: string; level: number; hp: number; maxHp: number; position: { x: number; y: number } }>> {
     try {
       logger.info(`Fetching monsters for zone: ${zoneIdOrName}`);
       
       const cacheKey = `monsters:zone:${zoneIdOrName}`;
-      const cached = await this.cache.get<any[]>(cacheKey);
+      const cached = await this.cache.get<Array<{ id: string; name: string; level: number; hp: number; maxHp: number; position: { x: number; y: number } }>>(cacheKey);
       if (cached) {
         logger.info(`Cache hit for monsters in zone: ${zoneIdOrName}`);
         return cached;
@@ -144,7 +144,7 @@ export class MonsterService {
     try {
       logger.info(`Updating monster state: ${monsterId} to ${newState}`);
       
-      const updateData: any = {
+      const updateData: { state: string; updatedAt: Date; metadata?: Record<string, unknown> } = {
         state: newState,
         updatedAt: new Date()
       };
@@ -180,12 +180,12 @@ export class MonsterService {
   /**
    * Get all monster types
    */
-  async getMonsterTypes(): Promise<any[]> {
+  async getMonsterTypes(): Promise<Array<{ id: string; name: string; level: number; baseStats: Record<string, number>; abilities: string[] }>> {
     try {
       logger.info('Fetching all monster types');
       
       const cacheKey = 'monster-types:all';
-      const cached = await this.cache.get<any[]>(cacheKey);
+      const cached = await this.cache.get<Array<{ id: string; name: string; level: number; baseStats: Record<string, number>; abilities: string[] }>>(cacheKey);
       if (cached) {
         logger.info('Cache hit for monster types');
         return cached;
@@ -207,12 +207,12 @@ export class MonsterService {
   /**
    * Get spawn points for a zone
    */
-  async getSpawnPointsByZone(zoneIdOrName: string): Promise<any[]> {
+  async getSpawnPointsByZone(zoneIdOrName: string): Promise<Array<{ id: string; zoneId: string; position: { x: number; y: number }; monsterType: string; respawnRate: number }>> {
     try {
       logger.info(`Fetching spawn points for zone: ${zoneIdOrName}`);
       
       const cacheKey = `spawn-points:zone:${zoneIdOrName}`;
-      const cached = await this.cache.get<any[]>(cacheKey);
+      const cached = await this.cache.get<Array<{ id: string; zoneId: string; position: { x: number; y: number }; monsterType: string; respawnRate: number }>>(cacheKey);
       if (cached) {
         logger.info(`Cache hit for spawn points in zone: ${zoneIdOrName}`);
         return cached;

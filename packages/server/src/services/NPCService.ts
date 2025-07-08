@@ -3,6 +3,7 @@ import { CacheService } from './CacheService';
 import { db } from '../database/config';
 import { npcs, npcInteractions, zones } from '../database/schema';
 import { eq, and } from 'drizzle-orm';
+import { NPC, NPCInteraction, NPCType } from '@aeturnis/shared';
 
 export class NPCService {
   private cache: CacheService;
@@ -18,12 +19,12 @@ export class NPCService {
   /**
    * Get all NPCs in a specific zone
    */
-  async getNPCsInZone(zoneIdOrName: string): Promise<any[]> {
+  async getNPCsInZone(zoneIdOrName: string): Promise<NPC[]> {
     try {
       logger.info(`Fetching NPCs for zone: ${zoneIdOrName}`);
       
       const cacheKey = `npcs:zone:${zoneIdOrName}`;
-      const cached = await this.cache.get<any[]>(cacheKey);
+      const cached = await this.cache.get<NPC[]>(cacheKey);
       if (cached) {
         logger.info(`Cache hit for NPCs in zone: ${zoneIdOrName}`);
         return cached;
@@ -51,9 +52,22 @@ export class NPCService {
         .from(npcs)
         .where(eq(npcs.zoneId, zoneId));
 
-      await this.cache.set(cacheKey, result, 60); // Cache for 1 minute
-      logger.info(`Found ${result.length} NPCs in zone: ${zoneId}`);
-      return result;
+      // Transform database results to NPC interface
+      const npcList: NPC[] = result.map(dbNpc => ({
+        id: dbNpc.id,
+        name: dbNpc.name,
+        displayName: dbNpc.displayName,
+        type: dbNpc.type as NPCType,
+        zoneId: dbNpc.zoneId,
+        position: dbNpc.position as { x: number; y: number; z: number },
+        dialogueTreeId: dbNpc.dialogueTreeId || undefined,
+        isQuestGiver: dbNpc.isQuestGiver,
+        metadata: dbNpc.metadata || {}
+      }));
+
+      await this.cache.set(cacheKey, npcList, 60); // Cache for 1 minute
+      logger.info(`Found ${npcList.length} NPCs in zone: ${zoneId}`);
+      return npcList;
     } catch (error) {
       logger.error(`Error fetching NPCs for zone ${zoneIdOrName}:`, error);
       throw error;
@@ -63,7 +77,7 @@ export class NPCService {
   /**
    * Start interaction with an NPC
    */
-  async startInteraction(npcId: string, characterId: string): Promise<any> {
+  async startInteraction(npcId: string, characterId: string): Promise<NPCInteraction> {
     try {
       logger.info(`Starting interaction between character ${characterId} and NPC ${npcId}`);
       
@@ -95,7 +109,7 @@ export class NPCService {
         .returning();
 
       // Get initial dialogue from NPC's metadata
-      const metadata = npc[0].metadata as any;
+      const metadata = npc[0].metadata as Record<string, unknown>;
       const dialogueTree = metadata?.dialogueTree;
       const initialDialogue = dialogueTree?.root || {
         nodeId: 'greeting',
@@ -115,10 +129,18 @@ export class NPCService {
       };
 
       logger.info(`Interaction started successfully: ${result[0].id}`);
-      return {
-        interaction: result[0],
-        dialogue: initialDialogue
+      
+      // Return NPCInteraction interface
+      const npcInteraction: NPCInteraction = {
+        id: result[0].id,
+        npcId: result[0].npcId,
+        characterId: result[0].characterId,
+        interactionType: result[0].interactionType,
+        dialogueState: result[0].dialogueState as Record<string, unknown>,
+        createdAt: result[0].createdAt
       };
+      
+      return npcInteraction;
     } catch (error) {
       logger.error(`Error starting interaction between character ${characterId} and NPC ${npcId}:`, error);
       throw error;
@@ -128,7 +150,7 @@ export class NPCService {
   /**
    * Advance dialogue with an NPC
    */
-  async advanceDialogue(npcId: string, characterId: string, choiceId: string): Promise<any> {
+  async advanceDialogue(npcId: string, characterId: string, choiceId: string): Promise<{ dialogue: any; choices: any[] }> {
     try {
       logger.info(`Advancing dialogue for character ${characterId} and NPC ${npcId} with choice: ${choiceId}`);
       
@@ -144,14 +166,14 @@ export class NPCService {
       }
 
       // Get dialogue tree and find next node
-      const metadata = npc[0].metadata as any;
+      const metadata = npc[0].metadata as Record<string, unknown>;
       const dialogueTree = metadata?.dialogueTree;
       let nextDialogue;
 
       // Simple dialogue logic based on choice
       switch (choiceId) {
         case 'services':
-          const services = (npc[0].metadata as any)?.services || ['general'];
+          const services = (npc[0].metadata as Record<string, unknown>)?.services as string[] || ['general'];
           nextDialogue = {
             nodeId: 'services',
             text: `I offer the following services: ${services.join(', ')}. What interests you?`,
@@ -269,12 +291,12 @@ export class NPCService {
   /**
    * Get all quest-giving NPCs
    */
-  async getQuestGivers(): Promise<any[]> {
+  async getQuestGivers(): Promise<NPC[]> {
     try {
       logger.info('Fetching quest-giving NPCs');
       
       const cacheKey = 'npcs:quest-givers';
-      const cached = await this.cache.get<any[]>(cacheKey);
+      const cached = await this.cache.get<NPC[]>(cacheKey);
       if (cached) {
         logger.info('Cache hit for quest-giving NPCs');
         return cached;
@@ -285,9 +307,22 @@ export class NPCService {
         .from(npcs)
         .where(eq(npcs.type, 'quest_giver'));
 
-      await this.cache.set(cacheKey, result, 300); // Cache for 5 minutes
-      logger.info(`Found ${result.length} quest-giving NPCs`);
-      return result;
+      // Transform database results to NPC interface
+      const questGivers: NPC[] = result.map(dbNpc => ({
+        id: dbNpc.id,
+        name: dbNpc.name,
+        displayName: dbNpc.displayName,
+        type: dbNpc.type as NPCType,
+        zoneId: dbNpc.zoneId,
+        position: dbNpc.position as { x: number; y: number; z: number },
+        dialogueTreeId: dbNpc.dialogueTreeId || undefined,
+        isQuestGiver: dbNpc.isQuestGiver,
+        metadata: dbNpc.metadata || {}
+      }));
+
+      await this.cache.set(cacheKey, questGivers, 300); // Cache for 5 minutes
+      logger.info(`Found ${questGivers.length} quest-giving NPCs`);
+      return questGivers;
     } catch (error) {
       logger.error('Error fetching quest-giving NPCs:', error);
       throw error;
@@ -297,7 +332,7 @@ export class NPCService {
   /**
    * Get interaction history for a character
    */
-  async getInteractionHistory(characterId: string): Promise<any[]> {
+  async getInteractionHistory(characterId: string): Promise<NPCInteraction[]> {
     try {
       logger.info(`Fetching interaction history for character: ${characterId}`);
       
@@ -306,8 +341,18 @@ export class NPCService {
         .from(npcInteractions)
         .where(eq(npcInteractions.characterId, characterId));
 
-      logger.info(`Found ${result.length} interactions for character: ${characterId}`);
-      return result;
+      // Transform to NPCInteraction interface
+      const interactions: NPCInteraction[] = result.map(dbInteraction => ({
+        id: dbInteraction.id,
+        npcId: dbInteraction.npcId,
+        characterId: dbInteraction.characterId,
+        interactionType: dbInteraction.interactionType,
+        dialogueState: dbInteraction.dialogueState as Record<string, unknown>,
+        createdAt: dbInteraction.createdAt
+      }));
+
+      logger.info(`Found ${interactions.length} interactions for character: ${characterId}`);
+      return interactions;
     } catch (error) {
       logger.error(`Error fetching interaction history for character ${characterId}:`, error);
       throw error;
@@ -331,7 +376,7 @@ export class NPCService {
       }
 
       // Check for any blocking conditions in metadata
-      const metadata = npc[0].metadata as any;
+      const metadata = npc[0].metadata as Record<string, unknown>;
       if (metadata?.disabled || metadata?.maintenance) {
         return false;
       }
@@ -351,7 +396,7 @@ export class NPCService {
   /**
    * Process trade interaction with merchant NPC
    */
-  async processTrade(npcId: string, characterId: string, tradeData: any): Promise<void> {
+  async processTrade(npcId: string, characterId: string, tradeData: { itemId: string; quantity: number; type: 'buy' | 'sell' }): Promise<void> {
     try {
       logger.info(`Processing trade between character ${characterId} and NPC ${npcId}`);
       
@@ -367,7 +412,7 @@ export class NPCService {
       }
 
       // Verify NPC is a merchant
-      const metadata = npc[0].metadata as any;
+      const metadata = npc[0].metadata as Record<string, unknown>;
       const services = metadata?.services || [];
       if (!services.includes('shop') && !services.includes('trade')) {
         throw new Error(`NPC ${npcId} is not a merchant`);
@@ -403,7 +448,7 @@ export class NPCService {
   /**
    * Get NPC by ID
    */
-  async getNPCById(npcId: string): Promise<any> {
+  async getNPCById(npcId: string): Promise<NPC | null> {
     try {
       const result = await db
         .select()
@@ -411,7 +456,24 @@ export class NPCService {
         .where(eq(npcs.id, npcId))
         .limit(1);
 
-      return result.length ? result[0] : null;
+      if (!result.length) {
+        return null;
+      }
+
+      const dbNpc = result[0];
+      const npc: NPC = {
+        id: dbNpc.id,
+        name: dbNpc.name,
+        displayName: dbNpc.displayName,
+        type: dbNpc.type as NPCType,
+        zoneId: dbNpc.zoneId,
+        position: dbNpc.position as { x: number; y: number; z: number },
+        dialogueTreeId: dbNpc.dialogueTreeId || undefined,
+        isQuestGiver: dbNpc.isQuestGiver,
+        metadata: dbNpc.metadata || {}
+      };
+
+      return npc;
     } catch (error) {
       logger.error(`Error fetching NPC ${npcId}:`, error);
       throw error;
@@ -421,12 +483,12 @@ export class NPCService {
   /**
    * Get all merchant NPCs
    */
-  async getMerchants(): Promise<any[]> {
+  async getMerchants(): Promise<NPC[]> {
     try {
       logger.info('Fetching merchant NPCs');
       
       const cacheKey = 'npcs:merchants';
-      const cached = await this.cache.get<any[]>(cacheKey);
+      const cached = await this.cache.get<NPC[]>(cacheKey);
       if (cached) {
         logger.info('Cache hit for merchant NPCs');
         return cached;
@@ -437,9 +499,22 @@ export class NPCService {
         .from(npcs)
         .where(eq(npcs.type, 'merchant'));
 
-      await this.cache.set(cacheKey, result, 300); // Cache for 5 minutes
-      logger.info(`Found ${result.length} merchant NPCs`);
-      return result;
+      // Transform database results to NPC interface
+      const merchants: NPC[] = result.map(dbNpc => ({
+        id: dbNpc.id,
+        name: dbNpc.name,
+        displayName: dbNpc.displayName,
+        type: dbNpc.type as NPCType,
+        zoneId: dbNpc.zoneId,
+        position: dbNpc.position as { x: number; y: number; z: number },
+        dialogueTreeId: dbNpc.dialogueTreeId || undefined,
+        isQuestGiver: dbNpc.isQuestGiver,
+        metadata: dbNpc.metadata || {}
+      }));
+
+      await this.cache.set(cacheKey, merchants, 300); // Cache for 5 minutes
+      logger.info(`Found ${merchants.length} merchant NPCs`);
+      return merchants;
     } catch (error) {
       logger.error('Error fetching merchant NPCs:', error);
       throw error;

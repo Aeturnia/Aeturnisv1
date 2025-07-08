@@ -3,18 +3,6 @@ import { TestButton } from '../common/TestButton';
 import { ResponseViewer } from '../common/ResponseViewer';
 import { useApi } from '../../hooks/useApi';
 
-interface Zone {
-  id: string;
-  name: string;
-  description: string;
-  type: string;
-  levelRequirement: number;
-  coordinates: { x: number; y: number };
-  boundaries: { width: number; height: number };
-  exits: Record<string, string>;
-  features: string[];
-}
-
 export const ZonePanel: React.FC = () => {
   const [response, setResponse] = useState<any>(null);
   const [loading, setLoading] = useState(false);

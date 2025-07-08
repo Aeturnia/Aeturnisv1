@@ -53,9 +53,9 @@ export class MockBankService implements IBankService {
     const personalBank = this.createEmptyBank(testCharacterId, BankType.PERSONAL);
     
     // Add some test items
-    personalBank.slots[0] = { slotIndex: 0, itemId: 'item_001', quantity: 1, isEmpty: false };
-    personalBank.slots[1] = { slotIndex: 1, itemId: 'item_002', quantity: 5, isEmpty: false };
-    personalBank.slots[5] = { slotIndex: 5, itemId: 'item_201', quantity: 1, isEmpty: false };
+    personalBank.slots[0] = { slot: 0, slotIndex: 0, itemId: 'item_001', quantity: 1, isEmpty: false };
+    personalBank.slots[1] = { slot: 1, slotIndex: 1, itemId: 'item_002', quantity: 5, isEmpty: false };
+    personalBank.slots[5] = { slot: 5, slotIndex: 5, itemId: 'item_201', quantity: 1, isEmpty: false };
     personalBank.usedSlots = 3;
     personalBank.gold = BigInt(5000);
     
@@ -113,7 +113,7 @@ export class MockBankService implements IBankService {
           success: true,
           itemId,
           quantity,
-          slotIndex: existingSlot.slotIndex,
+          slotIndex: existingSlot.slotIndex || existingSlot.slot,
           message: `Added ${quantity} to existing stack`
         };
       }
@@ -144,7 +144,7 @@ export class MockBankService implements IBankService {
       success: true,
       itemId,
       quantity,
-      slotIndex: emptySlot.slotIndex,
+      slotIndex: emptySlot.slotIndex || emptySlot.slot,
       message: 'Item deposited successfully'
     };
   }
@@ -180,7 +180,7 @@ export class MockBankService implements IBankService {
     } else {
       // Remove item completely
       slot.itemId = undefined;
-      slot.quantity = undefined;
+      slot.quantity = 0;
       slot.isEmpty = true;
       bank.usedSlots--;
     }
@@ -256,7 +256,9 @@ export class MockBankService implements IBankService {
     // Add new empty slots
     for (let i = bank.totalSlots; i < newSlots; i++) {
       bank.slots.push({
+        slot: i,
         slotIndex: i,
+        quantity: 0,
         isEmpty: true
       });
     }
@@ -312,7 +314,9 @@ export class MockBankService implements IBankService {
     
     for (let i = 0; i < totalSlots; i++) {
       slots.push({
+        slot: i,
         slotIndex: i,
+        quantity: 0,
         isEmpty: true
       });
     }
@@ -403,6 +407,7 @@ export class MockBankService implements IBankService {
     
     // Update the slot
     bank.slots[slot] = {
+      slot: slot,
       slotIndex: slot,
       itemId: `item_${itemId}`,
       quantity,
@@ -432,13 +437,17 @@ export class MockBankService implements IBankService {
     }
     
     const slotData = bank.slots[slot];
-    const itemIdNum = parseInt(slotData.itemId!.replace('item_', ''));
+    const itemIdNum = typeof slotData.itemId === 'string' 
+      ? parseInt(slotData.itemId.replace('item_', ''))
+      : slotData.itemId!;
     const removedQuantity = quantity || slotData.quantity || 1;
     
     if (removedQuantity >= (slotData.quantity || 1)) {
       // Remove entire item
       bank.slots[slot] = {
+        slot: slot,
         slotIndex: slot,
+        quantity: 0,
         isEmpty: true
       };
     } else {
@@ -450,7 +459,7 @@ export class MockBankService implements IBankService {
     bank.usedSlots = bank.slots.filter(s => !s.isEmpty).length;
     
     this.saveBank(characterId, type, bank);
-    this.recordTransaction(characterId, type, 'withdraw', slotData.itemId, undefined, removedQuantity);
+    this.recordTransaction(characterId, type, 'withdraw', slotData.itemId?.toString(), undefined, removedQuantity);
     
     return {
       itemId: itemIdNum,
@@ -502,7 +511,9 @@ export class MockBankService implements IBankService {
       // Expand the slots
       for (let i = bank.totalSlots; i < newTotalSlots; i++) {
         bank.slots.push({
+          slot: i,
           slotIndex: i,
+          quantity: 0,
           isEmpty: true
         });
       }

@@ -3,7 +3,7 @@
  * Provides zone data, boundaries, and exit validation for testing
  */
 
-import { Zone, ZoneListResponse, ZoneDetailsResponse, CharacterPosition } from '@aeturnis/shared/types/zone.types';
+import { Zone, ZoneListResponse, ZoneDetailsResponse, CharacterPosition } from '@aeturnis/shared';
 import { logger } from '../../utils/logger';
 
 export class MockZoneService {
@@ -222,7 +222,7 @@ export class MockZoneService {
   /**
    * Check if character meets zone requirements
    */
-  async meetsZoneRequirements(characterId: string, zoneId: string, characterLevel: number = 1): Promise<boolean> {
+  async meetsZoneRequirements(_characterId: string, zoneId: string, characterLevel: number = 1): Promise<boolean> {
     const zone = this.zones.get(zoneId);
     if (!zone) return false;
 

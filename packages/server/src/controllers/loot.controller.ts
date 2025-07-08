@@ -148,7 +148,7 @@ export const calculateLootDrops = async (req: Request, res: Response): Promise<R
  * Test endpoint for loot system validation
  * GET /api/v1/loot/test
  */
-export const testLootSystem = async (req: Request, res: Response): Promise<Response> => {
+export const testLootSystem = async (_req: Request, res: Response): Promise<Response> => {
   try {
     const testData = {
       system: 'Loot & Rewards System',
@@ -203,7 +203,7 @@ export const testLootSystem = async (req: Request, res: Response): Promise<Respo
  * Test loot claim with mock data
  * POST /api/v1/loot/test-claim
  */
-export const testLootClaim = async (req: Request, res: Response): Promise<Response> => {
+export const testLootClaim = async (_req: Request, res: Response): Promise<Response> => {
   try {
     const mockSessionId = 'combat_550e8400-e29b-41d4-a716-446655440000';
     const mockCharacterId = '550e8400-e29b-41d4-a716-446655440000';
@@ -240,7 +240,7 @@ export const testLootClaim = async (req: Request, res: Response): Promise<Respon
  * Test loot calculation with mock data
  * POST /api/v1/loot/test-calculate
  */
-export const testLootCalculation = async (req: Request, res: Response): Promise<Response> => {
+export const testLootCalculation = async (_req: Request, res: Response): Promise<Response> => {
   try {
     // First create a test loot table if it doesn't exist
     try {
@@ -290,12 +290,12 @@ export const testLootCalculation = async (req: Request, res: Response): Promise<
  * Get all available loot tables
  * GET /api/v1/loot/tables
  */
-export const getLootTables = async (req: Request, res: Response): Promise<Response> => {
+export const getLootTables = async (_req: Request, res: Response): Promise<Response> => {
   try {
     // TODO: Add getAllLootTables to ILootService interface and implementations
     // const lootService = ServiceProvider.getInstance().get<ILootService>('LootService');
     // const tables = await lootService.getAllLootTables();
-    const tables = [] as any[]; // Temporary until interface is updated
+    const tables = [] as Array<{ id: string; name: string; dropChance: number; items: unknown[] }>; // Temporary until interface is updated
 
     return res.status(200).json({
       success: true,

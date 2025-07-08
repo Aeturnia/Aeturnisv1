@@ -242,6 +242,14 @@ export class StatsService {
     ));
 
     return {
+      // Effective Stats
+      effectiveStrength: Math.round(effectiveStr * 10) / 10,
+      effectiveDexterity: Math.round(effectiveDex * 10) / 10,
+      effectiveIntelligence: Math.round(effectiveInt * 10) / 10,
+      effectiveWisdom: Math.round(effectiveWis * 10) / 10,
+      effectiveConstitution: Math.round(effectiveCon * 10) / 10,
+      effectiveCharisma: Math.round(effectiveCha * 10) / 10,
+      // Combat Stats
       physicalDamage: Math.round(physicalDamage),
       magicalDamage: Math.round(magicalDamage),
       physicalDefense: Math.round(physicalDefense),
@@ -390,8 +398,8 @@ export class StatsService {
    * Validate stat modification request (server-authoritative security)
    */
   static validateStatModification(
-    character: Character, 
-    statUpdates: Record<string, any>,
+    _character: Character, 
+    statUpdates: Record<string, number | bigint>,
     requestSource: 'server' | 'client' = 'client'
   ): { valid: boolean; errors: string[] } {
     const errors: string[] = [];

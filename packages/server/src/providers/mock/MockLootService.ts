@@ -268,11 +268,12 @@ export class MockLootService implements ILootService {
   private getRarity(sourceLevel: number, characterLevel: number): ItemRarity {
     const roll = Math.random();
     const levelBonus = sourceLevel / 100;
+    const charLevelBonus = characterLevel / 200; // Use character level for additional bonus
     
-    if (roll < 0.01 + levelBonus / 10) return 'legendary';
-    if (roll < 0.05 + levelBonus / 5) return 'epic';
-    if (roll < 0.15 + levelBonus / 3) return 'rare';
-    if (roll < 0.35 + levelBonus / 2) return 'uncommon';
+    if (roll < 0.01 + levelBonus / 10 + charLevelBonus / 20) return 'legendary';
+    if (roll < 0.05 + levelBonus / 5 + charLevelBonus / 10) return 'epic';
+    if (roll < 0.15 + levelBonus / 3 + charLevelBonus / 5) return 'rare';
+    if (roll < 0.35 + levelBonus / 2 + charLevelBonus / 3) return 'uncommon';
     return 'common';
   }
 
@@ -376,10 +377,10 @@ export class MockLootService implements ILootService {
       id: tableId,
       name: 'Test Loot Table',
       items: [
-        { itemId: 'item_001', dropRate: 0.8, minQty: 1, maxQty: 3, rarity: ItemRarity.COMMON },
-        { itemId: 'item_101', dropRate: 0.3, minQty: 1, maxQty: 1, rarity: ItemRarity.UNCOMMON },
-        { itemId: 'item_201', dropRate: 0.1, minQty: 1, maxQty: 1, rarity: ItemRarity.RARE },
-        { itemId: 'item_301', dropRate: 0.01, minQty: 1, maxQty: 1, rarity: ItemRarity.EPIC }
+        { itemId: 'item_001', dropRate: 0.8, minQty: 1, maxQty: 3, rarity: 'common' as ItemRarity },
+        { itemId: 'item_101', dropRate: 0.3, minQty: 1, maxQty: 1, rarity: 'uncommon' as ItemRarity },
+        { itemId: 'item_201', dropRate: 0.1, minQty: 1, maxQty: 1, rarity: 'rare' as ItemRarity },
+        { itemId: 'item_301', dropRate: 0.01, minQty: 1, maxQty: 1, rarity: 'epic' as ItemRarity }
       ]
     });
     

@@ -106,7 +106,14 @@ export class LootService {
   /**
    * Get loot history for a character
    */
-  async getLootHistory(characterId: string, limit: number = 50): Promise<any[]> {
+  async getLootHistory(characterId: string, limit: number = 50): Promise<Array<{
+    id: string;
+    itemId: string;
+    quantity: number;
+    source: string;
+    timestamp: string;
+    combatSessionId?: string;
+  }>> {
     const history = await this.lootRepository.getLootHistoryForCharacter(characterId, limit);
     
     return history.map(record => ({
@@ -147,7 +154,7 @@ export class LootService {
 
     // Apply event modifiers
     if (modifiers.eventModifiers) {
-      for (const [event, multiplier] of Object.entries(modifiers.eventModifiers)) {
+      for (const [, multiplier] of Object.entries(modifiers.eventModifiers)) {
         dropRate *= multiplier;
       }
     }
@@ -198,18 +205,20 @@ export class LootService {
    * Generate mock loot for testing purposes
    */
   private async generateMockLoot(characterId: string): Promise<ILootClaimResponse> {
+    // Using characterId for future enhancements
+    logger.debug(`Generating mock loot for character: ${characterId}`);
     const mockLoot: ILootDrop[] = [
       {
         itemId: 'health_potion_001',
         quantity: 2,
-        rarity: ItemRarity.COMMON,
+        rarity: 'common' as ItemRarity,
         rolledChance: 0.85,
         guaranteed: false,
       },
       {
         itemId: 'iron_sword_001',
         quantity: 1,
-        rarity: ItemRarity.UNCOMMON,
+        rarity: 'uncommon' as ItemRarity,
         rolledChance: 0.15,
         guaranteed: false,
       },
@@ -220,7 +229,7 @@ export class LootService {
       mockLoot.push({
         itemId: 'rare_gem_001',
         quantity: 1,
-        rarity: ItemRarity.RARE,
+        rarity: 'rare' as ItemRarity,
         rolledChance: 0.05,
         guaranteed: false,
       });

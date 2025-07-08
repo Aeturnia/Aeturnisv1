@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import { CombatParticipant } from '../types/combat.types';
 import { ResourcePool } from '../types/resources.types';
 

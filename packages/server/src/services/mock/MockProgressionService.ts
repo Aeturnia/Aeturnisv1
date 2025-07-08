@@ -9,12 +9,10 @@ import {
   AwardXPResponse, 
   AllocateStatRequest, 
   AllocateStatResponse, 
-  CharacterStats, 
   PowerScoreResponse, 
   ExperienceGain, 
-  StatAllocation, 
-  StatType 
-} from '@aeturnis/shared/types/progression.types';
+  StatAllocation
+} from '@aeturnis/shared';
 import { logger } from '../../utils/logger';
 
 export class MockProgressionService {

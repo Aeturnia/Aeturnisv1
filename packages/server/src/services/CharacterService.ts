@@ -84,7 +84,7 @@ export class CharacterService {
 
   async getCharacterWithStats(id: string): Promise<{
     character: Character;
-    derivedStats: any;
+    derivedStats: Record<string, number>;
   } | null> {
     const character = await this.getCharacter(id);
     if (!character) {
@@ -192,7 +192,7 @@ export class CharacterService {
     // Check if we should upgrade to a new tier
     const tierProgress = StatsService.calculateStatTierProgress(newValue, points);
 
-    const updates: any = {
+    const updates: Partial<Character> = {
       [stat]: tierProgress.newBase
     };
 
@@ -225,7 +225,7 @@ export class CharacterService {
   }
 
   async updateResources(id: string, hp?: bigint, mp?: bigint, stamina?: bigint): Promise<Character | null> {
-    const resources: any = {};
+    const resources: Record<string, number> = {};
     if (hp !== undefined) resources.currentHp = hp;
     if (mp !== undefined) resources.currentMp = mp;
     if (stamina !== undefined) resources.currentStamina = stamina;
@@ -345,7 +345,7 @@ export class CharacterService {
     return { isValid: true };
   }
 
-  async getRandomStartingAppearance(race: CharacterRace): Promise<any> {
+  async getRandomStartingAppearance(race: CharacterRace): Promise<Record<string, string | number>> {
     // Generate random appearance based on race
     const appearances = {
       [CharacterRace.HUMAN]: {

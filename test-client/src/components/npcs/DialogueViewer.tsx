@@ -1,16 +1,7 @@
 import React from 'react';
 import { TestButton } from '../common/TestButton';
 
-interface DialogueNode {
-  id: string;
-  text: string;
-  choices?: Array<{
-    id: number;
-    text: string;
-    nextNodeId?: string;
-  }>;
-  isEnd?: boolean;
-}
+
 
 interface DialogueViewerProps {
   npc: any;

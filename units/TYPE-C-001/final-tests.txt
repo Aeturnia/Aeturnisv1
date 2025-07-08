@@ -1,0 +1,167 @@
+
+> @aeturnis/monorepo@1.0.0 test
+> npm run test --workspaces --if-present
+
+
+> @aeturnis/server@1.0.0 test
+> vitest run
+
+
+ RUN  v3.2.4 /home/runner/workspace/packages/server
+
+ ❯ src/__tests__/CacheService.test.ts (14 tests | 14 failed) 20ms
+   × CacheService > get > should return parsed value for existing key 8ms
+     → Cannot read properties of null (reading 'get')
+   × CacheService > get > should return null for non-existent key 1ms
+     → Cannot read properties of null (reading 'get')
+   × CacheService > get > should return null and log error on Redis failure 1ms
+     → Cannot read properties of null (reading 'get')
+   × CacheService > set > should set value without TTL 1ms
+     → Cannot read properties of null (reading 'set')
+   × CacheService > set > should set value with TTL 1ms
+     → Cannot read properties of null (reading 'setex')
+   × CacheService > set > should throw error on Redis failure 1ms
+     → Cannot read properties of null (reading 'set')
+   × CacheService > delete > should delete key 1ms
+     → Cannot read properties of null (reading 'del')
+   × CacheService > delete > should handle deletion errors gracefully 1ms
+     → Cannot read properties of null (reading 'del')
+   × CacheService > ttl > should return TTL for existing key 1ms
+     → Cannot read properties of null (reading 'ttl')
+   × CacheService > ttl > should return -1 on error 1ms
+     → Cannot read properties of null (reading 'ttl')
+   × CacheService > exists > should return true for existing key 1ms
+     → Cannot read properties of null (reading 'exists')
+   × CacheService > exists > should return false for non-existing key 1ms
+     → Cannot read properties of null (reading 'exists')
+   × CacheService > exists > should return false on error 1ms
+     → Cannot read properties of null (reading 'exists')
+   × CacheService > disconnect > should disconnect from Redis 1ms
+     → Cannot read properties of null (reading 'quit')
+ ❯ src/__tests__/AffinityService.test.ts (22 tests | 2 failed) 78ms
+   ✓ MockAffinityService > getAffinitySummary > should return affinity summary for existing character 10ms
+   ✓ MockAffinityService > getAffinitySummary > should return empty summary for new character 2ms
+   ✓ MockAffinityService > getAffinitySummary > should include recommendations for new character 2ms
+   ✓ MockAffinityService > getAffinitySummary > should exclude achievements and milestones when not requested 11ms
+   × MockAffinityService > trackWeaponUse > should track weapon usage for new weapon type 17ms
+     → expected 1 to be greater than 1
+   ✓ MockAffinityService > trackWeaponUse > should update existing weapon affinity 1ms
+   ✓ MockAffinityService > trackWeaponUse > should apply context modifiers correctly 1ms
+   ✓ MockAffinityService > trackWeaponUse > should apply diminishing returns for high usage 1ms
+   ✓ MockAffinityService > trackWeaponUse > should calculate rank progression correctly 1ms
+   × MockAffinityService > trackMagicUse > should track magic usage for new school 3ms
+     → expected 1 to be greater than 1
+   ✓ MockAffinityService > trackMagicUse > should update existing magic affinity 1ms
+   ✓ MockAffinityService > trackMagicUse > should limit favorite spells to 5 2ms
+   ✓ MockAffinityService > trackMagicUse > should apply different bonuses for magic vs weapons 1ms
+   ✓ MockAffinityService > Rank and Bonus Calculations > should have correct rank thresholds 7ms
+   ✓ MockAffinityService > Rank and Bonus Calculations > should provide appropriate bonuses for each rank 1ms
+   ✓ MockAffinityService > Error Handling and Validation > should handle empty character IDs 1ms
+   ✓ MockAffinityService > Error Handling and Validation > should handle invalid weapon types gracefully 1ms
+   ✓ MockAffinityService > Error Handling and Validation > should maintain data consistency 1ms
+   ✓ MockAffinityService > Mock Data Validation > should have consistent demo data 1ms
+   ✓ MockAffinityService > Mock Data Validation > should have valid progression formulas 1ms
+   ✓ MockAffinityService > Mock Data Validation > should handle all weapon types 6ms
+   ✓ MockAffinityService > Mock Data Validation > should handle all magic schools 3ms
+ ❯ src/providers/__tests__/mock/MockMonsterService.test.ts (12 tests | 9 failed) 73ms
+   × MockMonsterService > getMonstersInZone > should return monsters for a valid zone 22ms
+     → expected 0 to be greater than 0
+   × MockMonsterService > getMonstersInZone > should return different monsters for different zones 4ms
+     → Cannot read properties of undefined (reading 'id')
+   ✓ MockMonsterService > getMonstersInZone > should return empty array for unknown zone 2ms
+   ✓ MockMonsterService > spawnMonster > should spawn a monster at a spawn point 2ms
+   × MockMonsterService > spawnMonster > should add spawned monster to the zone 12ms
+     → expected +0 to be 1 // Object.is equality
+   × MockMonsterService > updateMonsterState > should update monster state 1ms
+     → Cannot read properties of undefined (reading 'id')
+   ✓ MockMonsterService > updateMonsterState > should throw error for non-existent monster 5ms
+   × MockMonsterService > killMonster > should remove monster from the zone 1ms
+     → Cannot read properties of undefined (reading 'id')
+   × MockMonsterService > killMonster > should not throw error for non-existent monster 7ms
+     → promise rejected "Error: Monster non-existent not found" instead of resolving
+   × MockMonsterService > getMonsterTypes > should return list of monster types 3ms
+     → expected { id: 'goblin', name: 'goblin', …(8) } to have property "baseStats"
+   × MockMonsterService > getSpawnPoints > should return spawn points for a zone 1ms
+     → service.getSpawnPoints is not a function
+   × MockMonsterService > getSpawnPoints > should return empty array for unknown zone 10ms
+     → service.getSpawnPoints is not a function
+ ❯ src/providers/__tests__/integration/ServiceProvider.integration.test.ts (10 tests | 3 failed) 170ms
+   ✓ ServiceProvider Integration Tests > Mock Services > should register all mock services 97ms
+   × ServiceProvider Integration Tests > Mock Services > should return mock data from services 13ms
+     → expected 0 to be greater than 0
+   ✓ ServiceProvider Integration Tests > Mock Services > should maintain state between calls 5ms
+   ✓ ServiceProvider Integration Tests > Real Services > should register all real services 6ms
+   × ServiceProvider Integration Tests > Real Services > should use real service implementations 10ms
+     → expected 'MockMonsterService' to be 'RealMonsterService' // Object.is equality
+   × ServiceProvider Integration Tests > Service Switching > should switch between mock and real based on environment 10ms
+     → expected 'MockMonsterService' to be 'RealMonsterService' // Object.is equality
+   ✓ ServiceProvider Integration Tests > Error Handling > should throw error for unregistered service 9ms
+   ✓ ServiceProvider Integration Tests > Error Handling > should handle service errors gracefully 8ms
+   ✓ ServiceProvider Integration Tests > Singleton Pattern > should return same instance 1ms
+   ✓ ServiceProvider Integration Tests > Singleton Pattern > should share registered services across calls 7ms
+ ❯ src/providers/__tests__/integration/ErrorScenarios.test.ts (23 tests | 6 failed) 273ms
+   ✓ Service Provider Error Scenarios > Service Registration Errors > should throw error when getting unregistered service 96ms
+   × Service Provider Error Scenarios > Service Registration Errors > should handle null service registration 18ms
+     → Service NullService not registered. Available services: MonsterService, NPCService, DeathService, LootService, CombatService, BankService, CurrencyService, DialogueService, SpawnService, ZoneService, MovementService, ProgressionService, TutorialService, AffinityService, NullService
+   ✓ Service Provider Error Scenarios > Service Registration Errors > should allow re-registration of services 8ms
+   ✓ Service Provider Error Scenarios > Monster Service Error Scenarios > should handle non-existent monster updates 11ms
+   ✓ Service Provider Error Scenarios > Monster Service Error Scenarios > should handle invalid zone queries 7ms
+   × Service Provider Error Scenarios > Monster Service Error Scenarios > should handle killing non-existent monster 11ms
+     → promise rejected "Error: Monster non-existent-id not found" instead of resolving
+   ✓ Service Provider Error Scenarios > Monster Service Error Scenarios > should handle spawning at non-existent spawn point 8ms
+   ✓ Service Provider Error Scenarios > NPC Service Error Scenarios > should handle interaction with non-existent NPC 19ms
+   × Service Provider Error Scenarios > NPC Service Error Scenarios > should handle advancing non-existent dialogue 18ms
+     → expected [Function] to throw error including 'Interaction non-existent-interaction …' but got 'NPC non-existent-interaction not found'
+   ✓ Service Provider Error Scenarios > NPC Service Error Scenarios > should return null for non-existent NPC lookup 7ms
+   ✓ Service Provider Error Scenarios > Currency Service Error Scenarios > should handle insufficient funds for deduction 6ms
+   ✓ Service Provider Error Scenarios > Currency Service Error Scenarios > should handle insufficient funds for transfer 9ms
+   ✓ Service Provider Error Scenarios > Currency Service Error Scenarios > should handle negative amounts gracefully 4ms
+   × Service Provider Error Scenarios > Bank Service Error Scenarios > should handle depositing to full bank 7ms
+     → expected 'Item not found' to contain 'Bank is full'
+   ✓ Service Provider Error Scenarios > Bank Service Error Scenarios > should handle withdrawing non-existent item 2ms
+   ✓ Service Provider Error Scenarios > Bank Service Error Scenarios > should handle invalid bank type access 2ms
+   ✓ Service Provider Error Scenarios > Combat Service Error Scenarios > should handle combat with non-existent target 2ms
+   × Service Provider Error Scenarios > Combat Service Error Scenarios > should handle actions on non-existent session 19ms
+     → promise resolved "{ success: true, …(3) }" instead of rejecting
+   ✓ Service Provider Error Scenarios > Combat Service Error Scenarios > should return null for non-existent combat session 5ms
+   ✓ Service Provider Error Scenarios > Concurrent Access Scenarios > should handle concurrent service access 7ms
+   ✓ Service Provider Error Scenarios > Concurrent Access Scenarios > should handle concurrent modifications 2ms
+   ✓ Service Provider Error Scenarios > Service Lifecycle Errors > should handle service initialization failures gracefully 3ms
+   × Service Provider Error Scenarios > Service Lifecycle Errors > should maintain service state after errors 2ms
+     → expected 0 to be greater than 0
+ ❯ src/tests/services/CharacterService.cache.test.ts (7 tests | 5 failed) 40ms
+   × AIPE Cache Invalidation Tests > 3. Cache Invalidation on Stat Changes > should invalidate cache when character stats are updated 8ms
+     → characterService.updateStats is not a function
+   × AIPE Cache Invalidation Tests > 3. Cache Invalidation on Stat Changes > should invalidate cache when equipment changes affect stats 2ms
+     → characterService.updateStats is not a function
+   × AIPE Cache Invalidation Tests > 3. Cache Invalidation on Stat Changes > should invalidate cache when prestige level changes 4ms
+     → characterService.updatePrestige is not a function
+   × AIPE Cache Invalidation Tests > 3. Cache Invalidation on Stat Changes > should invalidate cache when paragon points are redistributed 2ms
+     → characterService.updateParagonDistribution is not a function
+   × AIPE Cache Invalidation Tests > 3. Cache Invalidation on Stat Changes > should recalculate derived stats after cache invalidation 9ms
+     → characterService.updateStats is not a function
+   ✓ AIPE Cache Invalidation Tests > Cache Performance Tests > should use cached character data when available 8ms
+   ✓ AIPE Cache Invalidation Tests > Cache Performance Tests > should cache character after database fetch 4ms
+ ✓ src/sockets/__tests__/handlers/ConnectionHandlers.test.ts (13 tests) 744ms
+ ✓ src/providers/__tests__/mock/MockCurrencyService.test.ts (21 tests) 37ms
+ ✓ src/sockets/__tests__/integration/simplePingTest.test.ts (1 test) 274ms
+ ✓ src/__tests__/TutorialService.test.ts (25 tests) 54ms
+ ✓ src/sockets/__tests__/handlers/ChatHandler.test.ts (15 tests) 51ms
+ ✓ src/__tests__/npc.service.test.ts (20 tests) 9ms
+ ✓ src/providers/__tests__/mock/MockNPCService.test.ts (13 tests) 24ms
+ ✓ src/sockets/__tests__/integration/socketFlow.test.ts (10 tests) 1682ms
+   ✓ Socket.IO Integration Flow > Basic Socket Communication > should handle ping-pong communication  632ms
+ ✓ src/__tests__/monster.service.test.ts (16 tests) 9ms
+ ✓ src/index.test.ts (2 tests) 5ms
+ ✓ src/__tests__/index.test.ts (5 tests) 11ms
+ ✓ src/services/AuthService.test.ts (14 tests) 3705ms
+   ✓ AuthService > User Registration > should register a new user successfully  453ms
+   ✓ AuthService > User Login > should login successfully with email  358ms
+   ✓ AuthService > User Login > should login successfully with username  398ms
+   ✓ AuthService > User Login > should throw UnauthorizedError for invalid credentials  366ms
+ ✓ src/__tests__/auth.endpoints.test.ts (5 tests) 11901ms
+   ✓ Authentication API Endpoints > should register a new user successfully  1700ms
+   ✓ Authentication API Endpoints > should login successfully  3421ms
+   ✓ Authentication API Endpoints > should handle validation errors  1519ms
+   ✓ Authentication API Endpoints > should handle unauthorized access  1524ms
+   ✓ Authentication API Endpoints > should return server health status  1506ms

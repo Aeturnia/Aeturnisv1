@@ -64,12 +64,3 @@ export interface MonsterStateUpdateRequest {
   targetId?: string;
 }
 
-export interface Zone {
-  id: string;
-  name: string;
-  displayName: string;
-  level: number;
-  maxPlayers: number;
-  description?: string;
-  metadata: Record<string, unknown>;
-}

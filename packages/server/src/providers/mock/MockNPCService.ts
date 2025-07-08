@@ -8,13 +8,13 @@ import { logger } from '../../utils/logger';
  */
 export class MockNPCService implements INPCService {
   // Mock NPCs data - copied from routes
-  private mockNPCs: any[] = [
+  private mockNPCs: NPC[] = [
     {
       id: 'npc-001',
       name: 'tutorial_guide',
       displayName: 'Tutorial Guide',
       type: NPCType.QUEST_GIVER,
-      zoneId: 'test-zone',
+      zoneId: 'starter-zone',
       position: { x: 95, y: 0, z: 105 },
       dialogueTreeId: 'tutorial-dialogue',
       isQuestGiver: true,
@@ -30,7 +30,7 @@ export class MockNPCService implements INPCService {
       name: 'village_merchant',
       displayName: 'Village Merchant',
       type: NPCType.MERCHANT,
-      zoneId: 'test-zone',
+      zoneId: 'market-zone',
       position: { x: 120, y: 0, z: 85 },
       dialogueTreeId: 'merchant-dialogue',
       isQuestGiver: false,
@@ -46,7 +46,7 @@ export class MockNPCService implements INPCService {
       name: 'guard_captain',
       displayName: 'Guard Captain',
       type: NPCType.GUARD,
-      zoneId: 'test-zone',
+      zoneId: 'starter-zone',
       position: { x: 100, y: 0, z: 50 },
       dialogueTreeId: 'guard-dialogue',
       isQuestGiver: true,
@@ -69,12 +69,8 @@ export class MockNPCService implements INPCService {
   async getNPCsInZone(zoneIdOrName: string): Promise<NPC[]> {
     logger.info(`MockNPCService: Getting NPCs for zone ${zoneIdOrName}`);
     
-    // Filter NPCs by zone - handle common zone name mappings
-    const npcs = this.mockNPCs.filter(npc => 
-      npc.zoneId === zoneIdOrName || 
-      zoneIdOrName === 'test-zone' ||
-      (zoneIdOrName === 'tutorial_area' && npc.zoneId === 'test-zone')
-    );
+    // Filter NPCs by zone
+    const npcs = this.mockNPCs.filter(npc => npc.zoneId === zoneIdOrName);
     
     logger.info(`MockNPCService: Found ${npcs.length} NPCs after filtering`);
     
@@ -223,7 +219,7 @@ export class MockNPCService implements INPCService {
     );
 
     // Can interact if NPC is interactable and no existing interaction
-    return npc.metadata.isInteractable && !existingInteraction;
+    return Boolean(npc.metadata.isInteractable) && !existingInteraction;
   }
 
   async processTrade(npcId: string, characterId: string, tradeData: any): Promise<void> {
@@ -296,13 +292,13 @@ export class MockNPCService implements INPCService {
     }
 
     // Create interaction record
-    const interaction = {
+    const interaction: NPCInteraction = {
       id: `interaction-${Date.now()}`,
       npcId,
       characterId,
       interactionType: interactionType || 'dialogue',
-      timestamp: new Date(),
-      metadata: {}
+      dialogueState: {},
+      createdAt: new Date()
     };
 
     this.mockInteractions.push(interaction);
@@ -321,7 +317,7 @@ export class MockNPCService implements INPCService {
     };
 
     switch (npc.type) {
-      case 'QUEST_GIVER':
+      case NPCType.QUEST_GIVER:
         result.message = `${npc.displayName}: Welcome, adventurer! I have quests available for you.`;
         result.data = {
           availableQuests: [
@@ -330,7 +326,7 @@ export class MockNPCService implements INPCService {
           ]
         };
         break;
-      case 'MERCHANT':
+      case NPCType.MERCHANT:
         result.message = `${npc.displayName}: Welcome to my shop! What can I get for you today?`;
         result.data = {
           shopItems: [
@@ -339,7 +335,7 @@ export class MockNPCService implements INPCService {
           ]
         };
         break;
-      case 'GUARD':
+      case NPCType.GUARD:
         result.message = `${npc.displayName}: Stay safe out there, citizen. The roads can be dangerous.`;
         result.data = {
           warnings: ['Goblins spotted near the forest', 'Travel in groups when possible']

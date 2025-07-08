@@ -100,11 +100,11 @@ describe('MockCurrencyService', () => {
       await service.addCurrency(fromId, 1000n, 'initial');
       
       // Transfer
-      const result = await service.transferCurrency(fromId, toId, 200n, true);
+      const result = await service.transferCurrency(fromId, toId, 200n, 'Test transfer', true);
       
       expect(result.success).toBe(true);
-      expect(result.fromBalance).toBeLessThan(800n); // Less due to fee
-      expect(result.toBalance).toBe(200n);
+      expect(result.senderNewBalance).toBeLessThan(800n); // Less due to fee
+      expect(result.recipientNewBalance).toBe(200n);
       expect(result.fee).toBeGreaterThan(0n);
     });
 
@@ -114,11 +114,11 @@ describe('MockCurrencyService', () => {
       
       await service.addCurrency(fromId, 1000n, 'initial');
       
-      const result = await service.transferCurrency(fromId, toId, 200n, false);
+      const result = await service.transferCurrency(fromId, toId, 200n, 'Test transfer', false);
       
       expect(result.success).toBe(true);
-      expect(result.fromBalance).toBe(800n);
-      expect(result.toBalance).toBe(200n);
+      expect(result.senderNewBalance).toBe(800n);
+      expect(result.recipientNewBalance).toBe(200n);
       expect(result.fee).toBe(0n);
     });
 
@@ -126,7 +126,7 @@ describe('MockCurrencyService', () => {
       const fromId = 'character-poor-sender';
       const toId = 'character-receiver';
       
-      const result = await service.transferCurrency(fromId, toId, 100n, true);
+      const result = await service.transferCurrency(fromId, toId, 100n, 'Test transfer', true);
       
       expect(result.success).toBe(false);
       expect(result.message).toContain('Insufficient funds');
@@ -145,16 +145,18 @@ describe('MockCurrencyService', () => {
     it('should track transaction history', async () => {
       const characterId = 'character-history';
       
-      await service.addCurrency(characterId, 100n, 'source1', 'First transaction');
-      await service.deductCurrency(characterId, 50n, 'reason1', 'Second transaction');
+      await service.addCurrency(characterId, 100n, 'source1', { description: 'First transaction' });
+      // Add small delay to ensure different timestamps
+      await new Promise(resolve => setTimeout(resolve, 10));
+      await service.deductCurrency(characterId, 50n, 'reason1', { description: 'Second transaction' });
       
       const history = await service.getTransactionHistory(characterId);
       
       expect(history.length).toBe(2);
-      expect(history[0].type).toBe('deduct'); // Most recent first
-      expect(history[0].amount).toBe(50n);
-      expect(history[1].type).toBe('add');
-      expect(history[1].amount).toBe(100n);
+      expect(history[0].type).toBe('purchase'); // Most recent first (deduct creates purchase type)
+      expect(history[0].amount).toBe(-50); // Stored as negative number in transaction
+      expect(history[1].type).toBe('reward'); // add creates reward type
+      expect(history[1].amount).toBe(100);
     });
 
     it('should respect limit parameter', async () => {

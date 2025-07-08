@@ -1,0 +1,8 @@
+
+> @aeturnis/monorepo@1.0.0 lint
+> npm run lint --workspaces --if-present
+
+
+> @aeturnis/server@1.0.0 lint
+> eslint src/**/*.ts
+

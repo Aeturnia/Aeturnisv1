@@ -1,4 +1,5 @@
-import { Monster, MonsterType, SpawnPoint, Position3D } from '@aeturnis/shared';
+import { MonsterType, SpawnPoint, Position3D } from '@aeturnis/shared';
+import { Monster } from '../../types/monster.types';
 
 /**
  * Interface for Monster-related operations
@@ -11,6 +12,13 @@ export interface IMonsterService {
    * @returns Array of monsters in the zone
    */
   getMonstersInZone(zoneIdOrName: string): Promise<Monster[]>;
+
+  /**
+   * Get a specific monster by ID
+   * @param monsterId - The monster UUID
+   * @returns The monster if found, null otherwise
+   */
+  getMonsterById(monsterId: string): Promise<Monster | null>;
 
   /**
    * Spawn a new monster at a spawn point

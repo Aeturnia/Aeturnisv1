@@ -12,6 +12,7 @@ import {
   BankTransferRequest
 } from '../interfaces/IBankService';
 import { BankService } from '../../services/BankService';
+import { cacheService } from '../../services';
 
 /**
  * Real implementation wrapper for BankService
@@ -21,7 +22,7 @@ export class RealBankService implements IBankService {
   private bankService: BankService;
 
   constructor() {
-    this.bankService = new BankService();
+    this.bankService = new BankService(cacheService);
   }
 
   async getBankContents(characterId: string, bankType: BankType): Promise<BankContents> {
@@ -33,7 +34,7 @@ export class RealBankService implements IBankService {
         characterId,
         slots: bank.slots,
         totalSlots: bank.maxSlots,
-        usedSlots: bank.slots.filter(s => !s.isEmpty).length,
+        usedSlots: bank.slots.filter(s => s.itemId !== undefined).length,
         gold: BigInt(0), // Bank doesn't track gold
         lastAccessed: new Date()
       };
@@ -44,7 +45,7 @@ export class RealBankService implements IBankService {
         characterId,
         slots: bank.slots,
         totalSlots: 48, // Default shared bank size
-        usedSlots: bank.slots.filter(s => !s.isEmpty).length,
+        usedSlots: bank.slots.filter(s => s.itemId !== undefined).length,
         gold: BigInt(0),
         lastAccessed: bank.lastAccessedAt || new Date()
       };
@@ -66,7 +67,7 @@ export class RealBankService implements IBankService {
     try {
       // Find first empty slot
       const bank = await this.getBankContents(characterId, bankType);
-      const emptySlot = bank.slots.findIndex(s => s.isEmpty);
+      const emptySlot = bank.slots.findIndex(s => s.itemId === undefined);
       
       if (emptySlot === -1) {
         return {
@@ -95,13 +96,13 @@ export class RealBankService implements IBankService {
         slotIndex: emptySlot,
         message: 'Item deposited'
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         success: false,
         itemId,
         quantity,
         slotIndex: -1,
-        message: error.message || 'Failed to deposit item'
+        message: (error as Error).message || 'Failed to deposit item'
       };
     }
   }
@@ -136,22 +137,22 @@ export class RealBankService implements IBankService {
         quantity: result.removedQuantity,
         message: 'Item withdrawn'
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         success: false,
         itemId,
         quantity: 0,
-        message: error.message || 'Failed to withdraw item'
+        message: (error as Error).message || 'Failed to withdraw item'
       };
     }
   }
 
-  async transferGold(characterId: string, amount: bigint, bankType: BankType, direction: 'deposit' | 'withdraw'): Promise<TransferResult> {
+  async transferGold(_characterId: string, _amount: bigint, _bankType: BankType, _direction: 'deposit' | 'withdraw'): Promise<TransferResult> {
     // The real BankService doesn't support gold transfers
     // This is a placeholder implementation
     return {
       success: false,
-      amount,
+      amount: _amount,
       previousBalance: BigInt(0),
       newBalance: BigInt(0),
       bankBalance: BigInt(0),
@@ -161,13 +162,13 @@ export class RealBankService implements IBankService {
 
   // Moved expandBankSlots to the end with overload support
 
-  async getTransactionHistory(characterId: string, bankType?: BankType, limit: number = 50): Promise<BankTransaction[]> {
+  async getTransactionHistory(_characterId: string, _bankType?: BankType, _limit: number = 50): Promise<BankTransaction[]> {
     // Real service may not have transaction history
     // Would need to implement or return empty
     return [];
   }
 
-  async hasAccess(characterId: string, bankType: BankType): Promise<boolean> {
+  async hasAccess(_characterId: string, bankType: BankType): Promise<boolean> {
     // Check access based on bank type
     switch (bankType) {
       case BankType.PERSONAL:

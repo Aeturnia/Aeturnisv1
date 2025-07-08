@@ -1,5 +1,5 @@
-import { eq, and, inArray, desc } from 'drizzle-orm';
-import { db } from '../database/index';
+import { eq, and, inArray } from 'drizzle-orm';
+import { db } from '../database/config';
 import { 
   items,
   characterEquipment, 
@@ -15,8 +15,6 @@ import type {
   EquipmentItem, 
   InventoryItem, 
   ItemStat,
-  ItemSet,
-  ItemSetBonus,
   EquipmentSlotType,
   BindType
 } from '../types/equipment.types';
@@ -35,7 +33,17 @@ export class EquipmentRepository {
         .where(eq(items.id, itemId))
         .limit(1);
       
-      return result[0] || null;
+      if (!result[0]) return null;
+      
+      // Convert null values to undefined for optional fields
+      const item = result[0];
+      return {
+        ...item,
+        description: item.description ?? undefined,
+        durability: item.durability ?? undefined,
+        iconPath: item.iconPath ?? undefined,
+        equipmentSlot: item.equipmentSlot as EquipmentSlotType | undefined,
+      } as Item;
     } catch (error) {
       logger.error('Error fetching item by ID:', error);
       throw error;
@@ -46,10 +54,19 @@ export class EquipmentRepository {
     if (itemIds.length === 0) return [];
     
     try {
-      return await db
+      const results = await db
         .select()
         .from(items)
         .where(inArray(items.id, itemIds));
+      
+      // Convert null values to undefined for optional fields
+      return results.map(item => ({
+        ...item,
+        description: item.description ?? undefined,
+        durability: item.durability ?? undefined,
+        iconPath: item.iconPath ?? undefined,
+        equipmentSlot: item.equipmentSlot as EquipmentSlotType | undefined,
+      } as Item));
     } catch (error) {
       logger.error('Error fetching items by IDs:', error);
       throw error;
@@ -485,7 +502,7 @@ export class EquipmentRepository {
   // UTILITY METHODS
   // =========================================================================
 
-  async getInventoryWeight(charId: string): Promise<number> {
+  async getInventoryWeight(_charId: string): Promise<number> {
     try {
       // Note: This would require a weight field on items table
       // For now, returning 0 as placeholder

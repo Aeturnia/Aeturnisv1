@@ -9,7 +9,7 @@ import {
   MovementCooldown, 
   ZoneTransition,
   Direction 
-} from '@aeturnis/shared/types/movement.types';
+} from '@aeturnis/shared';
 import { MockZoneService } from './MockZoneService';
 import { logger } from '../../utils/logger';
 

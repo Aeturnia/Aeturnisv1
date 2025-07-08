@@ -84,10 +84,20 @@ export class CharacterRepository {
       currentStamina: derivedStats.maxStamina,
       maxStamina: derivedStats.maxStamina,
       
+      // Economy
+      gold: 100,
+      bankSlots: 20,
+      
       // Set appearance and location
       appearance: data.appearance,
       currentZone: 'starter_zone',
       position: { x: 0, y: 0, z: 0 },
+      
+      // Death & Respawn System
+      isDead: false,
+      deathAt: null,
+      deathCount: 0,
+      lastRespawnAt: null,
       
       // Set meta fields
       isDeleted: false,
@@ -262,11 +272,17 @@ export class CharacterRepository {
   }
 
   async updateParagon(id: string, paragonPoints: bigint, distribution: Record<string, bigint>): Promise<Character | null> {
+    // Convert bigint values in distribution to numbers
+    const numberDistribution: Record<string, number> = {};
+    for (const [key, value] of Object.entries(distribution)) {
+      numberDistribution[key] = Number(value);
+    }
+    
     const result = await db
       .update(characters)
       .set({
         paragonPoints: Number(paragonPoints),
-        paragonDistribution: distribution,
+        paragonDistribution: numberDistribution,
         updatedAt: new Date(),
       })
       .where(and(eq(characters.id, id), eq(characters.isDeleted, false)))
@@ -277,7 +293,7 @@ export class CharacterRepository {
 
   async updateExperience(id: string, experience: bigint, level?: number): Promise<Character | null> {
     const updateData: Record<string, unknown> = {
-      experience,
+      experience: Number(experience),
       updatedAt: new Date(),
     };
 

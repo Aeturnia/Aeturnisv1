@@ -1,0 +1,27 @@
+{
+  "unit": "TYPE-E-003",
+  "name": "Combat Routes - Async Handler Fixes",
+  "assigned_to": "Route Handler Agent",
+  "status": "completed",
+  "completed_at": "2025-07-08",
+  "started_at": "2025-07-08",
+  "expected_impact": "~12 errors",
+  "tasks": [
+    "Fix async route handler error handling",
+    "Add missing returns in combat action handlers",
+    "Coordinate WebSocket event emission",
+    "Standardize response formats"
+  ],
+  "baseline": {
+    "errors": 70,
+    "eslint": 69
+  },
+  "final": {
+    "errors": 64,
+    "eslint": 69
+  },
+  "impact": {
+    "errors_reduction": 6,
+    "notes": "Fixed combat routes with asyncHandler, return statements, and response format standardization."
+  }
+}

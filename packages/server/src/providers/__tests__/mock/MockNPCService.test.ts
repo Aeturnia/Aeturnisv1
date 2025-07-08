@@ -19,9 +19,9 @@ describe('MockNPCService', () => {
       const npc = npcs[0];
       expect(npc).toHaveProperty('id');
       expect(npc).toHaveProperty('name');
-      expect(npc).toHaveProperty('npcType');
+      expect(npc).toHaveProperty('type');
       expect(npc).toHaveProperty('position');
-      expect(npc).toHaveProperty('isInteractable');
+      expect(npc).toHaveProperty('metadata');
     });
 
     it('should return different NPCs for different zones', async () => {
@@ -66,7 +66,8 @@ describe('MockNPCService', () => {
       expect(interaction.id).toContain('interaction-');
       expect(interaction.npcId).toBe(npcId);
       expect(interaction.characterId).toBe('character-001');
-      expect(interaction.currentNodeId).toBe('greeting');
+      expect(interaction.dialogueState).toBeDefined();
+      expect(interaction.dialogueState.currentNodeId).toBe('greeting');
     });
 
     it('should throw error for non-existent NPC', async () => {
@@ -82,10 +83,10 @@ describe('MockNPCService', () => {
       const npcId = npcs[0].id;
       
       const interaction = await service.startInteraction(npcId, 'character-001');
-      const response = await service.advanceDialogue(interaction.id, '1');
+      const response = await service.advanceDialogue(npcId, 'character-001', 'quest');
       
       expect(response).toBeDefined();
-      expect(response.nodeId).toBeDefined();
+      expect(response.node).toBeDefined();
       expect(response.text).toBeDefined();
       expect(response.choices).toBeDefined();
       expect(Array.isArray(response.choices)).toBe(true);
@@ -96,10 +97,10 @@ describe('MockNPCService', () => {
       const npcId = npcs[0].id;
       
       const interaction = await service.startInteraction(npcId, 'character-001');
-      const response = await service.advanceDialogue(interaction.id, '999');
+      const response = await service.advanceDialogue(npcId, 'character-001', 'goodbye');
       
       expect(response.isComplete).toBe(true);
-      expect(response.text).toContain('Goodbye');
+      expect(response.text).toContain('Farewell');
     });
   });
 
@@ -113,7 +114,7 @@ describe('MockNPCService', () => {
       
       // All quest givers should have questGiver flag
       questGivers.forEach(npc => {
-        expect(npc.questGiver).toBe(true);
+        expect(npc.isQuestGiver).toBe(true);
       });
     });
   });
@@ -128,7 +129,7 @@ describe('MockNPCService', () => {
       
       // All merchants should have shopkeeper flag
       merchants.forEach(npc => {
-        expect(npc.shopkeeper).toBe(true);
+        expect(npc.metadata.shopkeeper).toBe(true);
       });
     });
   });

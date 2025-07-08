@@ -94,7 +94,17 @@ export class CacheService {
   async ttl(key: string): Promise<number> {
     try {
       const fullKey = `${this.namespace}:${key}`;
-      return await this.redis.ttl(fullKey);
+      if (this.useRedis && this.redis) {
+        return await this.redis.ttl(fullKey);
+      } else {
+        // For in-memory cache, check if key exists and return TTL
+        const cached = this.memoryCache.get(fullKey);
+        if (cached && cached.expiry) {
+          const remaining = Math.max(0, cached.expiry - Date.now());
+          return Math.floor(remaining / 1000);
+        }
+        return cached ? -1 : -2; // -1 for no expiry, -2 for not found
+      }
     } catch (error) {
       console.error(`Cache TTL error for key ${key}:`, error);
       return -1;
@@ -104,7 +114,20 @@ export class CacheService {
   async exists(key: string): Promise<boolean> {
     try {
       const fullKey = `${this.namespace}:${key}`;
-      return (await this.redis.exists(fullKey)) === 1;
+      if (this.useRedis && this.redis) {
+        return (await this.redis.exists(fullKey)) === 1;
+      } else {
+        // For in-memory cache, check if key exists and not expired
+        const cached = this.memoryCache.get(fullKey);
+        if (cached) {
+          if (!cached.expiry || cached.expiry > Date.now()) {
+            return true;
+          } else {
+            this.memoryCache.delete(fullKey);
+          }
+        }
+        return false;
+      }
     } catch (error) {
       console.error(`Cache EXISTS error for key ${key}:`, error);
       return false;
@@ -112,6 +135,15 @@ export class CacheService {
   }
 
   async disconnect(): Promise<void> {
-    await this.redis.quit();
+    if (this.useRedis && this.redis) {
+      await this.redis.quit();
+    }
+    // Clear in-memory cache
+    this.memoryCache.clear();
+  }
+
+  // Add alias method for backward compatibility
+  async getTTL(key: string): Promise<number> {
+    return this.ttl(key);
   }
 }

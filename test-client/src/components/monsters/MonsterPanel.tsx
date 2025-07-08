@@ -286,7 +286,6 @@ export const MonsterPanel: React.FC = () => {
             }))}
             onAction={handleMonsterAction}
             loading={monsterTest.loading}
-            isAuthenticated={true}
           />
           
           <div style={{ fontSize: '12px', color: '#666', marginTop: '8px', padding: '8px', border: '1px solid #333' }}>
@@ -299,7 +298,6 @@ export const MonsterPanel: React.FC = () => {
             spawnPoints={spawnPoints}
             onSpawn={handleSpawn}
             loading={monsterTest.loading}
-            isAuthenticated={isAuthenticated}
           />
         </div>
       </div>

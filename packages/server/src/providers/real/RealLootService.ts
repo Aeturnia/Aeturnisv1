@@ -13,6 +13,7 @@ import {
 } from '../interfaces/ILootService';
 import { LootService } from '../../services/loot.service';
 import { LootRepository } from '../../repositories/loot.repository';
+import { ItemRarity } from '../../types/loot';
 
 /**
  * Real implementation wrapper for LootService
@@ -26,7 +27,7 @@ export class RealLootService implements ILootService {
     this.lootService = new LootService(lootRepository);
   }
 
-  async generateLoot(source: LootSource, killer: any): Promise<LootTable> {
+  async generateLoot(source: LootSource, killer: { level?: number }): Promise<LootTable> {
     // Map to real service format
     const dropModifiers = {
       characterLevel: killer.level || 1,
@@ -34,27 +35,27 @@ export class RealLootService implements ILootService {
       luckBonus: 0
     };
     
-    const result = await this.lootService.calculateLootDrops(source.id, dropModifiers);
+    const drops = await this.lootService.calculateLootDrops(source.id, dropModifiers);
     
     // Convert to our interface format
     return {
       id: `loot_${Date.now()}`,
       sourceId: source.id,
-      items: result.loot.map((item: any) => ({
-        itemId: item.itemId,
-        quantity: item.quantity || 1,
-        rarity: item.rarity || 'common',
+      items: drops.map((drop: ILootDrop) => ({
+        itemId: drop.itemId,
+        quantity: drop.quantity || 1,
+        rarity: drop.rarity || 'common',
         isBound: false,
         rollValue: Math.floor(Math.random() * 100)
       })),
-      gold: BigInt(result.gold || 0),
-      experience: BigInt(result.experience || 0),
+      gold: BigInt(0), // LootService doesn't return gold directly
+      experience: BigInt(0), // LootService doesn't return experience directly
       generatedAt: new Date(),
       expiresAt: new Date(Date.now() + 5 * 60 * 1000)
     };
   }
 
-  async calculateDropRates(monsterId: string, characterLevel: number): Promise<DropRates> {
+  async calculateDropRates(_monsterId: string, characterLevel: number): Promise<DropRates> {
     // Real service may not have this exact method
     // Simulate drop rate calculation
     const baseDropRate = 0.3;
@@ -100,8 +101,8 @@ export class RealLootService implements ILootService {
       const result = await this.lootService.claimLoot(lootId, claimRequest);
       
       return {
-        success: result.success,
-        claimedItems: result.loot.map((item: any) => ({
+        success: true, // ILootClaimResponse doesn't have success property
+        claimedItems: result.loot.map((item: ILootDrop) => ({
           itemId: item.itemId,
           quantity: item.quantity || 1,
           rarity: item.rarity || 'common',
@@ -110,16 +111,16 @@ export class RealLootService implements ILootService {
         })),
         claimedGold: BigInt(result.gold || 0),
         failedItems: [],
-        message: result.message || 'Loot claimed'
+        message: 'Loot claimed' // ILootClaimResponse doesn't have message property
       };
     }
   }
 
-  async distributeLoot(loot: LootTable, party: any[]): Promise<Distribution> {
+  async distributeLoot(loot: LootTable, party: { id: string }[]): Promise<Distribution> {
     // Real service may not have party distribution
     // Simulate distribution
-    const assignments = new Map<string, any[]>();
-    const unassigned: any[] = [];
+    const assignments = new Map<string, typeof loot.items>();
+    const unassigned: typeof loot.items = [];
     
     // Simple round-robin distribution
     let playerIndex = 0;
@@ -138,12 +139,12 @@ export class RealLootService implements ILootService {
     };
   }
 
-  async getActiveLoot(characterId: string): Promise<LootTable[]> {
+  async getActiveLoot(_characterId: string): Promise<LootTable[]> {
     // Real service may track this differently
     return [];
   }
 
-  async expireLoot(lootId: string): Promise<void> {
+  async expireLoot(_lootId: string): Promise<void> {
     // Real service may not have explicit expire method
     // Would need to implement or simulate
   }
@@ -158,19 +159,30 @@ export class RealLootService implements ILootService {
 
   async getLootHistory(characterId: string, limit: number = 50): Promise<LootHistoryEntry[]> {
     const history = await this.lootService.getLootHistory(characterId, limit);
-    return history;
+    // Convert to LootHistoryEntry format
+    return history.map((h: { id: string; combatSessionId?: string; itemId: string; quantity?: number; gold?: number; experience?: number; timestamp: string | number | Date }) => ({
+      id: h.id,
+      characterId: characterId,
+      sessionId: h.combatSessionId || '',
+      loot: [{ 
+        itemId: h.itemId, 
+        quantity: h.quantity || 1,
+        rarity: 'common' as ItemRarity,
+        rolledChance: 0,
+        guaranteed: false
+      }],
+      gold: h.gold || 0,
+      experience: h.experience || 0,
+      claimedAt: new Date(h.timestamp)
+    }));
   }
 
   async createTestLootTable(): Promise<string> {
-    const tableId = await this.lootService.createTestLootTable();
-    return tableId;
+    return await this.lootService.createTestLootTable();
   }
 
   async getAllLootTables(): Promise<LootTable[]> {
-    if (this.lootService.getAllLootTables) {
-      return await this.lootService.getAllLootTables();
-    }
-    // If the real service doesn't have this method, return empty array
+    // LootService doesn't have getAllLootTables method
     return [];
   }
 }

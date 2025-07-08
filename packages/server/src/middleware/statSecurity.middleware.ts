@@ -7,9 +7,9 @@ import { StatsService } from '../services/StatsService';
  */
 
 interface StatModificationRequest extends Request {
-  statUpdates?: Record<string, any>;
-  character?: any;
-  validatedStats?: Record<string, any>;
+  statUpdates?: Record<string, number>;
+  character?: { id: string; level: number; statPoints: number; [key: string]: unknown };
+  validatedStats?: Record<string, number>;
 }
 
 /**
@@ -43,7 +43,7 @@ export const validateStatModification = (
 
     // Validate the stat modification request
     const validation = StatsService.validateStatModification(
-      character,
+      character as any, // Cast to any since we only have partial character data
       statUpdates,
       'client' // Assume client requests unless explicitly marked as server
     );
@@ -149,7 +149,6 @@ export const preventStatRecursion = (
   }
   
   const calculations = (global as any).statCalculations;
-  const calculationKey = `stat_calc:${characterId}:${Date.now()}`;
   
   if (calculations.has(characterId)) {
     res.status(409).json({

@@ -1,0 +1,7 @@
+src/controllers/monster.controller.ts(22,23): error TS2339: Property 'currentHealth' does not exist on type 'Monster'.
+src/controllers/monster.controller.ts(22,48): error TS2339: Property 'baseHealth' does not exist on type 'Monster'.
+src/controllers/monster.controller.ts(23,26): error TS2339: Property 'baseHealth' does not exist on type 'Monster'.
+src/controllers/monster.controller.ts(24,25): error TS2339: Property 'displayName' does not exist on type 'Monster'.
+src/controllers/monster.controller.ts(24,48): error TS2339: Property 'name' does not exist on type 'Monster'.
+src/controllers/monster.controller.ts(75,39): error TS6133: 'req' is declared but its value is never read.
+src/controllers/monster.controller.ts(282,41): error TS6133: 'req' is declared but its value is never read.

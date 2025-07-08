@@ -103,7 +103,7 @@ export class LootEventHandler {
   /**
    * Emit loot history update
    */
-  emitLootHistoryUpdate(characterId: string, newLootEntry: any): void {
+  emitLootHistoryUpdate(characterId: string, newLootEntry: Record<string, unknown>): void {
     const eventData = {
       characterId,
       newEntry: newLootEntry,

@@ -59,6 +59,14 @@ export interface ParagonDistribution {
 }
 
 export interface DerivedStats {
+  // Effective Stats (after all modifiers)
+  effectiveStrength: number;
+  effectiveDexterity: number;
+  effectiveIntelligence: number;
+  effectiveWisdom: number;
+  effectiveConstitution: number;
+  effectiveCharisma: number;
+  
   // Combat
   physicalDamage: number;
   magicalDamage: number;

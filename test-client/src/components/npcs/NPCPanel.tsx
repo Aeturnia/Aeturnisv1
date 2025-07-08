@@ -238,7 +238,6 @@ export const NPCPanel: React.FC = () => {
             npcs={filteredNPCs}
             onInteract={startInteraction}
             loading={npcTest.loading}
-            isAuthenticated={isAuthenticated}
             selectedNpcId={selectedNpc?.id}
           />
         </div>

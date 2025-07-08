@@ -22,6 +22,13 @@
       "when": 1751815893547,
       "tag": "0002_sleepy_masque",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1751994222705,
+      "tag": "0003_ambiguous_marten_broadcloak",
+      "breakpoints": true
     }
   ]
 }

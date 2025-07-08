@@ -54,6 +54,7 @@ export const authenticate = async (
       success: false,
       error: error instanceof Error ? error.message : 'Invalid token',
     });
+    return;
   }
 };
 

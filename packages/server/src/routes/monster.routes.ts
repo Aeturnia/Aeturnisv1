@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { authenticate } from '../middleware/auth';
 import * as monsterController from '../controllers/monster.controller';
 
 const router = Router();

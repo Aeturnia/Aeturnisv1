@@ -1,22 +1,22 @@
 import { Router } from 'express';
-import { authenticate } from '../middleware/auth';
 import * as npcController from '../controllers/npc.controller';
+import { asyncHandler } from '../middleware/asyncHandler';
 
 const router = Router();
 
 // Test endpoints (no auth required for testing)
-router.get('/test', npcController.testNPCSystem);
+router.get('/test', asyncHandler(npcController.testNPCSystem));
 
 // Get NPCs in a specific zone
-router.get('/zone/:zoneId', npcController.getNPCsInZone);
+router.get('/zone/:zoneId', asyncHandler(npcController.getNPCsInZone));
 
 // Get NPC by ID
-router.get('/:npcId', npcController.getNPCById);
+router.get('/:npcId', asyncHandler(npcController.getNPCById));
 
 // Interact with NPC (no authentication required for testing)
-router.post('/:npcId/interact', npcController.interactWithNPC);
+router.post('/:npcId/interact', asyncHandler(npcController.interactWithNPC));
 
 // Get available interactions for NPC
-router.get('/:npcId/interactions', npcController.getNPCInteractions);
+router.get('/:npcId/interactions', asyncHandler(npcController.getNPCInteractions));
 
 export default router;

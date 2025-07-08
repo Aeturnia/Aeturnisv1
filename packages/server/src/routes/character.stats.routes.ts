@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { CharacterService } from '../services/CharacterService';
 import { StatsService } from '../services/StatsService';
-import { authenticateToken } from '../middleware/auth.middleware';
+import { authenticate as authenticateToken } from '../middleware/auth';
 import { 
   validateStatModification, 
   statModificationRateLimit, 
@@ -79,7 +79,7 @@ router.get('/:id/stats/breakdown/:stat',
   async (req, res) => {
     try {
       const characterId = req.params.id;
-      const statName = req.params.stat as keyof import('../../../../../packages/shared/src/types/character.types').BaseStats;
+      const statName = req.params.stat as keyof import('../types/character.types').BaseStats;
       const userId = (req as any).user.id;
       
       const character = await characterService.getCharacter(characterId);

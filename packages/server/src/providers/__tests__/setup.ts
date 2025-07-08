@@ -1,22 +1,23 @@
 // Test setup for Service Provider tests
+import { vi, beforeEach, afterEach } from 'vitest';
 
 // Mock environment variables
 process.env.NODE_ENV = 'test';
 process.env.USE_MOCKS = 'true';
 
 // Mock logger to reduce noise in tests
-jest.mock('../../utils/logger', () => ({
+vi.mock('../../utils/logger', () => ({
   logger: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn(),
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
   },
 }));
 
 // Clear all mocks before each test
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 // Ensure ServiceProvider is cleared between tests

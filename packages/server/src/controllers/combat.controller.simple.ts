@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
+import { logger } from '../utils/logger';
 
 /**
  * Test Combat System - Simple Mock Implementation
  */
-export const testCombatSystem = async (req: Request, res: Response) => {
+export const testCombatSystem = async (_req: Request, res: Response) => {
   try {
     res.json({
       success: true,
@@ -15,7 +16,7 @@ export const testCombatSystem = async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    console.error('Combat system test error:', error);
+    logger.error('Combat system test error:', error);
     res.status(500).json({
       success: false,
       message: 'Combat system test failed'
@@ -26,7 +27,7 @@ export const testCombatSystem = async (req: Request, res: Response) => {
 /**
  * Get Engine Info - Simple Mock Implementation
  */
-export const getEngineInfo = async (req: Request, res: Response) => {
+export const getEngineInfo = async (_req: Request, res: Response) => {
   try {
     res.json({
       success: true,
@@ -44,7 +45,7 @@ export const getEngineInfo = async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    console.error('Engine info error:', error);
+    logger.error('Engine info error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to get engine info'
@@ -55,7 +56,7 @@ export const getEngineInfo = async (req: Request, res: Response) => {
 /**
  * Get Test Monsters - Simple Mock Implementation
  */
-export const getTestMonsters = async (req: Request, res: Response) => {
+export const getTestMonsters = async (_req: Request, res: Response) => {
   try {
     const testMonsters = [
       {
@@ -96,7 +97,7 @@ export const getTestMonsters = async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    console.error('Get test monsters error:', error);
+    logger.error('Get test monsters error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve test monsters'
@@ -140,7 +141,7 @@ export const startTestCombat = async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    console.error('Start test combat error:', error);
+    logger.error('Start test combat error:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to start combat'

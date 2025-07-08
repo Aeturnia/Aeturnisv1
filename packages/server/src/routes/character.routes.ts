@@ -4,6 +4,7 @@ import { CharacterService } from '../services/CharacterService';
 import { StatsService } from '../services/StatsService';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { validateRequest } from '../middleware/validateRequest';
 import { CharacterRace, CharacterClass, CharacterGender } from '../types/character.types';
 
 const router = Router();
@@ -14,7 +15,7 @@ router.get(
   '/',
   authenticate,
   asyncHandler(async (req: AuthRequest, res) => {
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
     const characters = await characterService.getCharactersByAccount(userId);
     
     res.json({
@@ -32,9 +33,10 @@ router.get(
   '/:id',
   authenticate,
   param('id').isUUID('4').withMessage('Invalid character ID'),
-  asyncHandler(async (req, res) => {
+  validateRequest,
+  asyncHandler(async (req: AuthRequest, res) => {
     const { id } = req.params;
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
     
     const result = await characterService.getCharacterWithStats(id);
     if (!result) {
@@ -82,8 +84,9 @@ router.post(
       .isObject()
       .withMessage('Appearance must be an object')
   ],
-  asyncHandler(async (req, res) => {
-    const userId = req.user!.id;
+  validateRequest,
+  asyncHandler(async (req: AuthRequest, res) => {
+    const userId = req.user!.userId;
     const { name, race, class: characterClass, gender, appearance } = req.body;
 
     try {
@@ -100,7 +103,7 @@ router.post(
         data: character
       });
     } catch (error) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         error: error instanceof Error ? error.message : 'Failed to create character'
       });
@@ -113,9 +116,10 @@ router.delete(
   '/:id',
   authenticate,
   param('id').isUUID('4').withMessage('Invalid character ID'),
-  asyncHandler(async (req, res) => {
+  validateRequest,
+  asyncHandler(async (req: AuthRequest, res) => {
     const { id } = req.params;
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
 
     const success = await characterService.deleteCharacter(id, userId);
     if (!success) {
@@ -144,10 +148,11 @@ router.patch(
     body('z').isNumeric().withMessage('Z coordinate must be numeric'),
     body('rotation').optional().isNumeric().withMessage('Rotation must be numeric')
   ],
-  asyncHandler(async (req, res) => {
+  validateRequest,
+  asyncHandler(async (req: AuthRequest, res) => {
     const { id } = req.params;
     const { zone, x, y, z, rotation } = req.body;
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
 
     // Verify ownership first
     const character = await characterService.getCharacter(id);
@@ -177,10 +182,11 @@ router.post(
     param('id').isUUID('4').withMessage('Invalid character ID'),
     body('amount').isNumeric().withMessage('Experience amount must be numeric')
   ],
-  asyncHandler(async (req, res) => {
+  validateRequest,
+  asyncHandler(async (req: AuthRequest, res) => {
     const { id } = req.params;
     const { amount } = req.body;
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
 
     // Verify ownership
     const character = await characterService.getCharacter(id);
@@ -214,10 +220,11 @@ router.post(
       .withMessage('Invalid stat'),
     body('points').isInt({ min: 1, max: 10 }).withMessage('Points must be between 1 and 10')
   ],
-  asyncHandler(async (req, res) => {
+  validateRequest,
+  asyncHandler(async (req: AuthRequest, res) => {
     const { id } = req.params;
     const { stat, points } = req.body;
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
 
     // Verify ownership
     const character = await characterService.getCharacter(id);
@@ -253,10 +260,11 @@ router.patch(
     body('mp').optional().isNumeric().withMessage('MP must be numeric'),
     body('stamina').optional().isNumeric().withMessage('Stamina must be numeric')
   ],
-  asyncHandler(async (req, res) => {
+  validateRequest,
+  asyncHandler(async (req: AuthRequest, res) => {
     const { id } = req.params;
     const { hp, mp, stamina } = req.body;
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
 
     // Verify ownership
     const character = await characterService.getCharacter(id);
@@ -286,9 +294,10 @@ router.post(
   '/:id/prestige',
   authenticate,
   param('id').isUUID('4').withMessage('Invalid character ID'),
-  asyncHandler(async (req, res) => {
+  validateRequest,
+  asyncHandler(async (req: AuthRequest, res) => {
     const { id } = req.params;
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
 
     // Verify ownership
     const character = await characterService.getCharacter(id);
@@ -323,10 +332,11 @@ router.post(
     param('id').isUUID('4').withMessage('Invalid character ID'),
     body('distribution').isObject().withMessage('Distribution must be an object')
   ],
-  asyncHandler(async (req, res) => {
+  validateRequest,
+  asyncHandler(async (req: AuthRequest, res) => {
     const { id } = req.params;
     const { distribution } = req.body;
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
 
     // Verify ownership
     const character = await characterService.getCharacter(id);
@@ -391,6 +401,7 @@ router.post(
       .isLength({ min: 3, max: 32 })
       .withMessage('Name must be between 3 and 32 characters')
   ],
+  validateRequest,
   asyncHandler(async (req, res) => {
     const { name } = req.body;
     
@@ -407,6 +418,7 @@ router.post(
 router.get(
   '/appearance/:race',
   param('race').isIn(Object.values(CharacterRace)).withMessage('Invalid race'),
+  validateRequest,
   asyncHandler(async (req, res) => {
     const { race } = req.params;
     
@@ -424,9 +436,10 @@ router.patch(
   '/:id/last-played',
   authenticate,
   param('id').isUUID('4').withMessage('Invalid character ID'),
-  asyncHandler(async (req, res) => {
+  validateRequest,
+  asyncHandler(async (req: AuthRequest, res) => {
     const { id } = req.params;
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
 
     // Verify ownership
     const character = await characterService.getCharacter(id);
@@ -451,9 +464,10 @@ router.get(
   '/:id/stats',
   authenticate,
   param('id').isUUID('4').withMessage('Invalid character ID'),
-  asyncHandler(async (req, res) => {
+  validateRequest,
+  asyncHandler(async (req: AuthRequest, res) => {
     const { id } = req.params;
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
 
     const character = await characterService.getCharacter(id);
     if (!character || character.accountId !== userId) {

@@ -11,7 +11,7 @@ interface TestState {
 }
 
 export const CombatPanel: React.FC = () => {
-  const { token, isAuthenticated } = useAuth();
+  const { token } = useAuth();
   const api = useApi(token);
   
   const [combatEngineTest, setCombatEngineTest] = useState<TestState>({ loading: false, response: '', success: false });

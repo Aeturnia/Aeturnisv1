@@ -1,19 +1,23 @@
 import { eq, desc, sql } from 'drizzle-orm';
 import { db } from '../database/config';
 import { characters, transactions } from '../database/schema';
-import { redis } from '../utils/redis';
-import { Transaction, TransactionType, TransactionMetadata } from '../types/currency';
+import { cacheService } from './index';
+import { Transaction, TransactionType } from '../types/currency';
+import type { TransactionMetadata } from '../database/schema';
 import { logger } from '../utils/logger';
 
 export class CurrencyService {
   private readonly CACHE_TTL = 300; // 5 minutes
+  private cacheService = cacheService;
+  
+  constructor() {}
 
   async getBalance(characterId: string): Promise<number> {
     const cacheKey = `currency:balance:${characterId}`;
-    const cached = await redis.get(cacheKey);
+    const cached = await this.cacheService.get<number>(cacheKey);
     
     if (cached !== null) {
-      return parseInt(cached);
+      return cached;
     }
 
     const [character] = await db
@@ -25,7 +29,7 @@ export class CurrencyService {
       throw new Error('Character not found');
     }
 
-    await redis.setex(cacheKey, this.CACHE_TTL, character.gold.toString());
+    await this.cacheService.set(cacheKey, character.gold, this.CACHE_TTL);
     return character.gold;
   }
 
@@ -81,7 +85,7 @@ export class CurrencyService {
         .returning();
 
       // Invalidate cache
-      await redis.del(`currency:balance:${characterId}`);
+      await this.cacheService.delete(`currency:balance:${characterId}`);
 
       logger.info('Currency transaction completed', {
         characterId,

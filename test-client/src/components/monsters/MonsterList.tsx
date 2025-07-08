@@ -15,14 +15,12 @@ interface MonsterListProps {
   monsters: Monster[];
   onAction: (monsterId: string, action: string, data?: any) => void;
   loading: boolean;
-  isAuthenticated: boolean;
 }
 
 export const MonsterList: React.FC<MonsterListProps> = ({
   monsters,
   onAction,
   loading,
-  isAuthenticated,
 }) => {
   const getHealthPercentage = (current: number, max: number) => {
     return Math.round((current / max) * 100);

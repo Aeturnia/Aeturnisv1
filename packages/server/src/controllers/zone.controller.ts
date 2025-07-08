@@ -4,14 +4,14 @@
  */
 
 import { Request, Response } from 'express';
-import { ZoneListResponse, ZoneDetailsResponse } from '@aeturnis/shared/types/zone.types';
+import { ZoneListResponse, ZoneDetailsResponse } from '@aeturnis/shared';
 import { logger } from '../utils/logger';
 
 /**
  * Get all zones
  * GET /api/v1/zones
  */
-export const getAllZones = async (req: Request, res: Response): Promise<void> => {
+export const getAllZones = async (_req: Request, res: Response): Promise<void> => {
   try {
     // Mock response - in production this would use ServiceProvider
     const mockZones = [
@@ -204,7 +204,7 @@ export const getZoneById = async (req: Request, res: Response): Promise<void> =>
  * Get test zone data
  * GET /api/v1/zones/test
  */
-export const getTestZones = async (req: Request, res: Response): Promise<void> => {
+export const getTestZones = async (_req: Request, res: Response): Promise<void> => {
   try {
     const testData = {
       message: "Zone Service Test - Mock Data",
