@@ -48,7 +48,7 @@ export { MockProgressionService } from '../services/mock/MockProgressionService'
  * Initialize providers based on configuration
  * This is a helper function that can be called during server startup
  */
-export async function initializeProviders(useMocks: boolean): Promise<void> {
+export async function initializeProviders(_useMocks: boolean): Promise<void> {
   const { ServiceProvider } = await import('./ServiceProvider');
   const provider = ServiceProvider.getInstance();
 

@@ -18,10 +18,12 @@ export interface Transaction {
 export type TransactionType = 'deposit' | 'withdraw' | 'transfer' | 'purchase' | 'sale' | 'reward' | 'quest' | 'trade';
 
 export interface TransactionMetadata {
-  itemId?: number;
+  itemId?: number | string;
   itemName?: string;
   quantity?: number;
   unitPrice?: number;
+  unitCost?: number;
+  unitValue?: number;
   source?: string;
   destination?: string;
   transferType?: 'send' | 'receive';
@@ -29,6 +31,10 @@ export interface TransactionMetadata {
   npcId?: number;
   shopId?: number;
   tradeId?: string;
+  fee?: number;
+  sender?: string;
+  recipient?: string;
+  vendor?: string;
 }
 
 export interface TransferRequest {

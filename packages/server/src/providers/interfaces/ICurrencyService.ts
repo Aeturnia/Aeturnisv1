@@ -5,6 +5,42 @@ import { Transaction, TransactionType, TransactionMetadata } from '../../types/c
 export { Transaction, TransactionType, TransactionMetadata };
 
 /**
+ * Currency balance with denominations
+ */
+export interface CurrencyBalance {
+  characterId: string;
+  gold: bigint;
+  silver: bigint;
+  copper: bigint;
+  totalInCopper: bigint;
+  lastUpdated: Date;
+}
+
+/**
+ * Currency operation result
+ */
+export interface CurrencyOperationResult {
+  success: boolean;
+  previousBalance: bigint;
+  newBalance: bigint;
+  amount: bigint;
+  transactionId: string;
+  message?: string;
+}
+
+/**
+ * Transfer result
+ */
+export interface TransferResult {
+  success: boolean;
+  senderNewBalance: bigint;
+  recipientNewBalance: bigint;
+  fee: bigint;
+  transactionId: string;
+  message?: string;
+}
+
+/**
  * Transaction statistics
  */
 export interface TransactionStats {
@@ -22,11 +58,58 @@ export interface TransactionStats {
  */
 export interface ICurrencyService {
   /**
-   * Get gold balance for a character
+   * Get balance with currency denominations for a character
    * @param characterId - The character to check
-   * @returns Current gold balance
+   * @returns Currency balance with denominations
    */
-  getBalance(characterId: string): Promise<number>;
+  getBalance(characterId: string): Promise<CurrencyBalance>;
+
+  /**
+   * Add currency to a character's balance
+   * @param characterId - The character
+   * @param amount - Amount to add (in copper)
+   * @param source - Source of the currency
+   * @param metadata - Optional metadata
+   * @returns Operation result
+   */
+  addCurrency(
+    characterId: string,
+    amount: bigint,
+    source: string,
+    metadata?: TransactionMetadata
+  ): Promise<CurrencyOperationResult>;
+
+  /**
+   * Deduct currency from a character's balance
+   * @param characterId - The character
+   * @param amount - Amount to deduct (in copper)
+   * @param reason - Reason for deduction
+   * @param metadata - Optional metadata
+   * @returns Operation result
+   */
+  deductCurrency(
+    characterId: string,
+    amount: bigint,
+    reason: string,
+    metadata?: TransactionMetadata
+  ): Promise<CurrencyOperationResult>;
+
+  /**
+   * Transfer currency between characters
+   * @param fromCharacterId - Sending character
+   * @param toCharacterId - Receiving character
+   * @param amount - Amount to transfer (in copper)
+   * @param description - Optional description
+   * @param applyFee - Whether to apply transfer fee (default: true)
+   * @returns Transfer result
+   */
+  transferCurrency(
+    fromCharacterId: string,
+    toCharacterId: string,
+    amount: bigint,
+    description?: string,
+    applyFee?: boolean
+  ): Promise<TransferResult>;
 
   /**
    * Modify character's balance (core method)
@@ -128,4 +211,28 @@ export interface ICurrencyService {
     quantity?: number,
     vendorId?: string
   ): Promise<Transaction>;
+
+  /**
+   * Format currency amount into human-readable string
+   * @param amount - Amount in copper
+   * @returns Formatted string (e.g., "1g 23s 45c")
+   */
+  formatCurrency(amount: bigint): string;
+
+  /**
+   * Convert currency between denominations
+   * @param amount - Amount to convert
+   * @param from - Source denomination ('gold', 'silver', 'copper')
+   * @param to - Target denomination ('gold', 'silver', 'copper')
+   * @returns Converted amount
+   */
+  convertCurrency(amount: bigint, from: 'gold' | 'silver' | 'copper', to: 'gold' | 'silver' | 'copper'): bigint;
+
+  /**
+   * Check if character can afford an amount
+   * @param characterId - The character to check
+   * @param amount - Amount to check (in copper)
+   * @returns True if character has enough currency
+   */
+  canAfford(characterId: string, amount: bigint): Promise<boolean>;
 }

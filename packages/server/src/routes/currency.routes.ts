@@ -7,7 +7,7 @@ import { logger } from '../utils/logger';
 const router = Router();
 
 // Test endpoint for visual testing interface
-router.get('/test-balance', (req: Request, res: Response) => {
+router.get('/test-balance', (_req: Request, res: Response) => {
   res.json({
     success: true,
     message: 'Currency system is operational',
@@ -72,7 +72,8 @@ router.post('/transfer',
         fromCharacterId,
         toCharacterId,
         BigInt(amount),
-        true // includeFee
+        description,
+        true // applyFee
       );
 
       return res.json({
@@ -81,8 +82,8 @@ router.post('/transfer',
           from: fromCharacterId,
           to: toCharacterId,
           amount: amount.toString(),
-          senderNewBalance: result.fromBalance.toString(),
-          receiverNewBalance: result.toBalance.toString(),
+          senderNewBalance: result.senderNewBalance.toString(),
+          receiverNewBalance: result.recipientNewBalance.toString(),
           fee: result.fee.toString(),
           timestamp: new Date().toISOString(),
         }
@@ -135,8 +136,8 @@ router.get('/characters/:characterId/transactions',
           balanceBefore: tx.balanceBefore.toString(),
           balanceAfter: tx.balanceAfter.toString(),
           description: tx.description,
-          source: tx.source,
-          timestamp: tx.timestamp,
+          metadata: tx.metadata,
+          timestamp: tx.createdAt.toISOString(),
         })),
         pagination: {
           limit,
@@ -213,22 +214,21 @@ router.post('/admin/reward',
     try {
       const { characterId, amount, source, metadata } = req.body;
       const currencyService = ServiceProvider.getInstance().get<ICurrencyService>('CurrencyService');
-      const transaction = await currencyService.addCurrency(
+      const result = await currencyService.addCurrency(
         characterId,
         BigInt(amount),
         source,
-        metadata?.description
+        metadata
       );
 
       return res.json({
         success: true,
         transaction: {
-          id: transaction.id,
-          characterId: transaction.characterId,
+          transactionId: result.transactionId,
+          characterId: characterId,
           amount: amount.toString(),
-          newBalance: transaction.newBalance.toString(),
+          newBalance: result.newBalance.toString(),
           source,
-          transactionId: transaction.transactionId,
           timestamp: new Date().toISOString(),
         }
       });

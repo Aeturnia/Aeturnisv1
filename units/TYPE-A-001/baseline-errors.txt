@@ -1,50 +1,8 @@
-src/controllers/combat.controller.ts(5,1): error TS6192: All imports in import declaration are unused.
-src/controllers/combat.controller.ts(14,3): error TS6133: 'validateCombatAction' is declared but its value is never read.
-src/controllers/combat.controller.ts(15,3): error TS6133: 'safeBigIntToNumber' is declared but its value is never read.
-src/controllers/combat.controller.ts(32,38): error TS6133: 'req' is declared but its value is never read.
-src/controllers/combat.controller.ts(122,46): error TS2339: Property 'status' does not exist on type 'CombatSession'.
-src/controllers/combat.controller.ts(122,100): error TS2339: Property 'roundNumber' does not exist on type 'CombatSession'.
-src/controllers/combat.controller.ts(122,169): error TS2339: Property 'charId' does not exist on type 'Combatant'.
-src/controllers/combat.controller.ts(122,208): error TS2551: Property 'currentTurnIndex' does not exist on type 'CombatSession'. Did you mean 'currentTurn'?
-src/controllers/combat.controller.ts(122,233): error TS2339: Property 'charName' does not exist on type 'Combatant'.
-src/controllers/combat.controller.ts(214,27): error TS2722: Cannot invoke an object which is possibly 'undefined'.
-src/controllers/combat.controller.ts(214,27): error TS18048: 'combatService.getActiveCombat' is possibly 'undefined'.
-src/controllers/combat.controller.ts(218,24): error TS2339: Property 'status' does not exist on type 'CombatSession'.
-src/controllers/combat.controller.ts(238,58): error TS2345: Argument of type '{ type: CombatActionType; targetCharId: any; timestamp: number; }' is not assignable to parameter of type 'CombatAction'.
-src/controllers/combat.controller.ts(301,7): error TS2783: 'success' is specified more than once, so this usage will be overwritten.
-src/controllers/combat.controller.ts(340,11): error TS6133: 'actorId' is declared but its value is never read.
-src/controllers/combat.controller.ts(352,58): error TS2345: Argument of type '{ type: string; timestamp: number; }' is not assignable to parameter of type 'CombatAction'.
-src/controllers/combat.controller.ts(389,7): error TS2783: 'success' is specified more than once, so this usage will be overwritten.
-src/controllers/combat.controller.ts(420,19): error TS2304: Cannot find name 'battleType'.
-src/controllers/combat.controller.ts(432,27): error TS2722: Cannot invoke an object which is possibly 'undefined'.
-src/controllers/combat.controller.ts(432,27): error TS18048: 'combatService.initiateCombat' is possibly 'undefined'.
-src/controllers/combat.controller.ts(524,27): error TS2722: Cannot invoke an object which is possibly 'undefined'.
-src/controllers/combat.controller.ts(524,27): error TS18048: 'combatService.initiateCombat' is possibly 'undefined'.
-src/controllers/combat.controller.ts(532,50): error TS2551: Property 'currentTurnIndex' does not exist on type 'CombatSession'. Did you mean 'currentTurn'?
-src/controllers/combat.controller.ts(554,27): error TS2722: Cannot invoke an object which is possibly 'undefined'.
-src/controllers/combat.controller.ts(554,27): error TS18048: 'combatService.getActiveCombat' is possibly 'undefined'.
-src/controllers/combat.controller.ts(567,27): error TS2339: Property 'status' does not exist on type 'CombatSession'.
-src/controllers/combat.controller.ts(568,30): error TS2339: Property 'status' does not exist on type 'CombatSession'.
-src/controllers/combat.controller.ts(569,45): error TS2551: Property 'currentTurnIndex' does not exist on type 'CombatSession'. Did you mean 'currentTurn'?
-src/controllers/combat.controller.ts(570,32): error TS2339: Property 'roundNumber' does not exist on type 'CombatSession'.
-src/controllers/combat.controller.ts(610,35): error TS2722: Cannot invoke an object which is possibly 'undefined'.
-src/controllers/combat.controller.ts(610,35): error TS18048: 'combatService.getActiveCombat' is possibly 'undefined'.
-src/controllers/combat.controller.ts(619,25): error TS2339: Property 'status' does not exist on type 'CombatSession'.
-src/controllers/combat.controller.ts(629,58): error TS2345: Argument of type 'import("/home/runner/workspace/packages/server/src/types/combat.types").CombatAction' is not assignable to parameter of type 'import("/home/runner/workspace/packages/server/src/providers/interfaces/ICombatService").CombatAction'.
-src/controllers/combat.controller.ts(633,27): error TS2722: Cannot invoke an object which is possibly 'undefined'.
-src/controllers/combat.controller.ts(633,27): error TS18048: 'combatService.getActiveCombat' is possibly 'undefined'.
-src/controllers/combat.controller.ts(678,35): error TS2722: Cannot invoke an object which is possibly 'undefined'.
-src/controllers/combat.controller.ts(678,35): error TS18048: 'combatService.getActiveCombat' is possibly 'undefined'.
-src/controllers/combat.controller.ts(687,25): error TS2339: Property 'status' does not exist on type 'CombatSession'.
-src/controllers/combat.controller.ts(694,26): error TS2722: Cannot invoke an object which is possibly 'undefined'.
-src/controllers/combat.controller.ts(694,26): error TS18048: 'combatService.endCombat' is possibly 'undefined'.
-src/controllers/combat.controller.ts(694,61): error TS2345: Argument of type '{ reason: "flee"; survivors: string[]; }' is not assignable to parameter of type 'CombatOutcome'.
-src/controllers/combat.controller.ts(714,11): error TS6133: 'charId' is declared but its value is never read.
-src/controllers/combat.controller.ts(742,11): error TS6133: 'charId' is declared but its value is never read.
-src/controllers/combat.controller.ts(837,40): error TS6133: 'req' is declared but its value is never read.
-src/controllers/combat.controller.ts(839,25): error TS2304: Cannot find name 'CombatService'.
-src/controllers/combat.controller.ts(895,39): error TS6133: 'req' is declared but its value is never read.
-src/controllers/combat.controller.ts(897,22): error TS2304: Cannot find name 'testMonsterService'.
-src/controllers/combat.controller.ts(900,39): error TS7006: Parameter 'monster' implicitly has an 'any' type.
-src/controllers/combat.controller.ts(930,46): error TS6133: 'req' is declared but its value is never read.
-src/controllers/combat.controller.ts(932,25): error TS2304: Cannot find name 'CombatService'.
+
+> @aeturnis/monorepo@1.0.0 typecheck
+> npm run typecheck --workspaces --if-present
+
+
+> @aeturnis/server@1.0.0 typecheck
+> tsc --noEmit
+

@@ -315,7 +315,7 @@ export const lootHistory = pgTable('loot_history', {
 });
 
 // Death, Loot, and Respawn Relations
-export const respawnPointsRelations = relations(respawnPoints, ({ many }) => ({
+export const respawnPointsRelations = relations(respawnPoints, ({}) => ({
   // Future: respawns: many(characterRespawns),
 }));
 

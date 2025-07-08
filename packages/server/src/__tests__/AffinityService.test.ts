@@ -13,7 +13,7 @@ import {
   TrackWeaponUseRequest,
   TrackMagicUseRequest,
   GetAffinitySummaryRequest
-} from '@aeturnis/shared';
+} from '../../../shared/types/affinity.types';
 
 describe('MockAffinityService', () => {
   let affinityService: MockAffinityService;

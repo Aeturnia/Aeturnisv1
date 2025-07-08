@@ -1,24 +1,16 @@
 import { eq, desc, sql } from 'drizzle-orm';
 import { db } from '../database/config';
 import { characters, transactions } from '../database/schema';
-import { CacheService } from './CacheService';
-import { Transaction, TransactionType, TransactionMetadata } from '../types/currency';
+import { cacheService } from './index';
+import { Transaction, TransactionType } from '../types/currency';
+import type { TransactionMetadata } from '../database/schema';
 import { logger } from '../utils/logger';
-import { 
-  ServiceError,
-  ValidationError,
-  DatabaseError
-} from '../utils/errors';
-import { 
-  safeBigIntToNumber,
-  safeNumberToBigInt,
-  assertServiceDefined
-} from '../utils/validators';
 
 export class CurrencyService {
   private readonly CACHE_TTL = 300; // 5 minutes
+  private cacheService = cacheService;
   
-  constructor(private cacheService: CacheService) {}
+  constructor() {}
 
   async getBalance(characterId: string): Promise<number> {
     const cacheKey = `currency:balance:${characterId}`;

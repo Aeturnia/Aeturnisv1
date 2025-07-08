@@ -1,0 +1,276 @@
+
+> @aeturnis/monorepo@1.0.0 typecheck
+> npm run typecheck --workspaces --if-present
+
+
+> @aeturnis/server@1.0.0 typecheck
+> tsc --noEmit
+
+src/database/schema/index.ts(318,65): error TS6133: 'many' is declared but its value is never read.
+src/providers/real/RealCombatService.ts(6,3): error TS6133: 'DamageResult' is declared but its value is never read.
+src/providers/real/RealCombatService.ts(7,3): error TS6133: 'Combatant' is declared but its value is never read.
+src/providers/real/RealCombatService.ts(8,3): error TS6133: 'CombatOutcome' is declared but its value is never read.
+src/providers/real/RealCombatService.ts(9,3): error TS6133: 'StatusEffect' is declared but its value is never read.
+src/providers/real/RealCombatService.ts(10,3): error TS6133: 'Skill' is declared but its value is never read.
+src/providers/real/RealCombatService.ts(11,3): error TS6133: 'CombatSessionNew' is declared but its value is never read.
+src/providers/real/RealCombatService.ts(12,3): error TS6133: 'CombatActionNew' is declared but its value is never read.
+src/providers/real/RealCombatService.ts(13,3): error TS6133: 'CombatResultNew' is declared but its value is never read.
+src/providers/real/RealCombatService.ts(18,3): error TS6133: 'DamageType' is declared but its value is never read.
+src/providers/real/RealCombatService.ts(19,3): error TS6133: 'LegacyCombatSession' is declared but its value is never read.
+src/providers/real/RealCombatService.ts(20,3): error TS6133: 'LegacyCombatant' is declared but its value is never read.
+src/providers/real/RealCombatService.ts(21,3): error TS6133: 'LegacyCombatAction' is declared but its value is never read.
+src/providers/real/RealCombatService.ts(22,3): error TS6133: 'LegacyCombatResult' is declared but its value is never read.
+src/providers/real/RealCombatService.ts(174,17): error TS6133: 'getAllActiveSessions' is declared but its value is never read.
+src/providers/real/RealNPCService.ts(13,15): error TS6133: 'cacheService' is declared but its value is never read.
+src/providers/real/RealNPCService.ts(18,5): error TS2322: Type '{ id: string; name: string; type: string; position: { x: number; y: number; }; }[]' is not assignable to type 'NPC[]'.
+  Type '{ id: string; name: string; type: string; position: { x: number; y: number; }; }' is missing the following properties from type 'NPC': displayName, zoneId, isQuestGiver, metadata
+src/providers/real/RealNPCService.ts(22,5): error TS2740: Type '{ interaction: any; dialogue: any; }' is missing the following properties from type 'NPCInteraction': id, npcId, characterId, interactionType, and 2 more.
+src/providers/real/RealNPCService.ts(34,5): error TS2322: Type '{ id: string; name: string; questIds: string[]; location: { zone: string; position: { x: number; y: number; }; }; }[]' is not assignable to type 'NPC[]'.
+  Type '{ id: string; name: string; questIds: string[]; location: { zone: string; position: { x: number; y: number; }; }; }' is missing the following properties from type 'NPC': displayName, type, zoneId, position, and 2 more.
+src/providers/real/RealNPCService.ts(38,5): error TS2322: Type '{ id: string; npcId: string; timestamp: Date; interactionType: string; data: Record<string, unknown>; }[]' is not assignable to type 'NPCInteraction[]'.
+  Type '{ id: string; npcId: string; timestamp: Date; interactionType: string; data: Record<string, unknown>; }' is missing the following properties from type 'NPCInteraction': characterId, dialogueState, createdAt
+src/providers/real/RealNPCService.ts(50,5): error TS2322: Type 'Record<string, unknown> | null' is not assignable to type 'NPC | null'.
+  Type 'Record<string, unknown>' is missing the following properties from type 'NPC': id, name, displayName, type, and 4 more.
+src/providers/real/RealNPCService.ts(54,5): error TS2322: Type '{ id: string; name: string; shopType: string; inventory: unknown[]; location: { zone: string; position: { x: number; y: number; }; }; }[]' is not assignable to type 'NPC[]'.
+  Type '{ id: string; name: string; shopType: string; inventory: unknown[]; location: { zone: string; position: { x: number; y: number; }; }; }' is missing the following properties from type 'NPC': displayName, type, zoneId, position, and 2 more.
+src/providers/real/RealSpawnService.ts(19,11): error TS6133: 'spawnService' is declared but its value is never read.
+src/repositories/CharacterRepository.ts(42,7): error TS2769: No overload matches this call.
+  Overload 2 of 2, '(values: { name: string | SQL<unknown> | Placeholder<string, any>; accountId: string | SQL<unknown> | Placeholder<string, any>; race: CharacterRace | SQL<...> | Placeholder<...>; ... 44 more ...; lastPlayedAt?: Date | ... 3 more ... | undefined; }[]): PgInsertBase<...>', gave the following error.
+    Object literal may only specify known properties, and 'accountId' does not exist in type '{ name: string | SQL<unknown> | Placeholder<string, any>; accountId: string | SQL<unknown> | Placeholder<string, any>; race: CharacterRace | SQL<...> | Placeholder<...>; ... 44 more ...; lastPlayedAt?: Date | ... 3 more ... | undefined; }[]'.
+src/repositories/EquipmentRepository.ts(1,28): error TS6133: 'desc' is declared but its value is never read.
+src/repositories/EquipmentRepository.ts(18,3): error TS6196: 'ItemSet' is declared but never used.
+src/repositories/EquipmentRepository.ts(19,3): error TS6196: 'ItemSetBonus' is declared but never used.
+src/repositories/EquipmentRepository.ts(33,10): error TS2339: Property 'select' does not exist on type 'Pool'.
+src/repositories/EquipmentRepository.ts(50,10): error TS2339: Property 'select' does not exist on type 'Pool'.
+src/repositories/EquipmentRepository.ts(64,10): error TS2339: Property 'select' does not exist on type 'Pool'.
+src/repositories/EquipmentRepository.ts(69,21): error TS7006: Parameter 'stat' implicitly has an 'any' type.
+src/repositories/EquipmentRepository.ts(96,10): error TS2339: Property 'select' does not exist on type 'Pool'.
+src/repositories/EquipmentRepository.ts(100,28): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/repositories/EquipmentRepository.ts(116,16): error TS2339: Property 'transaction' does not exist on type 'Pool'.
+src/repositories/EquipmentRepository.ts(116,35): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/repositories/EquipmentRepository.ts(144,10): error TS2339: Property 'delete' does not exist on type 'Pool'.
+src/repositories/EquipmentRepository.ts(166,10): error TS2339: Property 'update' does not exist on type 'Pool'.
+src/repositories/EquipmentRepository.ts(187,10): error TS2339: Property 'select' does not exist on type 'Pool'.
+src/repositories/EquipmentRepository.ts(192,28): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/repositories/EquipmentRepository.ts(217,16): error TS2339: Property 'insert' does not exist on type 'Pool'.
+src/repositories/EquipmentRepository.ts(245,10): error TS2339: Property 'update' does not exist on type 'Pool'.
+src/repositories/EquipmentRepository.ts(262,10): error TS2339: Property 'delete' does not exist on type 'Pool'.
+src/repositories/EquipmentRepository.ts(281,16): error TS2339: Property 'transaction' does not exist on type 'Pool'.
+src/repositories/EquipmentRepository.ts(281,35): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/repositories/EquipmentRepository.ts(353,10): error TS2339: Property 'select' does not exist on type 'Pool'.
+src/repositories/EquipmentRepository.ts(357,50): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/repositories/EquipmentRepository.ts(382,10): error TS2339: Property 'select' does not exist on type 'Pool'.
+src/repositories/EquipmentRepository.ts(394,48): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/repositories/EquipmentRepository.ts(398,10): error TS2339: Property 'select' does not exist on type 'Pool'.
+src/repositories/EquipmentRepository.ts(400,16): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(column: Aliased<unknown>, values: SQLWrapper | unknown[]): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "set_id"; tableName: "item_set_pieces"; dataType: "number"; columnType: "PgInteger"; data: number; driverParam: string | number; notNull: true; hasDefault: false; isPrimaryKey: false; ... 5 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'Aliased<unknown>'.
+      Type 'PgColumn<{ name: "set_id"; tableName: "item_set_pieces"; dataType: "number"; columnType: "PgInteger"; data: number; driverParam: string | number; notNull: true; hasDefault: false; isPrimaryKey: false; ... 5 more ...; generated: undefined; }, {}, {}>' is missing the following properties from type 'Aliased<unknown>': sql, fieldAlias
+  Overload 2 of 3, '(column: PgColumn<{ name: "set_id"; tableName: "item_set_pieces"; dataType: "number"; columnType: "PgInteger"; data: number; driverParam: string | number; notNull: true; hasDefault: false; isPrimaryKey: false; ... 5 more ...; generated: undefined; }, {}, {}>, values: SQLWrapper | (number | Placeholder<...>)[]): SQL<...>', gave the following error.
+    Argument of type 'unknown[]' is not assignable to parameter of type 'SQLWrapper | (number | Placeholder<string, any>)[]'.
+      Type 'unknown[]' is not assignable to type '(number | Placeholder<string, any>)[]'.
+        Type 'unknown' is not assignable to type 'number | Placeholder<string, any>'.
+  Overload 3 of 3, '(column: never, values: SQLWrapper | unknown[]): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "set_id"; tableName: "item_set_pieces"; dataType: "number"; columnType: "PgInteger"; data: number; driverParam: string | number; notNull: true; hasDefault: false; isPrimaryKey: false; ... 5 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'never'.
+src/repositories/EquipmentRepository.ts(404,10): error TS2339: Property 'select' does not exist on type 'Pool'.
+src/repositories/EquipmentRepository.ts(406,16): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(column: Aliased<unknown>, values: SQLWrapper | unknown[]): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "set_id"; tableName: "item_set_bonuses"; dataType: "number"; columnType: "PgInteger"; data: number; driverParam: string | number; notNull: true; hasDefault: false; isPrimaryKey: false; ... 5 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'Aliased<unknown>'.
+      Type 'PgColumn<{ name: "set_id"; tableName: "item_set_bonuses"; dataType: "number"; columnType: "PgInteger"; data: number; driverParam: string | number; notNull: true; hasDefault: false; isPrimaryKey: false; ... 5 more ...; generated: undefined; }, {}, {}>' is missing the following properties from type 'Aliased<unknown>': sql, fieldAlias
+  Overload 2 of 3, '(column: PgColumn<{ name: "set_id"; tableName: "item_set_bonuses"; dataType: "number"; columnType: "PgInteger"; data: number; driverParam: string | number; notNull: true; hasDefault: false; isPrimaryKey: false; ... 5 more ...; generated: undefined; }, {}, {}>, values: SQLWrapper | (number | Placeholder<...>)[]): SQL<...>', gave the following error.
+    Argument of type 'unknown[]' is not assignable to parameter of type 'SQLWrapper | (number | Placeholder<string, any>)[]'.
+      Type 'unknown[]' is not assignable to type '(number | Placeholder<string, any>)[]'.
+        Type 'unknown' is not assignable to type 'number | Placeholder<string, any>'.
+  Overload 3 of 3, '(column: never, values: SQLWrapper | unknown[]): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "set_id"; tableName: "item_set_bonuses"; dataType: "number"; columnType: "PgInteger"; data: number; driverParam: string | number; notNull: true; hasDefault: false; isPrimaryKey: false; ... 5 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'never'.
+src/repositories/EquipmentRepository.ts(412,40): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/repositories/EquipmentRepository.ts(413,48): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/repositories/EquipmentRepository.ts(413,76): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/repositories/EquipmentRepository.ts(414,49): error TS7006: Parameter 'id' implicitly has an 'any' type.
+src/repositories/EquipmentRepository.ts(415,43): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/repositories/EquipmentRepository.ts(417,17): error TS2538: Type 'unknown' cannot be used as an index type.
+src/repositories/EquipmentRepository.ts(424,32): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/repositories/EquipmentRepository.ts(446,10): error TS2339: Property 'select' does not exist on type 'Pool'.
+src/repositories/EquipmentRepository.ts(472,12): error TS2339: Property 'insert' does not exist on type 'Pool'.
+src/repositories/EquipmentRepository.ts(488,28): error TS6133: 'charId' is declared but its value is never read.
+src/repositories/EquipmentRepository.ts(502,10): error TS2339: Property 'select' does not exist on type 'Pool'.
+src/repositories/EquipmentRepository.ts(510,32): error TS7006: Parameter 'total' implicitly has an 'any' type.
+src/repositories/EquipmentRepository.ts(510,39): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/repositories/death.repository.ts(20,24): error TS2339: Property 'increment' does not exist on type 'NodePgDatabase<typeof import("/home/runner/workspace/packages/server/src/database/schema/index")> & { $client: Pool; }'.
+src/repositories/death.repository.ts(88,24): error TS2339: Property 'decrement' does not exist on type 'NodePgDatabase<typeof import("/home/runner/workspace/packages/server/src/database/schema/index")> & { $client: Pool; }'.
+src/repositories/death.repository.ts(104,18): error TS2339: Property 'decrement' does not exist on type 'NodePgDatabase<typeof import("/home/runner/workspace/packages/server/src/database/schema/index")> & { $client: Pool; }'.
+src/repositories/loot.repository.ts(8,3): error TS6133: 'ILootDrop' is declared but its value is never read.
+src/repositories/loot.repository.ts(10,1): error TS6133: 'NotFoundError' is declared but its value is never read.
+src/repositories/loot.repository.ts(56,12): error TS2352: Conversion of type '{ id: string; createdAt: Date; itemId: string; lootTableId: string; minQty: number; maxQty: number; dropRate: string; rarity: string; conditions: Record<string, unknown> | null; }[]' to type 'ILootEntryRecord[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ id: string; createdAt: Date; itemId: string; lootTableId: string; minQty: number; maxQty: number; dropRate: string; rarity: string; conditions: Record<string, unknown> | null; }' is not comparable to type 'ILootEntryRecord'.
+    Types of property 'dropRate' are incompatible.
+      Type 'string' is not comparable to type 'number'.
+src/routes/bank.routes.ts(64,26): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+src/routes/bank.routes.ts(64,26): error TS18048: 'bankService.getBankContents' is possibly 'undefined'.
+src/routes/bank.routes.ts(96,13): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+src/routes/bank.routes.ts(146,28): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+src/routes/bank.routes.ts(146,28): error TS18048: 'bankService.withdrawItem' is possibly 'undefined'.
+src/routes/bank.routes.ts(158,33): error TS2339: Property 'removedQuantity' does not exist on type 'WithdrawResult'.
+src/routes/bank.routes.ts(197,13): error TS6133: 'userId' is declared but its value is never read.
+src/routes/bank.routes.ts(199,13): error TS6133: 'bankService' is declared but its value is never read.
+src/routes/bank.routes.ts(245,9): error TS2345: Argument of type 'import("/home/runner/workspace/packages/server/src/providers/interfaces/IBankService").BankType' is not assignable to parameter of type 'number'.
+src/routes/character.routes.ts(17,30): error TS2339: Property 'id' does not exist on type '{ userId: string; email: string; roles: string[]; }'.
+src/routes/character.routes.ts(37,24): error TS2339: Property 'user' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+src/routes/character.routes.ts(118,24): error TS2339: Property 'user' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+src/routes/character.routes.ts(291,24): error TS2339: Property 'user' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+src/routes/character.routes.ts(429,24): error TS2339: Property 'user' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+src/routes/character.routes.ts(456,24): error TS2339: Property 'user' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+src/routes/character.stats.routes.ts(4,35): error TS2307: Cannot find module '../middleware/auth.middleware' or its corresponding type declarations.
+src/routes/character.stats.routes.ts(36,34): error TS2339: Property 'effectiveStrength' does not exist on type 'DerivedStats'.
+src/routes/character.stats.routes.ts(37,35): error TS2339: Property 'effectiveDexterity' does not exist on type 'DerivedStats'.
+src/routes/character.stats.routes.ts(38,38): error TS2339: Property 'effectiveIntelligence' does not exist on type 'DerivedStats'.
+src/routes/character.stats.routes.ts(39,32): error TS2339: Property 'effectiveWisdom' does not exist on type 'DerivedStats'.
+src/routes/character.stats.routes.ts(40,38): error TS2339: Property 'effectiveConstitution' does not exist on type 'DerivedStats'.
+src/routes/character.stats.routes.ts(41,34): error TS2339: Property 'effectiveCharisma' does not exist on type 'DerivedStats'.
+src/routes/character.stats.routes.ts(82,56): error TS2307: Cannot find module '../../../../../packages/shared/src/types/character.types' or its corresponding type declarations.
+src/routes/character.stats.routes.ts(90,101): error TS2345: Argument of type 'string | number | symbol' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+src/routes/character.stats.routes.ts(94,66): error TS2345: Argument of type 'string | number | symbol' is not assignable to parameter of type 'keyof BaseStats'.
+  Type 'string' is not assignable to type 'keyof BaseStats'.
+src/routes/character.stats.routes.ts(123,55): error TS2339: Property 'updateStats' does not exist on type 'CharacterService'.
+src/routes/character.stats.routes.ts(138,34): error TS2339: Property 'effectiveStrength' does not exist on type 'DerivedStats'.
+src/routes/character.stats.routes.ts(139,35): error TS2339: Property 'effectiveDexterity' does not exist on type 'DerivedStats'.
+src/routes/character.stats.routes.ts(140,38): error TS2339: Property 'effectiveIntelligence' does not exist on type 'DerivedStats'.
+src/routes/character.stats.routes.ts(141,32): error TS2339: Property 'effectiveWisdom' does not exist on type 'DerivedStats'.
+src/routes/character.stats.routes.ts(142,38): error TS2339: Property 'effectiveConstitution' does not exist on type 'DerivedStats'.
+src/routes/character.stats.routes.ts(143,34): error TS2339: Property 'effectiveCharisma' does not exist on type 'DerivedStats'.
+src/routes/character.stats.routes.ts(177,55): error TS2339: Property 'updateParagonDistribution' does not exist on type 'CharacterService'.
+src/routes/character.stats.routes.ts(233,55): error TS2339: Property 'updatePrestige' does not exist on type 'CharacterService'.
+src/routes/combat.routes.ts(14,22): error TS6133: 'req' is declared but its value is never read.
+src/routes/combat.routes.ts(17,32): error TS6133: 'req' is declared but its value is never read.
+src/routes/combat.routes.ts(29,31): error TS6133: 'req' is declared but its value is never read.
+src/routes/combat.routes.ts(38,29): error TS6133: 'req' is declared but its value is never read.
+src/routes/debug.routes.ts(7,26): error TS6133: 'req' is declared but its value is never read.
+src/routes/equipment.routes.simple.ts(2,1): error TS6192: All imports in import declaration are unused.
+src/routes/equipment.routes.simple.ts(15,22): error TS6133: 'req' is declared but its value is never read.
+src/routes/equipment.routes.ts(2,23): error TS6133: 'query' is declared but its value is never read.
+src/routes/equipment.routes.ts(4,10): error TS2724: '"../middleware/auth"' has no exported member named 'authenticateToken'. Did you mean 'authenticate'?
+src/routes/equipment.routes.ts(429,41): error TS6133: 'req' is declared but its value is never read.
+src/routes/monster.routes.ts(2,1): error TS6133: 'authenticate' is declared but its value is never read.
+src/routes/npc.routes.ts(2,1): error TS6133: 'authenticate' is declared but its value is never read.
+src/services/BankService.ts(7,1): error TS6192: All imports in import declaration are unused.
+src/services/BankService.ts(12,1): error TS6192: All imports in import declaration are unused.
+src/services/BankService.ts(30,25): error TS2345: Argument of type 'PersonalBank' is not assignable to parameter of type 'string'.
+src/services/BankService.ts(52,35): error TS2345: Argument of type '{ id: string; createdAt: Date; updatedAt: Date; characterId: string; slot: number; itemId: number | null; quantity: number; }[]' is not assignable to parameter of type '{ slot: number; itemId: string | null; quantity: number | null; lastAccessedBy: string | null; updatedAt: Date; }[]'.
+  Property 'lastAccessedBy' is missing in type '{ id: string; createdAt: Date; updatedAt: Date; characterId: string; slot: number; itemId: number | null; quantity: number; }' but required in type '{ slot: number; itemId: string | null; quantity: number | null; lastAccessedBy: string | null; updatedAt: Date; }'.
+src/services/BankService.ts(76,35): error TS2345: Argument of type '{ id: string; createdAt: Date; updatedAt: Date; userId: string; slot: number; itemId: number | null; quantity: number; lastAccessedBy: string | null; }[]' is not assignable to parameter of type '{ slot: number; itemId: string | null; quantity: number | null; lastAccessedBy: string | null; updatedAt: Date; }[]'.
+  Type '{ id: string; createdAt: Date; updatedAt: Date; userId: string; slot: number; itemId: number | null; quantity: number; lastAccessedBy: string | null; }' is not assignable to type '{ slot: number; itemId: string | null; quantity: number | null; lastAccessedBy: string | null; updatedAt: Date; }'.
+    Types of property 'itemId' are incompatible.
+      Type 'number | null' is not assignable to type 'string | null'.
+        Type 'number' is not assignable to type 'string'.
+src/services/BankService.ts(243,25): error TS2365: Operator '*' cannot be applied to types 'number' and 'bigint'.
+src/services/BankService.ts(347,5): error TS2322: Type '{ slot: number; itemId: string | null; quantity: number | null; }[]' is not assignable to type 'BankSlot[]'.
+  Type '{ slot: number; itemId: string | null; quantity: number | null; }' is not assignable to type 'BankSlot'.
+    Types of property 'itemId' are incompatible.
+      Type 'string | null' is not assignable to type 'number | undefined'.
+        Type 'null' is not assignable to type 'number | undefined'.
+src/services/BankService.ts(356,28): error TS2554: Expected 1 arguments, but got 0.
+src/services/CharacterService.ts(98,7): error TS2322: Type 'DerivedStats' is not assignable to type 'Record<string, number>'.
+  Index signature for type 'string' is missing in type 'DerivedStats'.
+src/services/CharacterService.ts(202,7): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'Partial<Character>'.
+  No index signature with a parameter of type 'string' was found on type 'Partial<Character>'.
+src/services/CharacterService.ts(205,71): error TS2345: Argument of type 'Partial<Character>' is not assignable to parameter of type '{ baseStrength?: number | undefined; baseDexterity?: number | undefined; baseIntelligence?: number | undefined; baseWisdom?: number | undefined; baseConstitution?: number | undefined; ... 12 more ...; bonusCharisma?: bigint | undefined; }'.
+  Types of property 'bonusStrength' are incompatible.
+    Type 'number | undefined' is not assignable to type 'bigint | undefined'.
+      Type 'number' is not assignable to type 'bigint'.
+src/services/CharacterService.ts(229,27): error TS2322: Type 'bigint' is not assignable to type 'number'.
+src/services/CharacterService.ts(230,27): error TS2322: Type 'bigint' is not assignable to type 'number'.
+src/services/CharacterService.ts(231,32): error TS2322: Type 'bigint' is not assignable to type 'number'.
+src/services/CombatService.ts(3,1): error TS6192: All imports in import declaration are unused.
+src/services/CombatService.ts(9,1): error TS6192: All imports in import declaration are unused.
+src/services/DialogueService.ts(1,24): error TS6133: 'DialogueChoice' is declared but its value is never read.
+src/services/DialogueService.ts(1,81): error TS6059: File '/home/runner/workspace/packages/shared/src/types/npc.types.ts' is not under 'rootDir' '/home/runner/workspace/packages/server/src'. 'rootDir' is expected to contain all source files.
+src/services/DialogueService.ts(19,23): error TS6138: Property 'dialogueRepository' is declared but its value is never read.
+src/services/DialogueService.ts(26,25): error TS6133: 'treeId' is declared but its value is never read.
+src/services/DialogueService.ts(40,25): error TS6133: 'treeId' is declared but its value is never read.
+src/services/DialogueService.ts(40,41): error TS6133: 'nodeId' is declared but its value is never read.
+src/services/DialogueService.ts(57,5): error TS6133: 'treeId' is declared but its value is never read.
+src/services/DialogueService.ts(58,5): error TS6133: 'nodeId' is declared but its value is never read.
+src/services/DialogueService.ts(59,5): error TS6133: 'choiceId' is declared but its value is never read.
+src/services/DialogueService.ts(60,5): error TS6133: 'characterId' is declared but its value is never read.
+src/services/DialogueService.ts(76,25): error TS6133: 'conditions' is declared but its value is never read.
+src/services/DialogueService.ts(76,58): error TS6133: 'characterId' is declared but its value is never read.
+src/services/DialogueService.ts(90,24): error TS6133: 'actions' is declared but its value is never read.
+src/services/DialogueService.ts(90,51): error TS6133: 'characterId' is declared but its value is never read.
+src/services/DialogueService.ts(90,72): error TS6133: 'npcId' is declared but its value is never read.
+src/services/DialogueService.ts(104,27): error TS6133: 'characterId' is declared but its value is never read.
+src/services/DialogueService.ts(104,48): error TS6133: 'npcId' is declared but its value is never read.
+src/services/DialogueService.ts(104,63): error TS6133: 'state' is declared but its value is never read.
+src/services/DialogueService.ts(118,26): error TS6133: 'characterId' is declared but its value is never read.
+src/services/DialogueService.ts(118,47): error TS6133: 'npcId' is declared but its value is never read.
+src/services/EquipmentService.ts(10,3): error TS6196: 'Item' is declared but never used.
+src/services/EquipmentService.ts(12,3): error TS6196: 'InventoryItem' is declared but never used.
+src/services/EquipmentService.ts(17,3): error TS6196: 'InventoryItemWithDetails' is declared but never used.
+src/services/EquipmentService.ts(18,3): error TS6196: 'EquipmentItemWithDetails' is declared but never used.
+src/services/EquipmentService.ts(25,42): error TS6133: 'ConflictError' is declared but its value is never read.
+src/services/EquipmentService.ts(43,25): error TS2345: Argument of type '{}' is not assignable to parameter of type 'string'.
+src/services/EquipmentService.ts(205,25): error TS2345: Argument of type '{}' is not assignable to parameter of type 'string'.
+src/services/EquipmentService.ts(315,11): error TS2739: Type '{ strength: number; dexterity: number; intelligence: number; wisdom: number; constitution: number; charisma: number; health: number; mana: number; stamina: number; damage: number; defense: number; critical_chance: number; critical_damage: number; attack_speed: number; movement_speed: number; }' is missing the following properties from type 'Record<StatType, number>': min_damage, max_damage
+src/services/EquipmentService.ts(380,11): error TS2740: Type '{}' is missing the following properties from type 'Record<StatType, number>': strength, dexterity, intelligence, wisdom, and 13 more.
+src/services/EquipmentService.ts(397,11): error TS2740: Type '{}' is missing the following properties from type 'Record<StatType, number>': strength, dexterity, intelligence, wisdom, and 13 more.
+src/services/MonsterService.ts(71,7): error TS2322: Type '{ id: string; name: string; currentHp: number; maxHp: number; position: { x: number; y: number; z: number; }; state: string; aggroList: string[]; monsterTypeId: string; zoneId: string; spawnPointId: string | null; metadata: Record<...> | null; createdAt: Date; updatedAt: Date; }[]' is not assignable to type '{ id: string; name: string; level: number; hp: number; maxHp: number; position: { x: number; y: number; }; }[]'.
+  Type '{ id: string; name: string; currentHp: number; maxHp: number; position: { x: number; y: number; z: number; }; state: string; aggroList: string[]; monsterTypeId: string; zoneId: string; spawnPointId: string | null; metadata: Record<...> | null; createdAt: Date; updatedAt: Date; }' is missing the following properties from type '{ id: string; name: string; level: number; hp: number; maxHp: number; position: { x: number; y: number; }; }': level, hp
+src/services/MonsterService.ts(200,7): error TS2322: Type '{ level: number; id: string; name: string; createdAt: Date; updatedAt: Date; metadata: Record<string, unknown> | null; lootTableId: number | null; displayName: string; baseHp: number; baseAttack: number; baseDefense: number; experienceValue: number; aiBehavior: string; }[]' is not assignable to type '{ id: string; name: string; level: number; baseStats: Record<string, number>; abilities: string[]; }[]'.
+  Type '{ level: number; id: string; name: string; createdAt: Date; updatedAt: Date; metadata: Record<string, unknown> | null; lootTableId: number | null; displayName: string; baseHp: number; baseAttack: number; baseDefense: number; experienceValue: number; aiBehavior: string; }' is missing the following properties from type '{ id: string; name: string; level: number; baseStats: Record<string, number>; abilities: string[]; }': baseStats, abilities
+src/services/MonsterService.ts(245,7): error TS2322: Type '{ id: string; createdAt: Date; updatedAt: Date; position: { x: number; y: number; z: number; }; zoneId: string; monsterTypeId: string; respawnTime: number; maxSpawns: number; isActive: boolean; }[]' is not assignable to type '{ id: string; zoneId: string; position: { x: number; y: number; }; monsterType: string; respawnRate: number; }[]'.
+  Type '{ id: string; createdAt: Date; updatedAt: Date; position: { x: number; y: number; z: number; }; zoneId: string; monsterTypeId: string; respawnTime: number; maxSpawns: number; isActive: boolean; }' is missing the following properties from type '{ id: string; zoneId: string; position: { x: number; y: number; }; monsterType: string; respawnRate: number; }': monsterType, respawnRate
+src/services/NPCService.ts(100,45): error TS2339: Property 'root' does not exist on type '{}'.
+src/services/NPCService.ts(200,26): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{}'.
+  No index signature with a parameter of type 'string' was found on type '{}'.
+src/services/NPCService.ts(231,7): error TS2741: Property 'choices' is missing in type '{ dialogue: any; }' but required in type '{ dialogue: any; choices: any[]; }'.
+src/services/NPCService.ts(290,7): error TS2322: Type '{ id: string; name: string; createdAt: Date; updatedAt: Date; metadata: Record<string, unknown> | null; position: { x: number; y: number; z: number; }; isDeleted: boolean; type: string; zoneId: string; displayName: string; dialogueTreeId: string | null; isQuestGiver: boolean; }[]' is not assignable to type '{ id: string; name: string; questIds: string[]; location: { zone: string; position: { x: number; y: number; }; }; }[]'.
+  Type '{ id: string; name: string; createdAt: Date; updatedAt: Date; metadata: Record<string, unknown> | null; position: { x: number; y: number; z: number; }; isDeleted: boolean; type: string; zoneId: string; displayName: string; dialogueTreeId: string | null; isQuestGiver: boolean; }' is missing the following properties from type '{ id: string; name: string; questIds: string[]; location: { zone: string; position: { x: number; y: number; }; }; }': questIds, location
+src/services/NPCService.ts(310,7): error TS2322: Type '{ id: string; createdAt: Date; characterId: string; npcId: string; interactionType: string; dialogueState: Record<string, unknown> | null; }[]' is not assignable to type '{ id: string; npcId: string; timestamp: Date; interactionType: string; data: Record<string, unknown>; }[]'.
+  Type '{ id: string; createdAt: Date; characterId: string; npcId: string; interactionType: string; dialogueState: Record<string, unknown> | null; }' is missing the following properties from type '{ id: string; npcId: string; timestamp: Date; interactionType: string; data: Record<string, unknown>; }': timestamp, data
+src/services/NPCService.ts(372,21): error TS2339: Property 'includes' does not exist on type '{}'.
+src/services/NPCService.ts(372,51): error TS2339: Property 'includes' does not exist on type '{}'.
+src/services/NPCService.ts(442,7): error TS2322: Type '{ id: string; name: string; createdAt: Date; updatedAt: Date; metadata: Record<string, unknown> | null; position: { x: number; y: number; z: number; }; isDeleted: boolean; type: string; zoneId: string; displayName: string; dialogueTreeId: string | null; isQuestGiver: boolean; }[]' is not assignable to type '{ id: string; name: string; shopType: string; inventory: unknown[]; location: { zone: string; position: { x: number; y: number; }; }; }[]'.
+  Type '{ id: string; name: string; createdAt: Date; updatedAt: Date; metadata: Record<string, unknown> | null; position: { x: number; y: number; z: number; }; isDeleted: boolean; type: string; zoneId: string; displayName: string; dialogueTreeId: string | null; isQuestGiver: boolean; }' is missing the following properties from type '{ id: string; name: string; shopType: string; inventory: unknown[]; location: { zone: string; position: { x: number; y: number; }; }; }': shopType, inventory, location
+src/services/ResourceService.ts(89,7): error TS2322: Type 'string' is not assignable to type '"item" | "combat" | "regen" | "skill" | "rest"'.
+src/services/ResourceService.ts(162,29): error TS6133: 'charId' is declared but its value is never read.
+src/services/ResourceService.ts(179,31): error TS6133: 'charId' is declared but its value is never read.
+src/services/SpawnService.ts(23,13): error TS6138: Property 'spawnPointRepository' is declared but its value is never read.
+src/services/SpawnService.ts(24,13): error TS6138: Property 'monsterService' is declared but its value is never read.
+src/services/SpawnService.ts(62,25): error TS6133: 'spawnPointId' is declared but its value is never read.
+src/services/SpawnService.ts(75,18): error TS6133: 'spawnPointId' is declared but its value is never read.
+src/services/SpawnService.ts(119,20): error TS6133: 'spawnPointId' is declared but its value is never read.
+src/services/StatsService.ts(393,5): error TS6133: 'character' is declared but its value is never read.
+src/services/TestMonsterService.ts(1,1): error TS6133: 'uuidv4' is declared but its value is never read.
+src/services/death.service.ts(21,27): error TS6133: 'DURABILITY_DAMAGE_PERCENTAGE' is declared but its value is never read.
+src/services/death.service.ts(185,41): error TS6133: 'characterId' is declared but its value is never read.
+src/services/loot.service.ts(112,5): error TS2322: Type '{ id: string; itemId: string; quantity: number; source: string; timestamp: string; combatSessionId: string | undefined; }[]' is not assignable to type '{ id: string; timestamp: Date; items: unknown[]; source: string; }[]'.
+  Property 'items' is missing in type '{ id: string; itemId: string; quantity: number; source: string; timestamp: string; combatSessionId: string | undefined; }' but required in type '{ id: string; timestamp: Date; items: unknown[]; source: string; }'.
+src/services/loot.service.ts(150,19): error TS6133: 'event' is declared but its value is never read.
+src/services/loot.service.ts(200,34): error TS6133: 'characterId' is declared but its value is never read.
+src/services/mock/MockAffinityService.ts(27,8): error TS6059: File '/home/runner/workspace/packages/shared/types/affinity.types.ts' is not under 'rootDir' '/home/runner/workspace/packages/server/src'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Imported via '../../../../shared/types/affinity.types' from file '/home/runner/workspace/packages/server/src/services/mock/MockAffinityService.ts'
+    Imported via '../../../shared/types/affinity.types' from file '/home/runner/workspace/packages/server/src/controllers/affinity.controller.ts'
+src/services/mock/MockAffinityService.ts(394,35): error TS6133: 'characterId' is declared but its value is never read.
+src/services/mock/MockAffinityService.ts(396,37): error TS6133: 'achievement' is declared but its value is never read.
+src/services/mock/MockProgressionService.ts(12,3): error TS6133: 'CharacterStats' is declared but its value is never read.
+src/services/mock/MockProgressionService.ts(16,3): error TS6133: 'StatType' is declared but its value is never read.
+src/services/mock/MockProgressionService.ts(19,1): error TS6192: All imports in import declaration are unused.
+src/services/mock/MockProgressionService.ts(23,1): error TS6192: All imports in import declaration are unused.
+src/services/mock/MockTutorialService.ts(21,8): error TS6059: File '/home/runner/workspace/packages/shared/types/tutorial.types.ts' is not under 'rootDir' '/home/runner/workspace/packages/server/src'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Imported via '../../../../shared/types/tutorial.types' from file '/home/runner/workspace/packages/server/src/services/mock/MockTutorialService.ts'
+    Imported via '../../../shared/types/tutorial.types' from file '/home/runner/workspace/packages/server/src/controllers/tutorial.controller.ts'
+src/services/mock/MockTutorialService.ts(456,31): error TS6133: 'context' is declared but its value is never read.
+src/services/mock/MockZoneService.ts(225,31): error TS6133: 'characterId' is declared but its value is never read.
+src/sockets/combat.socket.ts(3,24): error TS6133: 'CombatResult' is declared but its value is never read.
+src/sockets/monster.events.ts(9,39): error TS6133: 'io' is declared but its value is never read.
+src/sockets/npc.events.ts(9,35): error TS6133: 'io' is declared but its value is never read.
+../shared/src/types/npc.types.ts(1,28): error TS6059: File '/home/runner/workspace/packages/shared/src/types/monster.types.ts' is not under 'rootDir' '/home/runner/workspace/packages/server/src'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Imported via './monster.types' from file '/home/runner/workspace/packages/shared/src/types/npc.types.ts'
+    Imported via '../../../shared/src/types/monster.types' from file '/home/runner/workspace/packages/server/src/services/SpawnService.ts'
+
+> @aeturnis/shared@1.0.0 typecheck
+> tsc --noEmit
+

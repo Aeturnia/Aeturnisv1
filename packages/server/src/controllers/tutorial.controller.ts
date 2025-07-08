@@ -23,7 +23,7 @@ export class TutorialController {
    * Get tutorial zone information
    * GET /api/v1/tutorial/zone
    */
-  async getTutorialZone(req: Request, res: Response): Promise<void> {
+  async getTutorialZone(_req: Request, res: Response): Promise<void> {
     try {
       const zone = await this.tutorialService.getTutorialZone();
       
@@ -79,7 +79,7 @@ export class TutorialController {
    * Get all tutorial quests
    * GET /api/v1/tutorial/quests
    */
-  async getAllQuests(req: Request, res: Response): Promise<void> {
+  async getAllQuests(_req: Request, res: Response): Promise<void> {
     try {
       const quests = await this.tutorialService.getAllQuests();
       
@@ -199,7 +199,7 @@ export class TutorialController {
    * Test endpoint for tutorial service
    * GET /api/v1/tutorial/test
    */
-  async testTutorialService(req: Request, res: Response): Promise<void> {
+  async testTutorialService(_req: Request, res: Response): Promise<void> {
     try {
       const zone = await this.tutorialService.getTutorialZone();
       const quests = await this.tutorialService.getAllQuests();

@@ -2,7 +2,7 @@ import request from 'supertest';
 import { Express } from 'express';
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { createApp } from '../app';
-import { db } from '../database/connection';
+import { db } from '../database/config';
 import { users, characters } from '../database/schema';
 import { eq } from 'drizzle-orm';
 import { AuthService } from '../services/AuthService';

@@ -72,7 +72,7 @@ export const getMonsterById = async (req: Request, res: Response) => {
 /**
  * Get all monster types
  */
-export const getMonsterTypes = async (req: Request, res: Response) => {
+export const getMonsterTypes = async (_req: Request, res: Response) => {
   try {
     const types = await mockMonsterService.getMonsterTypes();
     
@@ -279,7 +279,7 @@ export const updateMonsterState = async (req: Request, res: Response) => {
 /**
  * Test monster system
  */
-export const testMonsterSystem = async (req: Request, res: Response) => {
+export const testMonsterSystem = async (_req: Request, res: Response) => {
   try {
     const testData = {
       system: "Monster Management System",

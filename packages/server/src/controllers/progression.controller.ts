@@ -361,7 +361,7 @@ export const getCharacterProgression = async (req: Request, res: Response): Prom
  * Get progression test data
  * GET /api/v1/progression/test
  */
-export const getProgressionTest = async (req: Request, res: Response): Promise<void> => {
+export const getProgressionTest = async (_req: Request, res: Response): Promise<void> => {
   try {
     const testData = {
       message: "Progression Service Test - Mock Data",

@@ -265,7 +265,7 @@ export class MockLootService implements ILootService {
     }
   }
 
-  private getRarity(sourceLevel: number, characterLevel: number): ItemRarity {
+  private getRarity(sourceLevel: number, _characterLevel: number): ItemRarity {
     const roll = Math.random();
     const levelBonus = sourceLevel / 100;
     
@@ -376,10 +376,10 @@ export class MockLootService implements ILootService {
       id: tableId,
       name: 'Test Loot Table',
       items: [
-        { itemId: 'item_001', dropRate: 0.8, minQty: 1, maxQty: 3, rarity: ItemRarity.COMMON },
-        { itemId: 'item_101', dropRate: 0.3, minQty: 1, maxQty: 1, rarity: ItemRarity.UNCOMMON },
-        { itemId: 'item_201', dropRate: 0.1, minQty: 1, maxQty: 1, rarity: ItemRarity.RARE },
-        { itemId: 'item_301', dropRate: 0.01, minQty: 1, maxQty: 1, rarity: ItemRarity.EPIC }
+        { itemId: 'item_001', dropRate: 0.8, minQty: 1, maxQty: 3, rarity: 'common' as ItemRarity },
+        { itemId: 'item_101', dropRate: 0.3, minQty: 1, maxQty: 1, rarity: 'uncommon' as ItemRarity },
+        { itemId: 'item_201', dropRate: 0.1, minQty: 1, maxQty: 1, rarity: 'rare' as ItemRarity },
+        { itemId: 'item_301', dropRate: 0.01, minQty: 1, maxQty: 1, rarity: 'epic' as ItemRarity }
       ]
     });
     

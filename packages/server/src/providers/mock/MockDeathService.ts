@@ -4,7 +4,6 @@ import {
   IDeathResponse,
   IRespawnResponse,
   IDeathStatus,
-  DeathReason,
   ReviveType
 } from '../interfaces/IDeathService';
 import { logger } from '../../utils/logger';

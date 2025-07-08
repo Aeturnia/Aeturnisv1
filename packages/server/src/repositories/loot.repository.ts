@@ -4,10 +4,8 @@ import { eq } from 'drizzle-orm';
 import { 
   ILootTableRecord, 
   ILootEntryRecord, 
-  ILootHistoryRecord,
-  ILootDrop
+  ILootHistoryRecord
 } from '../types/loot';
-import { NotFoundError } from '../utils/errors';
 
 export class LootRepository {
   /**

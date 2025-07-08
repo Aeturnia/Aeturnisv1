@@ -1,8 +1,11 @@
+"use strict";
 /**
  * Affinity System Type Definitions
  * Comprehensive types for weapon and magic affinity tracking
  */
-export var WeaponType;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AffinityRewardType = exports.AffinityUsageContext = exports.AffinityBonusType = exports.AffinityRank = exports.MagicSchool = exports.WeaponType = void 0;
+var WeaponType;
 (function (WeaponType) {
     WeaponType["SWORD"] = "sword";
     WeaponType["AXE"] = "axe";
@@ -15,8 +18,8 @@ export var WeaponType;
     WeaponType["POLEARM"] = "polearm";
     WeaponType["SHIELD"] = "shield";
     WeaponType["UNARMED"] = "unarmed";
-})(WeaponType || (WeaponType = {}));
-export var MagicSchool;
+})(WeaponType || (exports.WeaponType = WeaponType = {}));
+var MagicSchool;
 (function (MagicSchool) {
     MagicSchool["FIRE"] = "fire";
     MagicSchool["ICE"] = "ice";
@@ -28,16 +31,16 @@ export var MagicSchool;
     MagicSchool["NATURE"] = "nature";
     MagicSchool["ILLUSION"] = "illusion";
     MagicSchool["NECROMANCY"] = "necromancy";
-})(MagicSchool || (MagicSchool = {}));
-export var AffinityRank;
+})(MagicSchool || (exports.MagicSchool = MagicSchool = {}));
+var AffinityRank;
 (function (AffinityRank) {
     AffinityRank["NOVICE"] = "novice";
     AffinityRank["APPRENTICE"] = "apprentice";
     AffinityRank["JOURNEYMAN"] = "journeyman";
     AffinityRank["EXPERT"] = "expert";
     AffinityRank["MASTER"] = "master";
-})(AffinityRank || (AffinityRank = {}));
-export var AffinityBonusType;
+})(AffinityRank || (exports.AffinityRank = AffinityRank = {}));
+var AffinityBonusType;
 (function (AffinityBonusType) {
     AffinityBonusType["DAMAGE"] = "damage";
     AffinityBonusType["ACCURACY"] = "accuracy";
@@ -48,8 +51,8 @@ export var AffinityBonusType;
     AffinityBonusType["RANGE"] = "range";
     AffinityBonusType["DURATION"] = "duration";
     AffinityBonusType["COOLDOWN_REDUCTION"] = "cooldown_reduction";
-})(AffinityBonusType || (AffinityBonusType = {}));
-export var AffinityUsageContext;
+})(AffinityBonusType || (exports.AffinityBonusType = AffinityBonusType = {}));
+var AffinityUsageContext;
 (function (AffinityUsageContext) {
     AffinityUsageContext["COMBAT"] = "combat";
     AffinityUsageContext["TRAINING"] = "training";
@@ -57,13 +60,13 @@ export var AffinityUsageContext;
     AffinityUsageContext["EXPLORATION"] = "exploration";
     AffinityUsageContext["QUEST"] = "quest";
     AffinityUsageContext["PVP"] = "pvp";
-})(AffinityUsageContext || (AffinityUsageContext = {}));
-export var AffinityRewardType;
+})(AffinityUsageContext || (exports.AffinityUsageContext = AffinityUsageContext = {}));
+var AffinityRewardType;
 (function (AffinityRewardType) {
     AffinityRewardType["EXPERIENCE"] = "experience";
     AffinityRewardType["GOLD"] = "gold";
     AffinityRewardType["ITEM"] = "item";
     AffinityRewardType["TITLE"] = "title";
     AffinityRewardType["SKILL_POINT"] = "skill_point";
-})(AffinityRewardType || (AffinityRewardType = {}));
+})(AffinityRewardType || (exports.AffinityRewardType = AffinityRewardType = {}));
 //# sourceMappingURL=affinity.types.js.map

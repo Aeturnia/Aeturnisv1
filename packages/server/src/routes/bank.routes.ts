@@ -7,7 +7,7 @@ import { logger } from '../utils/logger';
 const router = Router();
 
 // Test endpoint for visual testing interface
-router.get('/test-bank', (req: Request, res: Response) => {
+router.get('/test-bank', (_req: Request, res: Response) => {
   res.json({
     success: true,
     message: 'Banking system is operational',
@@ -33,7 +33,9 @@ router.get('/characters/:characterId/bank',
 
     try {
       const bankService = ServiceProvider.getInstance().get<IBankService>('BankService');
-      const bank = await bankService.getBankContents(req.params.characterId, BankType.PERSONAL);
+      const bank = bankService.getBankContents 
+        ? await bankService.getBankContents(req.params.characterId, BankType.PERSONAL)
+        : await bankService.getPersonalBank(req.params.characterId);
       return res.json(bank);
     } catch (error) {
       logger.error('Failed to get personal bank', { 

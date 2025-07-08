@@ -1,3 +1,6 @@
+// Import types from the actual service
+import type { BankTransferRequest as TypeBankTransferRequest } from '../../types/bank';
+
 /**
  * Bank types available
  */
@@ -5,6 +8,18 @@ export enum BankType {
   PERSONAL = 'personal',
   SHARED = 'shared',
   GUILD = 'guild'
+}
+
+/**
+ * Bank slot for interface
+ */
+export interface BankSlot {
+  slot: number;
+  slotIndex?: number; // Alternative name for slot
+  itemId?: string | number;
+  quantity: number;
+  isEmpty?: boolean;
+  item?: any; // populated on fetch
 }
 
 /**
@@ -18,16 +33,6 @@ export interface BankContents {
   usedSlots: number;
   gold: bigint;
   lastAccessed: Date;
-}
-
-/**
- * Individual bank slot
- */
-export interface BankSlot {
-  slotIndex: number;
-  itemId?: string;
-  quantity?: number;
-  isEmpty: boolean;
 }
 
 /**
@@ -92,7 +97,7 @@ export interface BankTransaction {
  * Interface for Bank-related operations
  * Handles personal, shared, and guild banking
  */
-// Import types from the actual service
+// Define types for the interface
 export interface PersonalBank {
   characterId: string;
   slots: BankSlot[];
@@ -106,13 +111,9 @@ export interface SharedBank {
   lastAccessedAt?: Date;
 }
 
-export interface BankTransferRequest {
-  fromBankType: 'personal' | 'shared';
-  toBankType: 'personal' | 'shared';
-  itemId: number;
-  quantity: number;
-  fromSlot: number;
-  toSlot: number;
+export interface BankTransferRequest extends TypeBankTransferRequest {
+  fromBankType?: 'personal' | 'shared';
+  toBankType?: 'personal' | 'shared';
 }
 
 export interface IBankService {

@@ -1,11 +1,13 @@
-import { DamageType } from '@aeturnis/shared';
 import { 
   CombatSession as ActualCombatSession,
   CombatAction as ActualCombatAction,
   CombatResult as ActualCombatResult,
   CombatStartRequest,
   CombatEndResult,
-  CharacterCombatStats
+  CharacterCombatStats,
+  Combatant as ActualCombatant,
+  CombatOutcome as ActualCombatOutcome,
+  DamageType
 } from '../../types/combat.types';
 import { ResourcePool } from '../../types/resources.types';
 
@@ -14,16 +16,27 @@ export {
   ActualCombatSession as CombatSessionNew,
   ActualCombatAction as CombatActionNew,
   ActualCombatResult as CombatResultNew,
+  ActualCombatant as CombatantNew,
+  ActualCombatOutcome as CombatOutcomeNew,
   CombatStartRequest,
   CombatEndResult,
   CharacterCombatStats,
-  ResourcePool
+  ResourcePool,
+  DamageType
 };
 
+// Type aliases for backward compatibility
+export type CombatSession = ActualCombatSession;
+export type CombatAction = ActualCombatAction;
+export type CombatResult = ActualCombatResult;
+export type Combatant = ActualCombatant;
+export type CombatOutcome = ActualCombatOutcome;
+
 /**
- * Combat participant (player or monster)
+ * Legacy combat participant (player or monster)
+ * @deprecated Use Combatant from combat.types.ts instead
  */
-export interface Combatant {
+export interface LegacyCombatant {
   id: string;
   name: string;
   type: 'player' | 'monster' | 'npc';
@@ -54,9 +67,9 @@ export interface CombatStats {
 /**
  * Active combat session
  */
-export interface CombatSession {
+export interface LegacyCombatSession {
   id: string;
-  participants: Combatant[];
+  participants: LegacyCombatant[];
   currentTurn: number;
   turnOrder: string[]; // Array of participant IDs
   rounds: CombatRound[];
@@ -68,7 +81,7 @@ export interface CombatSession {
 /**
  * Combat action taken by a participant
  */
-export interface CombatAction {
+export interface LegacyCombatAction {
   type: 'attack' | 'defend' | 'skill' | 'item' | 'flee';
   targetId?: string;
   skillId?: string;
@@ -78,7 +91,7 @@ export interface CombatAction {
 /**
  * Result of a combat action
  */
-export interface CombatResult {
+export interface LegacyCombatResult {
   success: boolean;
   damage?: DamageResult;
   healing?: number;
@@ -108,8 +121,8 @@ export interface CombatRound {
   roundNumber: number;
   actions: {
     participantId: string;
-    action: CombatAction;
-    result: CombatResult;
+    action: LegacyCombatAction;
+    result: LegacyCombatResult;
     timestamp: Date;
   }[];
 }
@@ -117,7 +130,7 @@ export interface CombatRound {
 /**
  * How combat ended
  */
-export interface CombatOutcome {
+export interface LegacyCombatOutcome {
   reason: 'victory' | 'defeat' | 'flee' | 'timeout';
   winner?: string;
   survivors: string[];
@@ -238,7 +251,7 @@ export interface ICombatService {
    * @param targetId - The target of the attack
    * @returns New combat session
    */
-  initiateCombat?(attackerId: string, targetId: string): Promise<CombatSession>;
+  initiateCombat?(attackerId: string, targetId: string): Promise<LegacyCombatSession>;
 
   /**
    * Process a combat action (legacy)
@@ -246,14 +259,14 @@ export interface ICombatService {
    * @param action - The action to process
    * @returns Result of the action
    */
-  processCombatAction?(sessionId: string, action: CombatAction): Promise<CombatResult>;
+  processCombatAction?(sessionId: string, action: LegacyCombatAction): Promise<LegacyCombatResult>;
 
   /**
    * End a combat session (legacy)
    * @param sessionId - The combat session ID
    * @param outcome - How the combat ended
    */
-  endCombat?(sessionId: string, outcome: CombatOutcome): Promise<void>;
+  endCombat?(sessionId: string, outcome: ActualCombatOutcome): Promise<void>;
 
   /**
    * Calculate damage between combatants (legacy)
@@ -262,14 +275,14 @@ export interface ICombatService {
    * @param skill - Optional skill being used
    * @returns Calculated damage
    */
-  calculateDamage?(attacker: Combatant, target: Combatant, skill?: Skill): Promise<DamageResult>;
+  calculateDamage?(attacker: LegacyCombatant, target: LegacyCombatant, skill?: Skill): Promise<DamageResult>;
 
   /**
    * Get active combat session for a participant (legacy)
    * @param participantId - The participant to check
    * @returns Active session or null
    */
-  getActiveCombat?(participantId: string): Promise<CombatSession | null>;
+  getActiveCombat?(participantId: string): Promise<LegacyCombatSession | null>;
 
   /**
    * Apply status effect to a combatant (legacy)

@@ -1,6 +1,6 @@
 import { db } from '../database/config';
 import { characters, respawnPoints } from '../database/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { IDeathEvent, IRespawnPoint } from '../types/death';
 import { NotFoundError } from '../utils/errors';
 
@@ -17,7 +17,7 @@ export class DeathRepository {
       .set({
         isDead: true,
         deathAt: deathEvent.deathAt,
-        deathCount: db.increment(characters.deathCount, 1),
+        deathCount: sql`${characters.deathCount} + 1`,
         updatedAt: new Date(),
       })
       .where(eq(characters.id, characterId))
@@ -85,7 +85,7 @@ export class DeathRepository {
     await db
       .update(characters)
       .set({
-        experience: db.decrement(characters.experience, experienceLoss),
+        experience: sql`GREATEST(0, ${characters.experience} - ${experienceLoss})`,
         updatedAt: new Date(),
       })
       .where(eq(characters.id, characterId));
@@ -101,7 +101,7 @@ export class DeathRepository {
     await db
       .update(characters)
       .set({
-        gold: db.decrement(characters.gold, goldLoss),
+        gold: sql`GREATEST(0, ${characters.gold} - ${goldLoss})`,
         updatedAt: new Date(),
       })
       .where(eq(characters.id, characterId));

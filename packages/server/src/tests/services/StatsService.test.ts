@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { StatsService } from '../../services/StatsService';
-import { Character, CharacterRace, CharacterClass, CharacterGender } from '../../../../../packages/shared/src/types/character.types';
+import { Character, CharacterRace, CharacterClass, CharacterGender } from '../../types/character.types';
 
 describe('AIPE (Aeturnis Infinite Progression Engine) - StatsService', () => {
   let baseCharacter: Character;

@@ -5,7 +5,7 @@ import {
   SpawnConfig, 
   SpawnEvent 
 } from '../interfaces/ISpawnService';
-import { SpawnPoint, Monster, Position3D, MonsterState } from '@aeturnis/shared';
+import { SpawnPoint, Monster, MonsterState } from '@aeturnis/shared';
 import { logger } from '../../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -234,7 +234,7 @@ export class MockSpawnService implements ISpawnService {
       
       for (let i = 0; i < spawnCount; i++) {
         try {
-          const monster = await this.spawnMonster(spawnPointId, { immediateSpawn: true });
+          const monster = await this.spawnMonster(spawnPointId, { immediateSpawn: true, overrideMaxSpawns: false });
           events.push({
             spawnPointId,
             monsterId: monster.id,

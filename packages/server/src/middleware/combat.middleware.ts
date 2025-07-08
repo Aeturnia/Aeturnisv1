@@ -115,7 +115,7 @@ export const validateCombatStart = (req: Request, res: Response, next: NextFunct
 /**
  * Check if user is in combat
  */
-export const checkCombatStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const checkCombatStatus = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     // TODO: Implement actual combat status check
     // For now, allow all requests

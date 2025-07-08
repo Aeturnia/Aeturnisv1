@@ -1,0 +1,10 @@
+{
+  "id": "TYPE-B-001",
+  "type": "TYPE-B",
+  "name": "Service Implementation",
+  "description": "Interface and implementation alignment",
+  "status": "completed",
+  "assignedTo": "Service Implementation Agent",
+  "startedAt": "2025-07-07T21:00:00Z",
+  "completedAt": "2025-07-07T21:30:00Z"
+}

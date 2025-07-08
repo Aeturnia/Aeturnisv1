@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body, param, query } from 'express-validator';
 import { asyncHandler } from '../middleware/asyncHandler';
-import { authenticateToken } from '../middleware/auth';
+import { authenticate as authenticateToken } from '../middleware/auth';
 import { EquipmentService } from '../services/EquipmentService';
 import { EquipmentRepository } from '../repositories/EquipmentRepository';
 import { CharacterRepository } from '../repositories/CharacterRepository';

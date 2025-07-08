@@ -337,7 +337,7 @@ export const getCharacterPosition = async (req: Request, res: Response): Promise
  * Get movement test data
  * GET /api/v1/movement/test
  */
-export const getMovementTest = async (req: Request, res: Response): Promise<void> => {
+export const getMovementTest = async (_req: Request, res: Response): Promise<void> => {
   try {
     const testData = {
       message: "Movement Service Test - Mock Data",

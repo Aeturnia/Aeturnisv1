@@ -18,7 +18,11 @@ export class RealDeathService implements IDeathService {
 
   constructor(cacheService?: CacheService) {
     const deathRepository = new DeathRepository();
-    const cache = cacheService || new CacheService();
+    const cache = cacheService || new CacheService({
+      host: 'localhost',
+      port: 6379,
+      password: undefined
+    });
     this.deathService = new DeathService(deathRepository, cache);
   }
 

@@ -8,8 +8,9 @@ export enum CombatActionType {
 }
 
 export interface CombatAction {
-  type: CombatActionType;
+  type: CombatActionType | 'attack' | 'defend' | 'flee' | 'useItem' | 'useSkill' | 'pass' | 'skill' | 'item';
   targetCharId?: string;
+  targetId?: string; // Alternative name for compatibility
   itemId?: string;
   skillId?: string;
   timestamp: number;
@@ -35,9 +36,10 @@ export interface CombatLog {
 
 export interface CombatSession {
   sessionId: string;
-  participants: CombatParticipant[];
+  participants: Combatant[];
   turnOrder: string[]; // Array of charIds
-  currentTurnIndex: number;
+  currentTurn: number;
+  currentTurnIndex: number; // Alias for currentTurn for compatibility
   roundNumber: number;
   status: 'active' | 'completed' | 'abandoned' | 'ended';
   startTime: number;
@@ -47,7 +49,7 @@ export interface CombatSession {
   combatLog?: CombatLog[];
 }
 
-export interface CombatParticipant {
+export interface Combatant {
   charId: string;
   charName: string;
   hp: number;
@@ -76,6 +78,9 @@ export interface CombatParticipant {
   weaponMinDamage: number;
   weaponMaxDamage: number;
 }
+
+// Alias for backward compatibility
+export type CombatParticipant = Combatant;
 
 export interface CombatBuff {
   id: string;
@@ -120,6 +125,18 @@ export interface CombatActionRequest {
   action: CombatAction;
 }
 
+export interface CombatOutcome {
+  reason: 'victory' | 'defeat' | 'flee' | 'timeout';
+  winner?: string;
+  survivors: string[];
+  casualties: string[];
+  rewards?: {
+    experience: bigint;
+    gold: bigint;
+    items: string[];
+  };
+}
+
 export interface CombatEndResult {
   sessionId: string;
   winner: string | null;
@@ -135,5 +152,16 @@ export interface CombatReward {
   itemId?: string;
 }
 
-// Import ResourcePool and ResourceUpdate from resources.types.ts
 import { ResourcePool, ResourceUpdate } from './resources.types';
+
+// Export DamageType enum
+export enum DamageType {
+  PHYSICAL = 'physical',
+  FIRE = 'fire',
+  ICE = 'ice',
+  LIGHTNING = 'lightning',
+  HOLY = 'holy',
+  DARK = 'dark',
+  POISON = 'poison',
+  PSYCHIC = 'psychic'
+}

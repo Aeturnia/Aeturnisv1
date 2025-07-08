@@ -12,7 +12,7 @@ import {
   TutorialHelpCategory,
   UpdateTutorialProgressRequest,
   TutorialHelpRequest
-} from '@aeturnis/shared';
+} from '../../../shared/types/tutorial.types';
 
 describe('MockTutorialService', () => {
   let tutorialService: MockTutorialService;

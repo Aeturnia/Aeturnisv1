@@ -1,5 +1,6 @@
 import { IMonsterService } from '../interfaces/IMonsterService';
-import { Monster, MonsterType, SpawnPoint, Position3D, MonsterState } from '@aeturnis/shared';
+import { MonsterType, SpawnPoint, Position3D, MonsterState } from '@aeturnis/shared';
+import { Monster } from '../../types/monster.types';
 import { logger } from '../../utils/logger';
 
 /**
@@ -157,25 +158,47 @@ export class MockMonsterService implements IMonsterService {
       state: m.state as MonsterState,
       aggroRadius: m.aggroRadius,
       targetId: m.targetId,
-      spawnPointId: m.spawnPointId
+      spawnPointId: m.spawnPointId,
+      // Add extended properties for server-side usage
+      currentHealth: m.currentHp,
+      baseHealth: m.maxHp,
+      name: m.name,
+      displayName: m.name
     }));
   }
 
   /**
    * Get monster by ID
    */
-  async getMonsterById(monsterId: string): Promise<any | null> {
+  async getMonsterById(monsterId: string): Promise<Monster | null> {
     logger.info(`MockMonsterService: Getting monster by ID ${monsterId}`);
     
     const monster = this.mockMonsters.find(monster => monster.id === monsterId);
     
     if (monster) {
       logger.info(`MockMonsterService: Found monster ${monster.name}`);
+      // Convert to proper Monster format with extended properties
+      return {
+        id: monster.id,
+        monsterTypeId: monster.monsterTypeId,
+        zoneId: monster.zoneId,
+        position: monster.position,
+        currentHp: monster.currentHp,
+        maxHp: monster.maxHp,
+        state: monster.state as MonsterState,
+        aggroRadius: monster.aggroRadius,
+        targetId: monster.targetId,
+        spawnPointId: monster.spawnPointId,
+        // Add extended properties for server-side usage
+        currentHealth: monster.currentHp,
+        baseHealth: monster.maxHp,
+        name: monster.name,
+        displayName: monster.name
+      };
     } else {
       logger.info(`MockMonsterService: Monster not found with ID ${monsterId}`);
+      return null;
     }
-    
-    return monster || null;
   }
 
   async spawnMonster(spawnPointId: string): Promise<Monster> {
@@ -218,7 +241,12 @@ export class MockMonsterService implements IMonsterService {
       maxHp: newMonster.maxHp,
       state: newMonster.state,
       aggroRadius: newMonster.aggroRadius,
-      spawnPointId: newMonster.spawnPointId
+      spawnPointId: newMonster.spawnPointId,
+      // Add extended properties for server-side usage
+      currentHealth: newMonster.currentHp,
+      baseHealth: newMonster.maxHp,
+      name: newMonster.name,
+      displayName: newMonster.name
     };
   }
 
@@ -247,7 +275,12 @@ export class MockMonsterService implements IMonsterService {
       state: updated.state as MonsterState,
       aggroRadius: updated.aggroRadius,
       targetId: updated.targetId,
-      spawnPointId: updated.spawnPointId
+      spawnPointId: updated.spawnPointId,
+      // Add extended properties for server-side usage
+      currentHealth: updated.currentHp,
+      baseHealth: updated.maxHp,
+      name: updated.name,
+      displayName: updated.name
     };
   }
 

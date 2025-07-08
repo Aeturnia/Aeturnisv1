@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ServiceProvider, IDeathService } from '../providers';
-import { IDeathRequest, IDeathStatusResponse } from '../types/death';
+import { IDeathRequest } from '../types/death';
 import { ValidationError, NotFoundError } from '../utils/errors';
 import { logger } from '../utils/logger';
 
@@ -141,7 +141,7 @@ export const getCharacterDeathStatus = async (req: Request, res: Response): Prom
  * Test endpoint for death system validation
  * GET /api/v1/death/test
  */
-export const testDeathSystem = async (req: Request, res: Response): Promise<Response> => {
+export const testDeathSystem = async (_req: Request, res: Response): Promise<Response> => {
   try {
     const testData = {
       system: 'Death & Respawn System',
@@ -193,18 +193,9 @@ export const testDeathSystem = async (req: Request, res: Response): Promise<Resp
  * Test character death with mock data
  * POST /api/v1/death/test-death
  */
-export const testCharacterDeath = async (req: Request, res: Response): Promise<Response> => {
+export const testCharacterDeath = async (_req: Request, res: Response): Promise<Response> => {
   try {
     const mockCharacterId = '550e8400-e29b-41d4-a716-446655440000';
-    const mockDeathRequest: IDeathRequest = {
-      reason: 'combat' as any,
-      killerId: '550e8400-e29b-41d4-a716-446655440001',
-      context: {
-        damageType: 'physical',
-        lastDamageSource: 'orc_warrior_axe',
-        combatSessionId: 'combat_550e8400'
-      }
-    };
 
     // This is a test endpoint, so we'll return mock data instead of actually processing death
     const mockResponse = {
@@ -240,7 +231,7 @@ export const testCharacterDeath = async (req: Request, res: Response): Promise<R
  * Test character respawn with mock data
  * POST /api/v1/death/test-respawn
  */
-export const testCharacterRespawn = async (req: Request, res: Response): Promise<Response> => {
+export const testCharacterRespawn = async (_req: Request, res: Response): Promise<Response> => {
   try {
     const mockCharacterId = '550e8400-e29b-41d4-a716-446655440000';
 
@@ -277,7 +268,7 @@ export const testCharacterRespawn = async (req: Request, res: Response): Promise
  * Test character death status with mock data
  * GET /api/v1/death/test-status
  */
-export const testCharacterDeathStatus = async (req: Request, res: Response): Promise<Response> => {
+export const testCharacterDeathStatus = async (_req: Request, res: Response): Promise<Response> => {
   try {
     const mockCharacterId = '550e8400-e29b-41d4-a716-446655440000';
 

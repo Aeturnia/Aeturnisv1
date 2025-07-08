@@ -229,8 +229,9 @@ export class MockDialogueService implements IDialogueService {
           context.gameState[`quest_${action.parameters?.questId}_completed`] = true;
           break;
         case 'set_flag':
-          context.session.variables[action.parameters?.flag || 'flag'] = action.parameters?.value || true;
-          result.message = `Flag set: ${action.parameters?.flag}`;
+          const flagName = String(action.parameters?.flag || 'flag');
+          context.session.variables[flagName] = action.parameters?.value || true;
+          result.message = `Flag set: ${flagName}`;
           break;
         default:
           result.message = `Unknown action: ${action.type}`;

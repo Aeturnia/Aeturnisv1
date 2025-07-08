@@ -188,6 +188,7 @@ export class CombatService {
         sessionId,
         participants,
         turnOrder,
+        currentTurn: 0,
         currentTurnIndex: 0,
         roundNumber: 1,
         status: 'active',
