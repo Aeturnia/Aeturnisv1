@@ -366,3 +366,24 @@ Number of calls: [1m0[22m
    ✓ Authentication API Endpoints > should handle validation errors  1510ms
    ✓ Authentication API Endpoints > should handle unauthorized access  1525ms
    ✓ Authentication API Endpoints > should return server health status  1506ms
+
+ Test Files  13 failed | 12 passed (26)
+      Tests  93 failed | 258 passed (366)
+     Errors  1 error
+   Start at  20:06:15
+   Duration  52.56s (transform 2.00s, setup 401ms, collect 11.37s, tests 22.43s, environment 8ms, prepare 2.93s)
+
+
+> @aeturnis/shared@1.0.0 test
+> vitest run
+
+
+ RUN  v3.2.4 /home/runner/workspace/packages/shared
+
+ ✓ src/__tests__/utils.test.ts (13 tests) 10ms
+
+ Test Files  1 passed (1)
+      Tests  13 passed (13)
+   Start at  20:07:08
+   Duration  377ms (transform 52ms, setup 0ms, collect 45ms, tests 10ms, environment 0ms, prepare 86ms)
+
