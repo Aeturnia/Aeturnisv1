@@ -22,7 +22,7 @@ export function SimpleDevToggle() {
       {/* Always visible toggle button */}
       <button
         onClick={() => setShowPanel(!showPanel)}
-        className="fixed bottom-4 right-16 z-[10000] w-12 h-12 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all transform hover:scale-110"
+        className="fixed bottom-4 right-4 z-[10003] w-12 h-12 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all transform hover:scale-110"
         aria-label="Toggle Dev Panel"
       >
         <span className="text-xl">⚙️</span>
@@ -30,7 +30,7 @@ export function SimpleDevToggle() {
 
       {/* Dev Panel */}
       {showPanel && (
-        <div className="fixed bottom-20 right-16 z-[9999] bg-gray-900 text-white rounded-lg shadow-xl p-4 w-72 border border-gray-700">
+        <div className="fixed bottom-20 right-4 z-[10003] bg-gray-900 text-white rounded-lg shadow-xl p-4 w-72 border border-gray-700">
           <h3 className="text-lg font-bold mb-4 flex items-center justify-between">
             Dev Tools
             <button

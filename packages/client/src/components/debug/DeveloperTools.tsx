@@ -45,7 +45,7 @@ export function DeveloperTools() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          fixed bottom-16 right-4 z-[10000] p-3 rounded-full shadow-lg
+          fixed bottom-20 right-4 z-[10004] p-3 rounded-full shadow-lg
           ${isOpen ? 'bg-purple-500' : 'bg-gray-700'}
           text-white transition-colors group
         `}
@@ -56,7 +56,7 @@ export function DeveloperTools() {
 
       {/* Developer tools panel */}
       {isOpen && (
-        <div className="fixed bottom-32 right-4 z-[9999] bg-dark-900 rounded-lg shadow-xl border border-dark-700 p-4 w-80">
+        <div className="fixed bottom-36 right-4 z-[10004] bg-dark-900 rounded-lg shadow-xl border border-dark-700 p-4 w-80">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-white font-bold text-lg">Developer Tools</h3>
             <button
