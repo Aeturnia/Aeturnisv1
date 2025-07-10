@@ -6,3 +6,7 @@
 > @aeturnis/server@1.0.0 typecheck
 > tsc --noEmit
 
+
+> @aeturnis/shared@1.0.0 typecheck
+> tsc --noEmit
+
