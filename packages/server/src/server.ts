@@ -89,12 +89,12 @@ async function startServer() {
 
     // Initialize Service Providers
     logger.info('Initializing service providers...', { service: 'aeturnis-api' });
-    const useMocks = true; // Force mock services for testing environment
+    const useMocks = false; // Use real services with production data
     await initializeProviders(useMocks);
     logger.info(`Service providers initialized with ${useMocks ? 'MOCK' : 'REAL'} services`, { 
       service: 'aeturnis-api',
       useMocks,
-      note: 'Forced to use MOCK services for testing environment'
+      note: 'Using REAL services with production data'
     });
 
     // Create Express app

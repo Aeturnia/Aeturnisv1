@@ -182,6 +182,139 @@ export async function initializeProviders(useMocks: boolean): Promise<void> {
     logger.info(`Service Provider initialized with ${registeredServices.length} MOCK services: ${registeredServices.join(', ')}`);
   } else {
     // Load real services when not using mocks
-    logger.info('Loading real services (not implemented yet)...');
+    logger.info('Loading real database-connected services...');
+    
+    // Register real services from the services directory
+    try {
+      logger.info('Registering real MonsterService...');
+      const { MonsterService } = await import('../services/MonsterService');
+      provider.register('MonsterService', new MonsterService());
+      logger.info('✅ MonsterService registered');
+    } catch (error) {
+      logger.error('❌ Failed to register MonsterService:', error);
+    }
+    
+    try {
+      logger.info('Registering real NPCService...');
+      const { NPCService } = await import('../services/NPCService');
+      provider.register('NPCService', new NPCService());
+      logger.info('✅ NPCService registered');
+    } catch (error) {
+      logger.error('❌ Failed to register NPCService:', error);
+    }
+    
+    try {
+      logger.info('Registering real DeathService...');
+      const { DeathService } = await import('../services/death.service');
+      provider.register('DeathService', new DeathService());
+      logger.info('✅ DeathService registered');
+    } catch (error) {
+      logger.error('❌ Failed to register DeathService:', error);
+    }
+    
+    try {
+      logger.info('Registering real LootService...');
+      const { LootService } = await import('../services/loot.service');
+      provider.register('LootService', new LootService());
+      logger.info('✅ LootService registered');
+    } catch (error) {
+      logger.error('❌ Failed to register LootService:', error);
+    }
+    
+    try {
+      logger.info('Registering real CombatService...');
+      const { CombatService } = await import('../services/CombatService');
+      provider.register('CombatService', new CombatService());
+      logger.info('✅ CombatService registered');
+    } catch (error) {
+      logger.error('❌ Failed to register CombatService:', error);
+    }
+    
+    try {
+      logger.info('Registering real BankService...');
+      const { BankService } = await import('../services/BankService');
+      provider.register('BankService', new BankService());
+      logger.info('✅ BankService registered');
+    } catch (error) {
+      logger.error('❌ Failed to register BankService:', error);
+    }
+    
+    try {
+      logger.info('Registering real CurrencyService...');
+      const { CurrencyService } = await import('../services/CurrencyService');
+      provider.register('CurrencyService', new CurrencyService());
+      logger.info('✅ CurrencyService registered');
+    } catch (error) {
+      logger.error('❌ Failed to register CurrencyService:', error);
+    }
+    
+    try {
+      logger.info('Registering real DialogueService...');
+      const { DialogueService } = await import('../services/DialogueService');
+      provider.register('DialogueService', new DialogueService());
+      logger.info('✅ DialogueService registered');
+    } catch (error) {
+      logger.error('❌ Failed to register DialogueService:', error);
+    }
+    
+    try {
+      logger.info('Registering real SpawnService...');
+      const { SpawnService } = await import('../services/SpawnService');
+      provider.register('SpawnService', new SpawnService());
+      logger.info('✅ SpawnService registered');
+    } catch (error) {
+      logger.error('❌ Failed to register SpawnService:', error);
+    }
+    
+    // For services that don't have real implementations yet, use mock versions
+    logger.info('Loading remaining services (using mock implementations for services without real database implementations)...');
+    
+    try {
+      logger.info('Registering MockZoneService...');
+      const { MockZoneService } = await import('../services/mock/MockZoneService');
+      provider.register('ZoneService', new MockZoneService());
+      logger.info('✅ ZoneService registered (mock)');
+    } catch (error) {
+      logger.error('❌ Failed to register ZoneService:', error);
+    }
+
+    try {
+      logger.info('Registering MockMovementService...');
+      const { MockMovementService } = await import('../services/mock/MockMovementService');
+      provider.register('MovementService', new MockMovementService());
+      logger.info('✅ MovementService registered (mock)');
+    } catch (error) {
+      logger.error('❌ Failed to register MovementService:', error);
+    }
+
+    try {
+      logger.info('Registering MockProgressionService...');
+      const { MockProgressionService } = await import('../services/mock/MockProgressionService');
+      provider.register('ProgressionService', new MockProgressionService());
+      logger.info('✅ ProgressionService registered (mock)');
+    } catch (error) {
+      logger.error('❌ Failed to register ProgressionService:', error);
+    }
+
+    try {
+      logger.info('Registering MockTutorialService...');
+      const { MockTutorialService } = await import('../services/mock/MockTutorialService');
+      provider.register('TutorialService', new MockTutorialService());
+      logger.info('✅ TutorialService registered (mock)');
+    } catch (error) {
+      logger.error('❌ Failed to register TutorialService:', error);
+    }
+
+    try {
+      logger.info('Registering MockAffinityService...');
+      const { MockAffinityService } = await import('../services/mock/MockAffinityService');
+      provider.register('AffinityService', new MockAffinityService());
+      logger.info('✅ AffinityService registered (mock)');
+    } catch (error) {
+      logger.error('❌ Failed to register AffinityService:', error);
+    }
+    
+    const registeredServices = provider.getRegisteredServices();
+    logger.info(`Service Provider initialized with ${registeredServices.length} REAL services: ${registeredServices.join(', ')}`);
   }
 }
