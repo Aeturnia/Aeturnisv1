@@ -103,8 +103,8 @@ export const createApp = () => {
 
   // Root route removed - now serves React testing frontend
 
-  // Serve production mobile client
-  app.use(express.static(path.join(__dirname, '../public')));
+  // Serve React client from packages/client/dist
+  app.use(express.static(path.join(__dirname, '../../client/dist')));
   
   // SPA fallback for React Router
   app.get('*', (req, res, next) => {
@@ -113,8 +113,8 @@ export const createApp = () => {
       return next();
     }
     
-    // Serve index.html for all non-API routes
-    res.sendFile(path.join(__dirname, '../public/index.html'));
+    // Serve React app index.html for all non-API routes
+    res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
   });
 
   app.get('/health', (_req, res) => {
