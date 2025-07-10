@@ -27,7 +27,7 @@ export class WebSocketManager extends EventEmitter {
     lastConnectedAt: null,
     reconnectAttempts: 0
   };
-  private reconnectTimer: NodeJS.Timer | null = null;
+  private reconnectTimer: NodeJS.Timeout | null = null;
   private messageHandlers: Map<string, Set<Function>> = new Map();
 
   constructor(config: WebSocketConfig = {}) {
@@ -156,11 +156,12 @@ export class WebSocketManager extends EventEmitter {
     this.socket!.emit(event, data);
   }
 
-  public on(event: string, handler: Function): void {
+  public on(event: string, handler: Function): this {
     if (!this.messageHandlers.has(event)) {
       this.messageHandlers.set(event, new Set());
     }
     this.messageHandlers.get(event)!.add(handler);
+    return this;
   }
 
   public off(event: string, handler: Function): void {

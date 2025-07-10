@@ -7,6 +7,9 @@ import { ServiceProvider } from './provider/ServiceProvider';
 
 // Import services
 import { CombatService } from './game/CombatService';
+import { CharacterService } from './game/CharacterService';
+import { ZoneService } from './game/ZoneService';
+import { InventoryService } from './game/InventoryService';
 // TODO: Import other services as they are implemented
 // import { MonsterService } from './game/MonsterService';
 // import { NPCService } from './game/NPCService';
@@ -45,6 +48,9 @@ export class ServiceLayer {
 
   // Service instances
   public combat: CombatService;
+  public character: CharacterService;
+  public zone: ZoneService;
+  public inventory: InventoryService;
   // TODO: Add other services
   // public monster: MonsterService;
   // public npc: NPCService;
@@ -99,6 +105,9 @@ export class ServiceLayer {
 
     // Initialize services
     this.combat = new CombatService(dependencies);
+    this.character = new CharacterService(dependencies);
+    this.zone = new ZoneService(dependencies);
+    this.inventory = new InventoryService(dependencies);
     // TODO: Initialize other services
     // this.monster = new MonsterService(dependencies);
     // this.npc = new NPCService(dependencies);
@@ -111,6 +120,9 @@ export class ServiceLayer {
 
     // Register services with ServiceProvider
     ServiceProvider.register('CombatService', this.combat);
+    ServiceProvider.register('CharacterService', this.character);
+    ServiceProvider.register('ZoneService', this.zone);
+    ServiceProvider.register('InventoryService', this.inventory);
     // TODO: Register other services
     // ServiceProvider.register('MonsterService', this.monster);
     // ServiceProvider.register('NPCService', this.npc);
@@ -182,7 +194,7 @@ export class ServiceLayer {
       await this.cacheService.initialize();
 
       // Load persisted state
-      await this.stateManager.loadPersistedState();
+      await this.stateManager.loadAllPersistedState();
 
       // Process offline queue
       await this.offlineQueue.process();
@@ -284,6 +296,9 @@ export * from './state/StateManager';
 export * from './provider/ServiceProvider';
 export * from './provider/interfaces/IService';
 export * from './provider/interfaces/ICombatService';
+export * from './provider/interfaces/ICharacterService';
+export * from './provider/interfaces/IZoneService';
+export * from './provider/interfaces/IInventoryService';
 export * from './provider/interfaces/IMonsterService';
 export * from './provider/interfaces/INPCService';
 export * from './provider/interfaces/ICurrencyService';

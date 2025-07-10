@@ -49,7 +49,9 @@
       "Bash(npx eslint:*)",
       "Bash(mv:*)",
       "Bash(git checkout:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(node:*)"
     ],
     "deny": []
   }

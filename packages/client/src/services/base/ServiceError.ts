@@ -118,7 +118,7 @@ export class ErrorHandler {
       }
 
       if (options.transform) {
-        throw options.transform(error);
+        throw options.transform(error as Error);
       }
 
       throw error;

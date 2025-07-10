@@ -55,10 +55,10 @@ export function createMockWebSocketManager(): WebSocketManager {
     updateAuth: vi.fn(),
     // EventEmitter methods
     on: vi.fn((event: string, handler: Function) => {
-      emitter.on(event, handler);
+      emitter.on(event, handler as (...args: any[]) => void);
     }),
     off: vi.fn((event: string, handler: Function) => {
-      emitter.off(event, handler);
+      emitter.off(event, handler as (...args: any[]) => void);
     }),
     emit: vi.fn((event: string, ...args: any[]) => {
       emitter.emit(event, ...args);

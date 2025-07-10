@@ -1,4 +1,4 @@
-import { BaseService, ServiceConfig, ServiceResponse, RetryOptions } from './BaseService';
+import { BaseService, ServiceConfig, ServiceResponse } from './BaseService';
 import { ApiClient } from '../core/ApiClient';
 import { CacheService } from '../cache/CacheService';
 import { OfflineQueue } from '../cache/OfflineQueue';
@@ -6,6 +6,7 @@ import { NetworkError } from './ServiceError';
 
 export interface HttpServiceConfig extends ServiceConfig {
   apiClient?: ApiClient;
+  baseURL: string;
   cacheService?: CacheService;
   offlineQueue?: OfflineQueue;
 }
@@ -31,11 +32,16 @@ export abstract class BaseHttpService extends BaseService {
   protected apiClient: ApiClient;
   protected cacheService?: CacheService;
   protected offlineQueue?: OfflineQueue;
+  protected http: ApiClient; // Expose http property for child classes
 
   constructor(config: HttpServiceConfig) {
     super(config);
     
-    this.apiClient = config.apiClient || new ApiClient(config);
+    this.apiClient = config.apiClient || new ApiClient({ 
+      baseURL: config.baseURL,
+      timeout: 30000
+    });
+    this.http = this.apiClient; // Expose as http for backward compatibility
     this.cacheService = config.cacheService;
     this.offlineQueue = config.offlineQueue;
   }

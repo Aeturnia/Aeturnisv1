@@ -17,7 +17,7 @@ describe('OfflineQueue', () => {
     it('should add operations to queue', async () => {
       const operation = {
         method: 'POST',
-        endpoint: '/api/test',
+        endpoint: '/api/v1/test',
         data: { name: 'Test' },
         timestamp: Date.now(),
       };
@@ -31,7 +31,7 @@ describe('OfflineQueue', () => {
     it('should get operation by id', async () => {
       const operation = {
         method: 'POST',
-        endpoint: '/api/test',
+        endpoint: '/api/v1/test',
         data: { name: 'Test' },
         timestamp: Date.now(),
       };
@@ -41,14 +41,14 @@ describe('OfflineQueue', () => {
 
       expect(retrieved).toBeDefined();
       expect(retrieved?.method).toBe('POST');
-      expect(retrieved?.endpoint).toBe('/api/test');
+      expect(retrieved?.endpoint).toBe('/api/v1/test');
       expect(retrieved?.data).toEqual({ name: 'Test' });
     });
 
     it('should remove operations', async () => {
       const id = await queue.add({
         method: 'POST',
-        endpoint: '/api/test',
+        endpoint: '/api/v1/test',
         data: {},
         timestamp: Date.now(),
       });
@@ -62,14 +62,14 @@ describe('OfflineQueue', () => {
     it('should get all operations', async () => {
       await queue.add({
         method: 'POST',
-        endpoint: '/api/test1',
+        endpoint: '/api/v1/test1',
         data: { id: 1 },
         timestamp: Date.now(),
       });
 
       await queue.add({
         method: 'PUT',
-        endpoint: '/api/test2',
+        endpoint: '/api/v1/test2',
         data: { id: 2 },
         timestamp: Date.now(),
       });
@@ -77,21 +77,21 @@ describe('OfflineQueue', () => {
       const all = await queue.getAll();
 
       expect(all).toHaveLength(2);
-      expect(all[0].endpoint).toBe('/api/test1');
-      expect(all[1].endpoint).toBe('/api/test2');
+      expect(all[0].endpoint).toBe('/api/v1/test1');
+      expect(all[1].endpoint).toBe('/api/v1/test2');
     });
 
     it('should clear all operations', async () => {
       await queue.add({
         method: 'POST',
-        endpoint: '/api/test1',
+        endpoint: '/api/v1/test1',
         data: {},
         timestamp: Date.now(),
       });
 
       await queue.add({
         method: 'POST',
-        endpoint: '/api/test2',
+        endpoint: '/api/v1/test2',
         data: {},
         timestamp: Date.now(),
       });
@@ -113,21 +113,21 @@ describe('OfflineQueue', () => {
       // Add operations up to limit
       const id1 = await limitedQueue.add({
         method: 'POST',
-        endpoint: '/api/1',
+        endpoint: '/api/v1/1',
         data: {},
         timestamp: Date.now() - 3000,
       });
 
       await limitedQueue.add({
         method: 'POST',
-        endpoint: '/api/2',
+        endpoint: '/api/v1/2',
         data: {},
         timestamp: Date.now() - 2000,
       });
 
       await limitedQueue.add({
         method: 'POST',
-        endpoint: '/api/3',
+        endpoint: '/api/v1/3',
         data: {},
         timestamp: Date.now() - 1000,
       });
@@ -135,7 +135,7 @@ describe('OfflineQueue', () => {
       // Adding one more should evict oldest
       await limitedQueue.add({
         method: 'POST',
-        endpoint: '/api/4',
+        endpoint: '/api/v1/4',
         data: {},
         timestamp: Date.now(),
       });
@@ -158,14 +158,14 @@ describe('OfflineQueue', () => {
 
       const id1 = await queueWithTTL.add({
         method: 'POST',
-        endpoint: '/api/old',
+        endpoint: '/api/v1/old',
         data: {},
         timestamp: now - 2000, // Expired
       });
 
       const id2 = await queueWithTTL.add({
         method: 'POST',
-        endpoint: '/api/new',
+        endpoint: '/api/v1/new',
         data: {},
         timestamp: now - 500, // Not expired
       });
@@ -173,7 +173,7 @@ describe('OfflineQueue', () => {
       const all = await queueWithTTL.getAll();
 
       expect(all).toHaveLength(1);
-      expect(all[0].endpoint).toBe('/api/new');
+      expect(all[0].endpoint).toBe('/api/v1/new');
       expect(await queueWithTTL.get(id1)).toBeUndefined();
       expect(await queueWithTTL.get(id2)).toBeDefined();
 
@@ -189,14 +189,14 @@ describe('OfflineQueue', () => {
 
       await defaultQueue.add({
         method: 'POST',
-        endpoint: '/api/old',
+        endpoint: '/api/v1/old',
         data: {},
         timestamp: now - (25 * 60 * 60 * 1000), // 25 hours old
       });
 
       await defaultQueue.add({
         method: 'POST',
-        endpoint: '/api/recent',
+        endpoint: '/api/v1/recent',
         data: {},
         timestamp: now - (23 * 60 * 60 * 1000), // 23 hours old
       });
@@ -204,7 +204,7 @@ describe('OfflineQueue', () => {
       const all = await defaultQueue.getAll();
 
       expect(all).toHaveLength(1);
-      expect(all[0].endpoint).toBe('/api/recent');
+      expect(all[0].endpoint).toBe('/api/v1/recent');
 
       vi.useRealTimers();
     });
@@ -214,14 +214,14 @@ describe('OfflineQueue', () => {
     it('should process operations and track retry counts', async () => {
       const op1 = await queue.add({
         method: 'POST',
-        endpoint: '/api/test1',
+        endpoint: '/api/v1/test1',
         data: {},
         timestamp: Date.now(),
       });
 
       const op2 = await queue.add({
         method: 'POST',
-        endpoint: '/api/test2',
+        endpoint: '/api/v1/test2',
         data: {},
         timestamp: Date.now(),
       });
@@ -247,7 +247,7 @@ describe('OfflineQueue', () => {
 
       const opId = await queueWithLowRetries.add({
         method: 'POST',
-        endpoint: '/api/test',
+        endpoint: '/api/v1/test',
         data: {},
         timestamp: Date.now(),
       });
@@ -268,7 +268,7 @@ describe('OfflineQueue', () => {
       // Mock the operation to throw an error during processing
       const operation = {
         method: 'POST',
-        endpoint: '/api/test',
+        endpoint: '/api/v1/test',
         data: {},
         timestamp: Date.now(),
       };
@@ -297,7 +297,7 @@ describe('OfflineQueue', () => {
 
       await persistedQueue.add({
         method: 'POST',
-        endpoint: '/api/test',
+        endpoint: '/api/v1/test',
         data: { persisted: true },
         timestamp: Date.now(),
       });
@@ -315,7 +315,7 @@ describe('OfflineQueue', () => {
         {
           id: 'op_123',
           method: 'POST',
-          endpoint: '/api/test1',
+          endpoint: '/api/v1/test1',
           data: { id: 1 },
           timestamp: Date.now(),
           retryCount: 0,
@@ -323,7 +323,7 @@ describe('OfflineQueue', () => {
         {
           id: 'op_456',
           method: 'PUT',
-          endpoint: '/api/test2',
+          endpoint: '/api/v1/test2',
           data: { id: 2 },
           timestamp: Date.now(),
           retryCount: 1,
@@ -354,7 +354,7 @@ describe('OfflineQueue', () => {
 
       await persistedQueue.add({
         method: 'POST',
-        endpoint: '/api/test',
+        endpoint: '/api/v1/test',
         data: {},
         timestamp: Date.now(),
       });
@@ -373,7 +373,7 @@ describe('OfflineQueue', () => {
     it('should set default retry count and max retries', async () => {
       const id = await queue.add({
         method: 'POST',
-        endpoint: '/api/test',
+        endpoint: '/api/v1/test',
         data: {},
         timestamp: Date.now(),
       });

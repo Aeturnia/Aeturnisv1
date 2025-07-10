@@ -72,7 +72,9 @@ export class ServiceRegistry {
       if (!this.initialized.has(name) && service.initialize) {
         promises.push(
           service.initialize()
-            .then(() => this.initialized.add(name))
+            .then(() => {
+              this.initialized.add(name);
+            })
             .catch(error => {
               console.error(`Failed to initialize service "${name}":`, error);
               throw error;

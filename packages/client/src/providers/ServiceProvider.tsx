@@ -81,5 +81,13 @@ export function useServiceContext() {
   return context;
 }
 
+// Export service dependencies interface
+export interface ServiceDependencies {
+  apiClient?: any;
+  wsManager?: any;
+  cacheService?: any;
+  offlineQueue?: any;
+}
+
 // Re-export the useServices hook for convenience
 export { useServices, useServiceState, useServiceData, useCombat, useWebSocketStatus, useOfflineQueue } from '../hooks/useServices';

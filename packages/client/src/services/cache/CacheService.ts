@@ -158,7 +158,15 @@ export class LocalStorageCacheService extends BaseCacheService {
         await this.evictOldest();
         // Retry once
         try {
-          localStorage.setItem(this.prefix + key, JSON.stringify(entry));
+          const retryEntry: CacheEntry<T> = {
+            data,
+            metadata: {
+              timestamp: Date.now(),
+              version: options.version
+            },
+            ttl: options.ttl || this.config.defaultTTL
+          };
+          localStorage.setItem(this.prefix + key, JSON.stringify(retryEntry));
         } catch (retryError) {
           console.error('Failed to set cache entry after eviction:', retryError);
         }

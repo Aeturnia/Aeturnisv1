@@ -9,6 +9,7 @@ import { LoadingScreen } from './components/common/LoadingScreen'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { InstallPrompt, ShareHandler } from './components/common'
 import { DeveloperTools } from './components/debug'
+import { CharacterServiceTest } from './components/debug/CharacterServiceTest'
 import { ServiceProvider } from './providers/ServiceProvider'
 
 // Lazy load game screens for code splitting
@@ -20,8 +21,8 @@ const SettingsScreen = lazy(() => import('./components/game/SettingsScreen').the
 
 // Service configuration
 const serviceConfig = {
-  apiBaseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3000',
-  wsUrl: import.meta.env.VITE_WS_URL || 'ws://localhost:3000',
+  apiBaseUrl: import.meta.env?.VITE_API_URL || 'http://localhost:3000',
+  wsUrl: import.meta.env?.VITE_WS_URL || 'ws://localhost:3000',
   timeout: 30000,
   cacheConfig: {
     storage: 'localStorage' as const,
@@ -37,7 +38,7 @@ const serviceConfig = {
 
 function App() {
   const [isLoading, setIsLoading] = useState(true)
-  const [isAppReady, setIsAppReady] = useState(false)
+
   const { orientation, isTransitioning, getOrientationStyles } = useOrientation({
     lockPortrait: true,
     adaptiveUI: true,
@@ -52,7 +53,7 @@ function App() {
         // Initialize app services
         await new Promise(resolve => setTimeout(resolve, 1000))
         
-        setIsAppReady(true)
+
         setIsLoading(false)
       } catch (error) {
         console.error('App initialization failed:', error)
@@ -122,6 +123,9 @@ function App() {
             
             {/* Developer Tools (dev only) */}
             <DeveloperTools />
+            
+            {/* Character Service Test */}
+            <CharacterServiceTest />
           </div>
         </SafeArea>
       </ServiceProvider>

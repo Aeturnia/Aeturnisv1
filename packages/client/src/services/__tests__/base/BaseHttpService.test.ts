@@ -72,9 +72,9 @@ describe('BaseHttpService', () => {
       const mockData = { id: 1, name: 'Test' };
       mockApiClient.get.mockResolvedValue({ data: mockData });
 
-      const result = await service.testGet('/api/test');
+      const result = await service.testGet('/api/v1/test');
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/api/test', {});
+      expect(mockApiClient.get).toHaveBeenCalledWith('/api/v1/test', {});
       expect(result).toEqual({
         data: mockData,
         metadata: { timestamp: expect.any(Number), cached: false },
@@ -89,7 +89,7 @@ describe('BaseHttpService', () => {
       };
       mockCacheService.get.mockResolvedValue(cachedData);
 
-      const result = await service.testGet('/api/test');
+      const result = await service.testGet('/api/v1/test');
 
       expect(mockApiClient.get).not.toHaveBeenCalled();
       expect(result).toEqual({
@@ -107,7 +107,7 @@ describe('BaseHttpService', () => {
       mockCacheService.get.mockResolvedValue(expiredCache);
       mockApiClient.get.mockResolvedValue({ data: { id: 1, name: 'Fresh' } });
 
-      const result = await service.testGet('/api/test');
+      const result = await service.testGet('/api/v1/test');
 
       expect(mockApiClient.get).toHaveBeenCalled();
       expect(result.data).toEqual({ id: 1, name: 'Fresh' });
@@ -119,10 +119,10 @@ describe('BaseHttpService', () => {
       mockApiClient.get.mockResolvedValue({ data: mockData });
       mockCacheService.get.mockResolvedValue(null);
 
-      await service.testGet('/api/test');
+      await service.testGet('/api/v1/test');
 
       expect(mockCacheService.set).toHaveBeenCalledWith(
-        'GET:/api/test:',
+        'GET:/api/v1/test:',
         mockData,
         { ttl: 300000 }
       );
@@ -132,7 +132,7 @@ describe('BaseHttpService', () => {
       const mockData = { id: 1, name: 'Test' };
       mockApiClient.get.mockResolvedValue({ data: mockData });
 
-      await service.testGet('/api/test', { useCache: false });
+      await service.testGet('/api/v1/test', { useCache: false });
 
       expect(mockCacheService.get).not.toHaveBeenCalled();
       expect(mockApiClient.get).toHaveBeenCalled();
@@ -149,7 +149,7 @@ describe('BaseHttpService', () => {
       mockCacheService.get.mockResolvedValue(cachedData);
       mockApiClient.get.mockRejectedValue(new NetworkError('Offline'));
 
-      const result = await service.testGet('/api/test');
+      const result = await service.testGet('/api/v1/test');
 
       expect(result).toEqual({
         data: cachedData.data,
@@ -164,7 +164,7 @@ describe('BaseHttpService', () => {
       mockCacheService.get.mockResolvedValue(null);
       mockApiClient.get.mockRejectedValue(new NetworkError('Offline'));
 
-      await expect(service.testGet('/api/test')).rejects.toThrow(NetworkError);
+      await expect(service.testGet('/api/v1/test')).rejects.toThrow(NetworkError);
     });
   });
 
@@ -174,9 +174,9 @@ describe('BaseHttpService', () => {
       const responseData = { id: 1, ...postData };
       mockApiClient.post.mockResolvedValue({ data: responseData });
 
-      const result = await service.testPost('/api/items', postData);
+      const result = await service.testPost('/api/v1/items', postData);
 
-      expect(mockApiClient.post).toHaveBeenCalledWith('/api/items', postData, {});
+      expect(mockApiClient.post).toHaveBeenCalledWith('/api/v1/items', postData, {});
       expect(result).toEqual({
         data: responseData,
         metadata: { timestamp: expect.any(Number), cached: false },
@@ -190,12 +190,12 @@ describe('BaseHttpService', () => {
       const postData = { name: 'Offline Item' };
       mockOfflineQueue.add.mockResolvedValue('queue-id-123');
 
-      await expect(service.testPost('/api/items', postData))
+      await expect(service.testPost('/api/v1/items', postData))
         .rejects.toThrow('Operation queued for offline sync');
 
       expect(mockOfflineQueue.add).toHaveBeenCalledWith({
         method: 'POST',
-        endpoint: '/api/items',
+        endpoint: '/api/v1/items',
         data: postData,
         options: {},
         timestamp: expect.any(Number),
@@ -209,7 +209,7 @@ describe('BaseHttpService', () => {
       const postData = { name: 'Optimistic Item' };
       const optimisticResponse = { id: 'temp-123', ...postData };
 
-      const result = await service.testPost('/api/items', postData, {
+      const result = await service.testPost('/api/v1/items', postData, {
         optimisticResponse,
       });
 
@@ -235,7 +235,7 @@ describe('BaseHttpService', () => {
       const postData = { name: 'No Queue Item' };
       mockApiClient.post.mockRejectedValue(new NetworkError('Offline'));
 
-      await expect(service.testPost('/api/items', postData))
+      await expect(service.testPost('/api/v1/items', postData))
         .rejects.toThrow(NetworkError);
 
       expect(mockOfflineQueue?.add).not.toHaveBeenCalled();
@@ -248,9 +248,9 @@ describe('BaseHttpService', () => {
       const responseData = { id: 1, ...putData };
       mockApiClient.put.mockResolvedValue({ data: responseData });
 
-      const result = await service.testPut('/api/items/1', putData);
+      const result = await service.testPut('/api/v1/items/1', putData);
 
-      expect(mockApiClient.put).toHaveBeenCalledWith('/api/items/1', putData, {});
+      expect(mockApiClient.put).toHaveBeenCalledWith('/api/v1/items/1', putData, {});
       expect(result).toEqual({
         data: responseData,
         metadata: { timestamp: expect.any(Number), cached: false },
@@ -263,12 +263,12 @@ describe('BaseHttpService', () => {
 
       const putData = { name: 'Offline Update' };
 
-      await expect(service.testPut('/api/items/1', putData))
+      await expect(service.testPut('/api/v1/items/1', putData))
         .rejects.toThrow('Operation queued for offline sync');
 
       expect(mockOfflineQueue.add).toHaveBeenCalledWith({
         method: 'PUT',
-        endpoint: '/api/items/1',
+        endpoint: '/api/v1/items/1',
         data: putData,
         options: {},
         timestamp: expect.any(Number),
@@ -280,9 +280,9 @@ describe('BaseHttpService', () => {
     it('should make successful DELETE request', async () => {
       mockApiClient.delete.mockResolvedValue({ data: undefined });
 
-      const result = await service.testDelete('/api/items/1');
+      const result = await service.testDelete('/api/v1/items/1');
 
-      expect(mockApiClient.delete).toHaveBeenCalledWith('/api/items/1', {});
+      expect(mockApiClient.delete).toHaveBeenCalledWith('/api/v1/items/1', {});
       expect(result).toEqual({
         data: undefined,
         metadata: { timestamp: expect.any(Number), cached: false },
@@ -293,12 +293,12 @@ describe('BaseHttpService', () => {
       Object.defineProperty(navigator, 'onLine', { value: false });
       service['isOnline'] = false;
 
-      await expect(service.testDelete('/api/items/1'))
+      await expect(service.testDelete('/api/v1/items/1'))
         .rejects.toThrow('Operation queued for offline sync');
 
       expect(mockOfflineQueue.add).toHaveBeenCalledWith({
         method: 'DELETE',
-        endpoint: '/api/items/1',
+        endpoint: '/api/v1/items/1',
         options: {},
         timestamp: expect.any(Number),
       });
@@ -307,11 +307,11 @@ describe('BaseHttpService', () => {
 
   describe('cache key generation', () => {
     it('should generate consistent cache keys', () => {
-      expect(service.testGetCacheKey('GET', '/api/test')).toBe('GET:/api/test:');
-      expect(service.testGetCacheKey('GET', '/api/test', { id: 1 }))
-        .toBe('GET:/api/test:{"id":1}');
-      expect(service.testGetCacheKey('POST', '/api/items', { name: 'Test' }))
-        .toBe('POST:/api/items:{"name":"Test"}');
+      expect(service.testGetCacheKey('GET', '/api/v1/test')).toBe('GET:/api/v1/test:');
+      expect(service.testGetCacheKey('GET', '/api/v1/test', { id: 1 }))
+        .toBe('GET:/api/v1/test:{"id":1}');
+      expect(service.testGetCacheKey('POST', '/api/v1/items', { name: 'Test' }))
+        .toBe('POST:/api/v1/items:{"name":"Test"}');
     });
   });
 
@@ -344,7 +344,7 @@ describe('BaseHttpService', () => {
         .mockRejectedValueOnce(new NetworkError('Network error'))
         .mockResolvedValue({ data: { success: true } });
 
-      const result = await service.testGet('/api/test');
+      const result = await service.testGet('/api/v1/test');
 
       expect(mockApiClient.get).toHaveBeenCalledTimes(2);
       expect(result.data).toEqual({ success: true });

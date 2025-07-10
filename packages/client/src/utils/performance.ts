@@ -1,6 +1,8 @@
 /**
  * Performance monitoring and optimization utilities for mobile
  */
+import { useState, useEffect } from 'react'
+import React from 'react'
 
 // Performance metrics tracking
 interface PerformanceMetrics {
@@ -176,8 +178,6 @@ export const withPerformanceTracking = <P extends object>(
       performanceMonitor.trackRenderTime(componentName, startTime)
     })
     
-    return <Component {...props} />
+    return React.createElement(Component, props)
   }
 }
-
-import { useState, useEffect } from 'react'

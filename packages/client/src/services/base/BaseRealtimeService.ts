@@ -39,7 +39,8 @@ export abstract class BaseRealtimeService extends BaseService {
   protected wsManager: WebSocketManager;
   protected subscriptions: Map<string, Subscription> = new Map();
   protected messageQueue: QueuedMessage[] = [];
-  private heartbeatTimer?: NodeJS.Timer;
+  protected socket: WebSocketManager; // Expose socket property for child classes
+  private heartbeatTimer?: NodeJS.Timeout;
 
   constructor(config: RealtimeServiceConfig) {
     super(config);
@@ -48,7 +49,8 @@ export abstract class BaseRealtimeService extends BaseService {
       autoReconnect: config.autoReconnect ?? true,
       reconnectInterval: config.reconnectInterval ?? 5000,
     });
-
+    
+    this.socket = this.wsManager; // Expose as socket for backward compatibility
     this.setupEventHandlers();
     
     if (config.heartbeatInterval) {
@@ -67,7 +69,7 @@ export abstract class BaseRealtimeService extends BaseService {
       this.emit('realtime:disconnected');
     });
 
-    this.wsManager.on('error', (error) => {
+    this.wsManager.on('error', (error: any) => {
       this.emit('realtime:error', error);
     });
 

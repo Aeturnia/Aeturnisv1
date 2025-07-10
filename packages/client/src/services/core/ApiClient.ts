@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { NetworkError, TimeoutError, ServiceError } from '../base/ServiceError';
 
 export interface ApiClientConfig {
@@ -8,7 +8,7 @@ export interface ApiClientConfig {
 }
 
 export interface RequestInterceptor {
-  onRequest?: (config: AxiosRequestConfig) => AxiosRequestConfig | Promise<AxiosRequestConfig>;
+  onRequest?: (config: InternalAxiosRequestConfig) => InternalAxiosRequestConfig | Promise<InternalAxiosRequestConfig>;
   onRequestError?: (error: any) => any;
 }
 
@@ -92,7 +92,7 @@ export class ApiClient {
 
     if (error.response) {
       const { status, data } = error.response;
-      const message = data?.message || error.message;
+      const message = (data as any)?.message || error.message;
 
       return new ServiceError(message, 'API_ERROR', {
         statusCode: status,
@@ -105,7 +105,7 @@ export class ApiClient {
   }
 
   public addRequestInterceptor(
-    onRequest?: (config: AxiosRequestConfig) => AxiosRequestConfig | Promise<AxiosRequestConfig>,
+    onRequest?: (config: InternalAxiosRequestConfig) => InternalAxiosRequestConfig | Promise<InternalAxiosRequestConfig>,
     onRequestError?: (error: any) => any
   ): void {
     this.requestInterceptors.push({ onRequest, onRequestError });

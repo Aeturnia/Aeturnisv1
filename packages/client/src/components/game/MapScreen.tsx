@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTouch } from '../../hooks/useTouch'
+import { useZone, useCharacter } from '../../hooks/useServices'
+import { Zone } from '@aeturnis/shared'
 
 interface MapLocation {
   id: string
@@ -12,19 +14,61 @@ interface MapLocation {
   completed?: boolean
 }
 
-const mockLocations: MapLocation[] = [
-  { id: '1', name: 'Starting Village', x: 20, y: 80, type: 'town', level: 1, discovered: true, completed: true },
-  { id: '2', name: 'Goblin Cave', x: 40, y: 60, type: 'dungeon', level: 5, discovered: true, completed: true },
-  { id: '3', name: 'Ancient Forest', x: 60, y: 40, type: 'resource', level: 10, discovered: true },
-  { id: '4', name: 'Dragon Lair', x: 80, y: 20, type: 'boss', level: 25, discovered: true },
-  { id: '5', name: 'Hidden Temple', x: 75, y: 70, type: 'dungeon', level: 15, discovered: false },
-  { id: '6', name: 'Crystal Mine', x: 25, y: 30, type: 'resource', level: 8, discovered: true },
-]
+// Map zone types to display types
+const getZoneDisplayType = (zone: Zone): 'town' | 'dungeon' | 'boss' | 'resource' => {
+  if (zone.type === 'city') return 'town'
+  if (zone.type === 'dungeon') return 'dungeon'
+  if (zone.features?.includes('boss')) return 'boss'
+  if (zone.features?.includes('resources')) return 'resource'
+  return 'town'
+}
 
 export function MapScreen() {
-  const [selectedLocation, setSelectedLocation] = useState<MapLocation | null>(null)
+  const [selectedZone, setSelectedZone] = useState<Zone | null>(null)
   const [mapScale, setMapScale] = useState(1)
   const [mapPosition, setMapPosition] = useState({ x: 0, y: 0 })
+  const [loading, setLoading] = useState(true)
+  const [playerPosition, setPlayerPosition] = useState<{ x: number; y: number } | null>(null)
+  
+  const { zoneList, currentZone, getZones, getCharacterPosition, moveToZone } = useZone()
+  const { currentCharacter } = useCharacter()
+  
+  // Load zones on mount
+  useEffect(() => {
+    loadData()
+  }, [])
+  
+  // Update player position when current zone changes
+  useEffect(() => {
+    if (currentZone) {
+      setPlayerPosition({
+        x: currentZone.coordinates.x,
+        y: currentZone.coordinates.y
+      })
+    }
+  }, [currentZone])
+  
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      await getZones()
+      
+      // Get current character position if available
+      if (currentCharacter?.id) {
+        const position = await getCharacterPosition(currentCharacter.id)
+        if (position) {
+          setPlayerPosition({
+            x: position.coordinates.x,
+            y: position.coordinates.y
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load map data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
   
   const { gestureHandler, hapticFeedback } = useTouch({
     onTap: ({ point }) => {
@@ -45,7 +89,8 @@ export function MapScreen() {
     dragScrollEnabled: true
   })
 
-  const getLocationIcon = (type: string) => {
+  const getLocationIcon = (zone: Zone) => {
+    const type = getZoneDisplayType(zone)
     switch (type) {
       case 'town': return '🏘️'
       case 'dungeon': return '🕳️'
@@ -55,10 +100,10 @@ export function MapScreen() {
     }
   }
 
-  const getLocationColor = (type: string, discovered: boolean, completed?: boolean) => {
-    if (!discovered) return 'bg-gray-600'
-    if (completed) return 'bg-green-600'
+  const getLocationColor = (zone: Zone) => {
+    if (zone.locked) return 'bg-gray-600'
     
+    const type = getZoneDisplayType(zone)
     switch (type) {
       case 'town': return 'bg-blue-600'
       case 'dungeon': return 'bg-purple-600'
@@ -67,6 +112,32 @@ export function MapScreen() {
       default: return 'bg-gray-600'
     }
   }
+  
+  const handleTravel = async (zone: Zone) => {
+    if (!currentCharacter?.id || zone.locked) return
+    
+    try {
+      await moveToZone(currentCharacter.id, zone.id)
+      setSelectedZone(null)
+      hapticFeedback('success')
+    } catch (error) {
+      console.error('Failed to travel:', error)
+      hapticFeedback('error')
+    }
+  }
+  
+  if (loading) {
+    return (
+      <div className="h-full bg-dark-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4 animate-spin">🗺️</div>
+          <p className="text-white">Loading world map...</p>
+        </div>
+      </div>
+    )
+  }
+  
+  const zones = zoneList ? Array.from(zoneList.values()) : []
 
   return (
     <div
@@ -77,7 +148,7 @@ export function MapScreen() {
         <div className="flex justify-between items-center">
           <div className="card p-2">
             <h2 className="text-lg font-bold text-white">World Map</h2>
-            <p className="text-xs text-dark-400">Level 1-25 Areas</p>
+            <p className="text-xs text-dark-400">{zones.length} Zones Available</p>
           </div>
           <div className="flex space-x-2">
             <button
@@ -110,36 +181,38 @@ export function MapScreen() {
           <div className="absolute top-1/3 right-0 w-1/3 h-1/3 bg-gradient-to-l from-brown-600 to-transparent" />
         </div>
 
-        {/* Locations */}
-        {mockLocations.map((location) => (
+        {/* Zones */}
+        {zones.map((zone) => (
           <div
-            key={location.id}
-            className={`absolute w-12 h-12 rounded-full ${getLocationColor(location.type, location.discovered, location.completed)} 
+            key={zone.id}
+            className={`absolute w-12 h-12 rounded-full ${getLocationColor(zone)} 
               border-2 border-white shadow-lg cursor-pointer flex items-center justify-center`}
             style={{
-              left: `${location.x}%`,
-              top: `${location.y}%`,
+              left: `${zone.coordinates.x}%`,
+              top: `${zone.coordinates.y}%`,
               transform: 'translate(-50%, -50%)',
-              opacity: location.discovered ? 1 : 0.3
+              opacity: zone.locked ? 0.3 : 1
             }}
             onClick={() => {
-              setSelectedLocation(location)
+              setSelectedZone(zone)
               hapticFeedback('medium')
             }}
           >
-            <span className="text-lg">{getLocationIcon(location.type)}</span>
+            <span className="text-lg">{getLocationIcon(zone)}</span>
           </div>
         ))}
 
         {/* Current player position */}
-        <div
-          className="absolute w-4 h-4 bg-primary-500 rounded-full border-2 border-white shadow-lg"
-          style={{
-            left: '20%',
-            top: '80%',
-            transform: 'translate(-50%, -50%)'
-          }}
-        />
+        {playerPosition && (
+          <div
+            className="absolute w-4 h-4 bg-primary-500 rounded-full border-2 border-white shadow-lg animate-pulse"
+            style={{
+              left: `${playerPosition.x}%`,
+              top: `${playerPosition.y}%`,
+              transform: 'translate(-50%, -50%)'
+            }}
+          />
+        )}
       </div>
 
       {/* Map Legend */}
@@ -169,35 +242,47 @@ export function MapScreen() {
         </div>
       </div>
 
-      {/* Location Details Modal */}
-      {selectedLocation && (
+      {/* Zone Details Modal */}
+      {selectedZone && (
         <div
           className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-          onClick={() => setSelectedLocation(null)}
+          onClick={() => setSelectedZone(null)}
         >
           <div
             className="card p-6 max-w-sm w-full"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center mb-4">
-              <div className="text-4xl mb-2">{getLocationIcon(selectedLocation.type)}</div>
-              <h3 className="text-xl font-bold text-white">{selectedLocation.name}</h3>
+              <div className="text-4xl mb-2">{getLocationIcon(selectedZone)}</div>
+              <h3 className="text-xl font-bold text-white">{selectedZone.displayName}</h3>
               <p className="text-sm text-dark-400 capitalize">
-                Level {selectedLocation.level} {selectedLocation.type}
+                {selectedZone.levelRequirement && `Level ${selectedZone.levelRequirement} `}
+                {selectedZone.type} Zone
               </p>
             </div>
             
             <div className="space-y-2 mb-4">
               <div className="flex justify-between">
                 <span className="text-dark-400">Status:</span>
-                <span className={`text-sm ${selectedLocation.discovered ? 'text-green-400' : 'text-gray-400'}`}>
-                  {selectedLocation.discovered ? 'Discovered' : 'Undiscovered'}
+                <span className={`text-sm ${selectedZone.locked ? 'text-red-400' : 'text-green-400'}`}>
+                  {selectedZone.locked ? 'Locked' : 'Available'}
                 </span>
               </div>
-              {selectedLocation.completed && (
-                <div className="flex justify-between">
-                  <span className="text-dark-400">Progress:</span>
-                  <span className="text-green-400 text-sm">Completed</span>
+              {selectedZone.description && (
+                <div className="text-sm text-dark-400 italic">
+                  "{selectedZone.description}"
+                </div>
+              )}
+              {selectedZone.features && selectedZone.features.length > 0 && (
+                <div>
+                  <span className="text-dark-400 text-sm">Features:</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {selectedZone.features.map((feature, index) => (
+                      <span key={index} className="px-2 py-1 bg-dark-700 rounded text-xs text-white capitalize">
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -205,12 +290,16 @@ export function MapScreen() {
             <div className="flex space-x-2">
               <button 
                 className="btn-touch btn-primary flex-1"
-                disabled={!selectedLocation.discovered}
+                disabled={selectedZone.locked || !currentCharacter}
+                onClick={() => handleTravel(selectedZone)}
               >
-                Travel
+                {selectedZone.locked ? 'Locked' : 'Travel'}
               </button>
-              <button className="btn-touch btn-secondary">
-                Info
+              <button 
+                className="btn-touch btn-secondary"
+                onClick={() => setSelectedZone(null)}
+              >
+                Close
               </button>
             </div>
           </div>

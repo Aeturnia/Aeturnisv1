@@ -62,7 +62,7 @@ describe('CombatService', () => {
 
       expect(result).toEqual(mockCombatSession);
       expect(mockDependencies.apiClient.post).toHaveBeenCalledWith(
-        '/api/combat/start',
+        '/api/v1/combat/start',
         {
           initiatorId: 'character-123',
           targetId: 'monster-456',
@@ -147,7 +147,7 @@ describe('CombatService', () => {
 
       expect(result).toBe(true);
       expect(mockDependencies.apiClient.post).toHaveBeenCalledWith(
-        '/api/combat/sessions/combat-123/flee',
+        '/api/v1/combat/sessions/combat-123/flee',
         { userId: 'user-123' }
       );
     });
@@ -180,7 +180,7 @@ describe('CombatService', () => {
 
       expect(result).toEqual(mockCombatSession);
       expect(mockDependencies.apiClient.get).toHaveBeenCalledWith(
-        '/api/combat/sessions/combat-123',
+        '/api/v1/combat/sessions/combat-123',
         expect.objectContaining({
           useCache: true,
           cacheTTL: 5000,
@@ -242,7 +242,7 @@ describe('CombatService', () => {
 
       expect(result).toEqual(mockCombatStats);
       expect(mockDependencies.apiClient.get).toHaveBeenCalledWith(
-        '/api/combat/stats/character-123',
+        '/api/v1/combat/stats/character-123',
         expect.objectContaining({
           useCache: true,
           cacheTTL: 30000,

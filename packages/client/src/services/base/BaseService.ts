@@ -16,6 +16,8 @@ export interface ServiceResponse<T> {
     timestamp: number;
     cached: boolean;
     version?: string;
+    offline?: boolean;
+    queued?: boolean;
   };
 }
 

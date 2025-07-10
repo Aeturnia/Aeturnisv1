@@ -226,14 +226,14 @@ class CombatHttpService extends BaseHttpService {
     initiatorId: string,
     request: StartCombatRequest
   ): Promise<ServiceResponse<CombatSessionData>> {
-    return this.post<CombatSessionData>('/api/combat/start', {
+    return this.post<CombatSessionData>('/api/v1/combat/start', {
       initiatorId,
       ...request
     });
   }
 
   public async getCombatSession(sessionId: string): Promise<ServiceResponse<CombatSessionData>> {
-    return this.get<CombatSessionData>(`/api/combat/sessions/${sessionId}`, {
+    return this.get<CombatSessionData>(`/api/v1/combat/sessions/${sessionId}`, {
       useCache: true,
       cacheTTL: 5000 // 5 seconds
     });
@@ -242,15 +242,15 @@ class CombatHttpService extends BaseHttpService {
   public async getActiveCombatForCharacter(
     characterId: string
   ): Promise<ServiceResponse<CombatSessionData | null>> {
-    return this.get<CombatSessionData | null>(`/api/combat/active/${characterId}`);
+    return this.get<CombatSessionData | null>(`/api/v1/combat/active/${characterId}`);
   }
 
   public async fleeCombat(sessionId: string, userId: string): Promise<ServiceResponse<boolean>> {
-    return this.post<boolean>(`/api/combat/sessions/${sessionId}/flee`, { userId });
+    return this.post<boolean>(`/api/v1/combat/sessions/${sessionId}/flee`, { userId });
   }
 
   public async getCharacterStats(characterId: string): Promise<ServiceResponse<CombatStats>> {
-    return this.get<CombatStats>(`/api/combat/stats/${characterId}`, {
+    return this.get<CombatStats>(`/api/v1/combat/stats/${characterId}`, {
       useCache: true,
       cacheTTL: 30000 // 30 seconds
     });

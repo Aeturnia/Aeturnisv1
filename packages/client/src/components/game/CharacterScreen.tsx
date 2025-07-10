@@ -1,46 +1,75 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTouch } from '../../hooks/useTouch'
+import { useCharacter } from '../../hooks/useServices'
+import { Character } from '@aeturnis/shared'
 
-interface CharacterStats {
-  level: number
-  experience: number
-  experienceToNext: number
-  health: number
-  maxHealth: number
-  mana: number
-  maxMana: number
-  strength: number
-  dexterity: number
-  intelligence: number
-  constitution: number
-  wisdom: number
-  charisma: number
-}
-
-const mockCharacter: CharacterStats = {
-  level: 25,
-  experience: 12500,
-  experienceToNext: 15000,
-  health: 180,
-  maxHealth: 200,
-  mana: 85,
-  maxMana: 120,
-  strength: 28,
-  dexterity: 18,
-  intelligence: 22,
-  constitution: 25,
-  wisdom: 20,
-  charisma: 15,
+// Helper function to calculate experience for level
+// TODO: Use from @aeturnis/shared once export issue is resolved
+function calculateExpForLevel(level: number): bigint {
+  if (level <= 1) return 0n;
+  const base = 100n;
+  const scaling = 115n; // 1.15 as percentage
+  let exp = base;
+  for (let i = 2; i < level; i++) {
+    exp = (exp * scaling) / 100n;
+  }
+  return exp;
 }
 
 export function CharacterScreen() {
   const [activeTab, setActiveTab] = useState<'stats' | 'skills' | 'achievements'>('stats')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null)
+  
+  const { 
+    currentCharacter, 
+    characterList,
+    getCharacter,
+    getCharacters
+  } = useCharacter()
   
   const { hapticFeedback } = useTouch({
     onTap: () => {
       hapticFeedback('light')
     }
   })
+
+  // Load character data on mount
+  useEffect(() => {
+    loadCharacterData()
+  }, [])
+
+  // Use currentCharacter from state or selectedCharacter
+  useEffect(() => {
+    if (currentCharacter && !selectedCharacter) {
+      setSelectedCharacter(currentCharacter as Character)
+    }
+  }, [currentCharacter, selectedCharacter])
+
+  const loadCharacterData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      // Try to get all characters first
+      await getCharacters()
+      
+      // If we have a current character in state, use it
+      if (currentCharacter) {
+        setSelectedCharacter(currentCharacter as Character)
+      } else if (characterList && characterList.size > 0) {
+        // Otherwise, select the first character from the list
+        const firstCharId = Array.from(characterList.keys())[0]
+        const character = await getCharacter(firstCharId)
+        setSelectedCharacter(character)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load character data')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const getStatColor = (value: number) => {
     if (value >= 25) return 'text-red-400'
@@ -49,6 +78,68 @@ export function CharacterScreen() {
     if (value >= 10) return 'text-green-400'
     return 'text-gray-400'
   }
+
+  // Calculate experience for next level
+  const getExperienceToNextLevel = (character: Character) => {
+    const currentExp = BigInt(character.experience)
+    const nextLevelExp = calculateExpForLevel(character.level + 1)
+    const currentLevelExp = calculateExpForLevel(character.level)
+    return {
+      current: Number(currentExp - currentLevelExp),
+      toNext: Number(nextLevelExp - currentLevelExp),
+      total: Number(currentExp)
+    }
+  }
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="h-full bg-dark-900 p-4 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4 animate-spin">⚔️</div>
+          <p className="text-white">Loading character data...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="h-full bg-dark-900 p-4 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4">⚠️</div>
+          <p className="text-red-400 mb-4">{error}</p>
+          <button
+            onClick={loadCharacterData}
+            className="btn-touch btn-primary"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Show message if no character data
+  if (!selectedCharacter) {
+    return (
+      <div className="h-full bg-dark-900 p-4 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4">👤</div>
+          <p className="text-white mb-4">No character data available</p>
+          <button
+            onClick={loadCharacterData}
+            className="btn-touch btn-primary"
+          >
+            Load Character
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  const expInfo = getExperienceToNextLevel(selectedCharacter)
 
   return (
     <div
@@ -61,19 +152,19 @@ export function CharacterScreen() {
             👤
           </div>
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-white">Hero</h2>
-            <p className="text-sm text-dark-400">Level {mockCharacter.level} Warrior</p>
+            <h2 className="text-xl font-bold text-white">{selectedCharacter.name}</h2>
+            <p className="text-sm text-dark-400">Level {selectedCharacter.level} {selectedCharacter.race}</p>
             
             {/* Experience Bar */}
             <div className="mt-2">
               <div className="flex justify-between text-xs text-dark-400 mb-1">
-                <span>XP: {mockCharacter.experience.toLocaleString()}</span>
-                <span>Next: {mockCharacter.experienceToNext.toLocaleString()}</span>
+                <span>XP: {expInfo.total.toLocaleString()}</span>
+                <span>Progress: {expInfo.current.toLocaleString()} / {expInfo.toNext.toLocaleString()}</span>
               </div>
               <div className="w-full h-2 bg-dark-700 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-primary-500 rounded-full transition-all duration-500"
-                  style={{ width: `${(mockCharacter.experience / mockCharacter.experienceToNext) * 100}%` }}
+                  style={{ width: `${(expInfo.current / expInfo.toNext) * 100}%` }}
                 />
               </div>
             </div>
@@ -115,11 +206,11 @@ export function CharacterScreen() {
                     <div className="w-24 h-2 bg-dark-700 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-red-500 rounded-full"
-                        style={{ width: `${(mockCharacter.health / mockCharacter.maxHealth) * 100}%` }}
+                        style={{ width: `${(selectedCharacter.health / selectedCharacter.maxHealth) * 100}%` }}
                       />
                     </div>
                     <span className="text-sm text-white">
-                      {mockCharacter.health}/{mockCharacter.maxHealth}
+                      {selectedCharacter.health}/{selectedCharacter.maxHealth}
                     </span>
                   </div>
                 </div>
@@ -129,11 +220,11 @@ export function CharacterScreen() {
                     <div className="w-24 h-2 bg-dark-700 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-blue-500 rounded-full"
-                        style={{ width: `${(mockCharacter.mana / mockCharacter.maxMana) * 100}%` }}
+                        style={{ width: `${(selectedCharacter.mana / selectedCharacter.maxMana) * 100}%` }}
                       />
                     </div>
                     <span className="text-sm text-white">
-                      {mockCharacter.mana}/{mockCharacter.maxMana}
+                      {selectedCharacter.mana}/{selectedCharacter.maxMana}
                     </span>
                   </div>
                 </div>
@@ -145,12 +236,11 @@ export function CharacterScreen() {
               <h3 className="text-lg font-semibold text-white mb-3">Attributes</h3>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { name: 'Strength', value: mockCharacter.strength, icon: '💪' },
-                  { name: 'Dexterity', value: mockCharacter.dexterity, icon: '🏃' },
-                  { name: 'Intelligence', value: mockCharacter.intelligence, icon: '🧠' },
-                  { name: 'Constitution', value: mockCharacter.constitution, icon: '🛡️' },
-                  { name: 'Wisdom', value: mockCharacter.wisdom, icon: '🔮' },
-                  { name: 'Charisma', value: mockCharacter.charisma, icon: '💬' },
+                  { name: 'Strength', value: selectedCharacter.stats.strength, icon: '💪' },
+                  { name: 'Dexterity', value: selectedCharacter.stats.dexterity, icon: '🏃' },
+                  { name: 'Intelligence', value: selectedCharacter.stats.intelligence, icon: '🧠' },
+                  { name: 'Vitality', value: selectedCharacter.stats.vitality, icon: '🛡️' },
+                  { name: 'Wisdom', value: selectedCharacter.stats.wisdom, icon: '🔮' },
                 ].map((stat) => (
                   <div key={stat.name} className="flex items-center justify-between bg-dark-800 rounded-lg p-2">
                     <div className="flex items-center space-x-2">
@@ -172,20 +262,12 @@ export function CharacterScreen() {
             <div className="card p-4">
               <h3 className="text-lg font-semibold text-white mb-3">Combat Skills</h3>
               <div className="space-y-3">
-                {[
-                  { name: 'Sword Fighting', level: 15, icon: '⚔️' },
-                  { name: 'Archery', level: 8, icon: '🏹' },
-                  { name: 'Magic', level: 12, icon: '🔮' },
-                  { name: 'Defense', level: 10, icon: '🛡️' },
-                ].map((skill) => (
-                  <div key={skill.name} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <span className="text-xl">{skill.icon}</span>
-                      <span className="text-white">{skill.name}</span>
-                    </div>
-                    <span className="text-primary-400 font-bold">Lv.{skill.level}</span>
-                  </div>
-                ))}
+                {/* For now, show placeholder skills - will be replaced when skills data is available */}
+                <div className="text-center text-dark-400 py-8">
+                  <div className="text-4xl mb-4">🎯</div>
+                  <p>Skills system coming soon!</p>
+                  <p className="text-sm mt-2">Train your abilities to unlock new skills</p>
+                </div>
               </div>
             </div>
           </div>
@@ -196,25 +278,12 @@ export function CharacterScreen() {
             <div className="card p-4">
               <h3 className="text-lg font-semibold text-white mb-3">Recent Achievements</h3>
               <div className="space-y-3">
-                {[
-                  { name: 'First Victory', description: 'Win your first battle', icon: '🏆', completed: true },
-                  { name: 'Explorer', description: 'Visit 10 different zones', icon: '🗺️', completed: true },
-                  { name: 'Collector', description: 'Collect 50 items', icon: '🎒', completed: false },
-                  { name: 'Master Warrior', description: 'Reach level 50', icon: '⚔️', completed: false },
-                ].map((achievement) => (
-                  <div key={achievement.name} className={`flex items-center space-x-3 p-2 rounded-lg ${
-                    achievement.completed ? 'bg-green-900/20 border border-green-500/20' : 'bg-dark-800'
-                  }`}>
-                    <span className="text-2xl">{achievement.icon}</span>
-                    <div className="flex-1">
-                      <div className="text-white font-medium">{achievement.name}</div>
-                      <div className="text-xs text-dark-400">{achievement.description}</div>
-                    </div>
-                    {achievement.completed && (
-                      <div className="text-green-400 text-sm">✓</div>
-                    )}
-                  </div>
-                ))}
+                {/* For now, show placeholder achievements - will be replaced when achievements data is available */}
+                <div className="text-center text-dark-400 py-8">
+                  <div className="text-4xl mb-4">🏆</div>
+                  <p>Achievements system coming soon!</p>
+                  <p className="text-sm mt-2">Complete quests and challenges to earn achievements</p>
+                </div>
               </div>
             </div>
           </div>

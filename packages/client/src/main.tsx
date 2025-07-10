@@ -32,7 +32,7 @@ function sendToAnalytics(metric: Metric) {
   })
   
   // In production, you would send this to your analytics endpoint
-  // Example: fetch('/api/analytics', { method: 'POST', body: JSON.stringify(metric) })
+  // Example: fetch('/api/v1/analytics', { method: 'POST', body: JSON.stringify(metric) })
 }
 
 // Monitor Core Web Vitals
