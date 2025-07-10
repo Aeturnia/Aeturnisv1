@@ -68,12 +68,7 @@ router.get('/test/:serviceName', (req, res) => {
   }
 });
 
-export { router as debugRoutes };
-import { Router } from 'express';
-import { ServiceProvider } from '../providers/ServiceProvider';
-import { logger } from '../utils/logger';
-
-const router = Router();
+// Additional debug routes continue here...
 
 router.get('/server-info', (req, res) => {
   const uptime = process.uptime();
@@ -113,4 +108,4 @@ router.get('/logs', (req, res) => {
   });
 });
 
-export default router;
+export { router as debugRoutes };
