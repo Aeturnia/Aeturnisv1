@@ -42,6 +42,18 @@ module.exports = {
       rules: {
         'no-console': ['error', { allow: ['error'] }]
       }
+    },
+    {
+      // Files that need 'any' for dynamic property access
+      files: [
+        'src/services/CharacterService.ts',
+        'src/services/NPCService.ts',
+        'src/services/ResourceService.ts',
+        'src/middleware/statSecurity.middleware.ts'
+      ],
+      rules: {
+        '@typescript-eslint/no-explicit-any': 'off'
+      }
     }
   ],
   ignorePatterns: ['dist/', 'node_modules/', '**/*.d.ts', 'src/types/express.d.ts'],

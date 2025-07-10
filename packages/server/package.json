@@ -14,7 +14,7 @@
     "test:providers:watch": "vitest src/providers/__tests__",
     "test:providers:coverage": "vitest run --coverage src/providers/__tests__",
     "benchmark": "tsx src/providers/__tests__/performance/ServiceProvider.benchmark.ts",
-    "lint": "eslint src/**/*.ts",
+    "lint": "eslint \"src/**/*.ts\" --ignore-pattern \"**/*.d.ts\"",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts",
     "format:check": "prettier --check src/**/*.ts",
