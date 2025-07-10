@@ -51,7 +51,7 @@ export function ServiceTester() {
     return (
       <button
         onClick={() => setIsVisible(true)}
-        className="fixed bottom-6 left-6 z-[10002] bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm shadow-lg"
+        className="relative bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm shadow-lg"
       >
         Test Services
       </button>
@@ -59,7 +59,7 @@ export function ServiceTester() {
   }
 
   return (
-    <div className="fixed bottom-20 left-6 z-[10002] bg-gray-900 text-white rounded-lg shadow-xl p-4 w-80 max-h-96 overflow-y-auto border border-gray-700">
+    <div className="absolute bottom-full left-0 mb-2 bg-gray-900 text-white rounded-lg shadow-xl p-4 w-80 max-h-96 overflow-y-auto border border-gray-700">
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-lg font-bold">Service Test</h3>
         <button

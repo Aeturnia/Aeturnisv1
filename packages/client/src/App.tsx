@@ -135,10 +135,26 @@ function App() {
             </div>
           </SafeArea>
           
-          {/* Developer Overlay Components - Outside SafeArea to avoid container constraints */}
-          <MockModeIndicator />
-          <ServiceTester />
-          <SimpleDevToggle />
+          {/* Developer Overlay Portal - Completely isolated from main app layout */}
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            pointerEvents: 'none',
+            zIndex: 999999
+          }}>
+            <div style={{ position: 'absolute', top: '20px', left: '20px', pointerEvents: 'auto' }}>
+              <MockModeIndicator />
+            </div>
+            <div style={{ position: 'absolute', bottom: '20px', left: '20px', pointerEvents: 'auto' }}>
+              <ServiceTester />
+            </div>
+            <div style={{ position: 'absolute', bottom: '20px', right: '20px', pointerEvents: 'auto' }}>
+              <SimpleDevToggle />
+            </div>
+          </div>
         </ServiceInitializationWrapper>
       </ServiceProvider>
     </ErrorBoundary>
