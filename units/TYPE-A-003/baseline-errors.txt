@@ -1,2 +1,0 @@
-src/controllers/movement.controller.ts(7,37): error TS2459: Module '"@aeturnis/shared/types/movement.types"' declares 'Direction' locally, but it is not exported.
-src/controllers/movement.controller.ts(340,39): error TS6133: 'req' is declared but its value is never read.

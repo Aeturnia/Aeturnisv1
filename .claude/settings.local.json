@@ -46,7 +46,8 @@
       "Bash([ -s \"$dir/unit.json\" ])",
       "Bash(head:*)",
       "Bash(touch:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(mv:*)"
     ],
     "deny": []
   }

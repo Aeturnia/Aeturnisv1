@@ -1,5 +1,0 @@
-TypeScript Errors: 100
-ESLint Errors/Warnings: 66
-
-No unused variables found in provider/mock/real files.
-All expected errors for TYPE-J-003 were already resolved.

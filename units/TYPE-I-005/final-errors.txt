@@ -1,4 +1,0 @@
-TypeScript Errors: 116
-ESLint Errors/Warnings: 69
-
-No explicit-any errors remaining (down from 26)
