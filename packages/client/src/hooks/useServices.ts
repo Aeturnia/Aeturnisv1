@@ -41,31 +41,134 @@ export function useServiceData<T>(key: string): T | undefined {
 export function useCombat() {
   const services = useServices();
   const combatService = services.combat;
-  
-  const activeCombat = useServiceData('combat:active');
-  const combatSessions = useServiceData<Map<string, any>>('combat:sessions');
-  const combatStats = useServiceData<Map<string, any>>('combat:stats');
+  const combatState = useServiceState<any>('combat');
 
-  const startCombat = useCallback(async (initiatorId: string, request: any) => {
-    return combatService.startCombat(initiatorId, request);
+  const startCombat = useCallback(async (params: {
+    targetId: string;
+    targetType: 'monster' | 'player';
+    initiatorId: string;
+    initiatorPosition?: { x: number; y: number; z: number };
+  }) => {
+    return combatService.startCombat(params);
   }, [combatService]);
 
-  const processAction = useCallback(async (sessionId: string, actorId: string, action: any) => {
-    return combatService.processAction(sessionId, actorId, action);
+  const performAction = useCallback(async (params: {
+    sessionId: string;
+    action: 'attack' | 'defend' | 'flee' | 'ability';
+    targetId?: string;
+    abilityId?: string;
+  }) => {
+    return combatService.performAction(params);
   }, [combatService]);
 
-  const fleeCombat = useCallback(async (sessionId: string, userId: string) => {
-    return combatService.fleeCombat(sessionId, userId);
+  const fleeCombat = useCallback(async (sessionId: string) => {
+    return combatService.fleeCombat(sessionId);
   }, [combatService]);
 
   return {
-    activeCombat,
-    combatSessions,
-    combatStats,
+    session: combatState?.data?.session,
+    stats: combatState?.data?.stats,
+    isLoading: combatState?.isLoading || false,
+    error: combatState?.error,
     startCombat,
-    processAction,
+    performAction,
     fleeCombat,
     service: combatService
+  };
+}
+
+// Hook for character service
+export function useCharacter() {
+  const services = useServices();
+  const characterService = services.character;
+  const characterState = useServiceState<any>('character');
+
+  const getCharacter = useCallback(async () => {
+    return characterService.getCharacter();
+  }, [characterService]);
+
+  const updateStats = useCallback(async (stats: Partial<any>) => {
+    return characterService.updateStats(stats);
+  }, [characterService]);
+
+  const levelUp = useCallback(async () => {
+    return characterService.levelUp();
+  }, [characterService]);
+
+  return {
+    character: characterState?.data,
+    isLoading: characterState?.isLoading || false,
+    error: characterState?.error,
+    getCharacter,
+    updateStats,
+    levelUp,
+    service: characterService
+  };
+}
+
+// Hook for inventory service
+export function useInventory() {
+  const services = useServices();
+  const inventoryService = services.inventory;
+  const inventoryState = useServiceState<any>('inventory');
+
+  const getInventory = useCallback(async () => {
+    return inventoryService.getInventory();
+  }, [inventoryService]);
+
+  const useItem = useCallback(async (itemId: string) => {
+    return inventoryService.useItem(itemId);
+  }, [inventoryService]);
+
+  const dropItem = useCallback(async (itemId: string, quantity?: number) => {
+    return inventoryService.dropItem(itemId, quantity);
+  }, [inventoryService]);
+
+  const moveItem = useCallback(async (itemId: string, toSlot: number) => {
+    return inventoryService.moveItem(itemId, toSlot);
+  }, [inventoryService]);
+
+  return {
+    items: inventoryState?.items || [],
+    maxSlots: inventoryState?.maxSlots || 50,
+    usedSlots: inventoryState?.usedSlots || 0,
+    isLoading: inventoryState?.isLoading || false,
+    error: inventoryState?.error,
+    getInventory,
+    useItem,
+    dropItem,
+    moveItem,
+    service: inventoryService
+  };
+}
+
+// Hook for location service
+export function useLocation() {
+  const services = useServices();
+  const locationService = services.location;
+  const locationState = useServiceState<any>('location');
+
+  const getLocations = useCallback(async () => {
+    return locationService.getLocations();
+  }, [locationService]);
+
+  const moveToLocation = useCallback(async (locationId: string) => {
+    return locationService.moveToLocation(locationId);
+  }, [locationService]);
+
+  const discoverLocation = useCallback(async (locationId: string) => {
+    return locationService.discoverLocation(locationId);
+  }, [locationService]);
+
+  return {
+    locations: locationState?.locations || [],
+    currentLocation: locationState?.currentLocation,
+    isLoading: locationState?.isLoading || false,
+    error: locationState?.error,
+    getLocations,
+    moveToLocation,
+    discoverLocation,
+    service: locationService
   };
 }
 

@@ -23,6 +23,12 @@ const serviceConfig = {
   apiBaseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3000',
   wsUrl: import.meta.env.VITE_WS_URL || 'ws://localhost:3000',
   timeout: 30000,
+  useMockServices: import.meta.env.VITE_USE_MOCKS === 'true',
+  mockConfig: {
+    delay: 500, // 500ms simulated network delay
+    errorRate: 0, // No random errors by default
+    offlineMode: false
+  },
   cacheConfig: {
     storage: 'localStorage' as const,
     maxSize: 1000,
@@ -119,6 +125,9 @@ function App() {
             {/* PWA Components */}
             <InstallPrompt />
             <ShareHandler />
+            
+            {/* Mock Mode Indicator */}
+            <MockModeIndicator />
             
             {/* Developer Tools (dev only) */}
             <DeveloperTools />

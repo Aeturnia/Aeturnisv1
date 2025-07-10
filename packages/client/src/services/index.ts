@@ -7,6 +7,7 @@ import { ServiceProvider } from './provider/ServiceProvider';
 
 // Import services
 import { CombatService } from './game/CombatService';
+import { MockCombatService } from './mocks/MockCombatService';
 // TODO: Import other services as they are implemented
 // import { MonsterService } from './game/MonsterService';
 // import { NPCService } from './game/NPCService';
@@ -21,6 +22,12 @@ export interface ServiceLayerConfig {
   apiBaseUrl: string;
   wsUrl: string;
   timeout?: number;
+  useMockServices?: boolean;
+  mockConfig?: {
+    delay?: number; // Simulate network delay in ms
+    errorRate?: number; // Probability of random errors (0-1)
+    offlineMode?: boolean; // Simulate offline state
+  };
   cacheConfig?: {
     storage: 'memory' | 'localStorage' | 'indexeddb';
     maxSize?: number;
@@ -97,8 +104,17 @@ export class ServiceLayer {
       offlineQueue: this.offlineQueue
     };
 
-    // Initialize services
-    this.combat = new CombatService(dependencies);
+    // Check if we should use mock services
+    // Priority: localStorage override > config > env variable
+    const localStorageOverride = localStorage.getItem('VITE_USE_MOCKS');
+    const useMocks = localStorageOverride !== null 
+      ? localStorageOverride === 'true'
+      : this.config.useMockServices || import.meta.env.VITE_USE_MOCKS === 'true';
+
+    // Initialize services using factory pattern
+    this.combat = useMocks 
+      ? new MockCombatService({ stateManager: this.stateManager }, this.config.mockConfig)
+      : new CombatService(dependencies);
     // TODO: Initialize other services
     // this.monster = new MonsterService(dependencies);
     // this.npc = new NPCService(dependencies);
@@ -111,7 +127,10 @@ export class ServiceLayer {
 
     // Register services with ServiceProvider
     ServiceProvider.register('CombatService', this.combat);
-    // TODO: Register other services
+    ServiceProvider.register('CharacterService', this.character);
+    ServiceProvider.register('InventoryService', this.inventory);
+    ServiceProvider.register('LocationService', this.location);
+    // TODO: Register other services when implemented
     // ServiceProvider.register('MonsterService', this.monster);
     // ServiceProvider.register('NPCService', this.npc);
     // ServiceProvider.register('CurrencyService', this.currency);

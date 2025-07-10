@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DevTouchDebugger } from './TouchDebugOverlay'
 import { DeviceEmulator } from './DeviceEmulator'
 import { PerformanceMonitor } from './PerformanceMonitor'
 
 export function DeveloperTools() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isMockMode, setIsMockMode] = useState(import.meta.env.VITE_USE_MOCKS === 'true')
 
   // Only show in development
   if (process.env.NODE_ENV !== 'development') return null
@@ -101,11 +102,40 @@ export function DeveloperTools() {
               </div>
             </div>
 
+            {/* Service Mode Toggle */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-400 mb-1">Service Mode</h4>
+              <div className="px-3 py-2 bg-dark-800 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-300">
+                    {isMockMode ? '🎭 Mock Services' : '🔌 Real Services'}
+                  </span>
+                  <button
+                    onClick={() => {
+                      // Toggle mock mode (requires page reload)
+                      const newMockMode = !isMockMode
+                      localStorage.setItem('VITE_USE_MOCKS', newMockMode.toString())
+                      window.location.reload()
+                    }}
+                    className="px-3 py-1 text-xs rounded bg-purple-600 hover:bg-purple-700 text-white transition-colors"
+                  >
+                    Switch to {isMockMode ? 'Real' : 'Mock'}
+                  </button>
+                </div>
+                <div className="mt-2 text-xs text-gray-500">
+                  {isMockMode 
+                    ? 'Using local mock data with simulated delays'
+                    : 'Connected to backend API'}
+                </div>
+              </div>
+            </div>
+
             {/* Environment Info */}
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-gray-400 mb-1">Environment</h4>
               <div className="px-3 py-2 bg-dark-800 rounded-lg text-xs font-mono text-gray-300">
                 <div>Mode: {process.env.NODE_ENV}</div>
+                <div>API: {import.meta.env.VITE_API_URL || 'http://localhost:3000'}</div>
                 <div>PWA: {('serviceWorker' in navigator) ? 'Supported' : 'Not Supported'}</div>
                 <div>Touch: {('ontouchstart' in window) ? 'Yes' : 'No'}</div>
                 <div>Screen: {window.innerWidth}x{window.innerHeight}</div>
