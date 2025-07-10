@@ -248,16 +248,20 @@ export class SocketServer {
         service: 'socket-server',
       });
 
+      // Console output for debugging
       // eslint-disable-next-line no-console
-      console.log('🔌 Socket.IO server running on same port as Express (5000)');
+      console.log('🔌 Socket.IO server running on same port as Express (8080)');
       // eslint-disable-next-line no-console
       console.log(`🌐 CORS origins: ${this.config.corsOrigins.join(', ')}`);
       // eslint-disable-next-line no-console
       console.log(`🔄 Redis adapter: ${this.config.useRedisAdapter ? 'enabled' : 'disabled'}`);
 
+      // Start successfully
+      return Promise.resolve();
     } catch (error) {
       logger.error('Failed to start Socket.IO server', {
         error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
         service: 'socket-server',
       });
       throw error;
