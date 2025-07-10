@@ -9,6 +9,7 @@ import { LoadingScreen } from './components/common/LoadingScreen'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { InstallPrompt, ShareHandler } from './components/common'
 import { DeveloperTools } from './components/debug'
+import { ServiceProvider } from './providers/ServiceProvider'
 
 // Lazy load game screens for code splitting
 const GameScreen = lazy(() => import('./components/game/GameScreen').then(module => ({ default: module.GameScreen })))
@@ -16,6 +17,23 @@ const InventoryScreen = lazy(() => import('./components/game/InventoryScreen').t
 const CharacterScreen = lazy(() => import('./components/game/CharacterScreen').then(module => ({ default: module.CharacterScreen })))
 const MapScreen = lazy(() => import('./components/game/MapScreen').then(module => ({ default: module.MapScreen })))
 const SettingsScreen = lazy(() => import('./components/game/SettingsScreen').then(module => ({ default: module.SettingsScreen })))
+
+// Service configuration
+const serviceConfig = {
+  apiBaseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  wsUrl: import.meta.env.VITE_WS_URL || 'ws://localhost:3000',
+  timeout: 30000,
+  cacheConfig: {
+    storage: 'localStorage' as const,
+    maxSize: 1000,
+    defaultTTL: 300000 // 5 minutes
+  },
+  offlineConfig: {
+    storage: 'localStorage' as const,
+    maxSize: 100,
+    maxRetries: 3
+  }
+}
 
 function App() {
   const [isLoading, setIsLoading] = useState(true)
@@ -59,52 +77,54 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <SafeArea>
-        <div
-          className="min-h-screen bg-dark-900 flex flex-col"
-          style={getOrientationStyles()}
-        >
-          {/* Header */}
-          <Header />
+      <ServiceProvider config={serviceConfig}>
+        <SafeArea>
+          <div
+            className="min-h-screen bg-dark-900 flex flex-col"
+            style={getOrientationStyles()}
+          >
+            {/* Header */}
+            <Header />
 
-          {/* Main Content */}
-          <main className="flex-1 overflow-hidden">
-            <Suspense fallback={<LoadingScreen />}>
-              <Routes>
-                <Route path="/" element={<Navigate to="/game" replace />} />
-                <Route path="/game" element={<GameScreen />} />
-                <Route path="/inventory" element={<InventoryScreen />} />
-                <Route path="/character" element={<CharacterScreen />} />
-                <Route path="/map" element={<MapScreen />} />
-                <Route path="/settings" element={<SettingsScreen />} />
-                <Route path="*" element={<Navigate to="/game" replace />} />
-              </Routes>
-            </Suspense>
-          </main>
+            {/* Main Content */}
+            <main className="flex-1 overflow-hidden">
+              <Suspense fallback={<LoadingScreen />}>
+                <Routes>
+                  <Route path="/" element={<Navigate to="/game" replace />} />
+                  <Route path="/game" element={<GameScreen />} />
+                  <Route path="/inventory" element={<InventoryScreen />} />
+                  <Route path="/character" element={<CharacterScreen />} />
+                  <Route path="/map" element={<MapScreen />} />
+                  <Route path="/settings" element={<SettingsScreen />} />
+                  <Route path="*" element={<Navigate to="/game" replace />} />
+                </Routes>
+              </Suspense>
+            </main>
 
-          {/* Bottom Navigation */}
-          <Navigation />
+            {/* Bottom Navigation */}
+            <Navigation />
 
-          {/* Orientation Transition Overlay */}
-          {isTransitioning && (
-            <div
-              className="fixed inset-0 bg-dark-900 bg-opacity-50 z-50 flex items-center justify-center"
-            >
-              <div className="text-white text-center">
-                <div className="text-2xl mb-2">⚡</div>
-                <div>Adjusting display...</div>
+            {/* Orientation Transition Overlay */}
+            {isTransitioning && (
+              <div
+                className="fixed inset-0 bg-dark-900 bg-opacity-50 z-50 flex items-center justify-center"
+              >
+                <div className="text-white text-center">
+                  <div className="text-2xl mb-2">⚡</div>
+                  <div>Adjusting display...</div>
+                </div>
               </div>
-            </div>
-          )}
-          
-          {/* PWA Components */}
-          <InstallPrompt />
-          <ShareHandler />
-          
-          {/* Developer Tools (dev only) */}
-          <DeveloperTools />
-        </div>
-      </SafeArea>
+            )}
+            
+            {/* PWA Components */}
+            <InstallPrompt />
+            <ShareHandler />
+            
+            {/* Developer Tools (dev only) */}
+            <DeveloperTools />
+          </div>
+        </SafeArea>
+      </ServiceProvider>
     </ErrorBoundary>
   )
 }
