@@ -6,15 +6,6 @@ export * from './tutorial.types';
 export * from './zone.types';
 export * from './movement.types';
 export * from './progression.types';
-export * from './bank';
-export * from './combat';
-export * from './currency';
-export * from './death';
-export * from './dialogue';
-export * from './loot';
-export * from './spawn';
-export * from './trade';
-export * from './zone';
 
 // Game-wide type definitions
 export type CharacterRace = 'human' | 'elf' | 'dwarf' | 'orc' | 'halfling' | 'gnome' | 'darkelf' | 'lizardman';

@@ -1,48 +1,13 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { ServiceLayer } from '../services';
+import { ServiceLayer, getServices } from '../services';
 import { StateSlice } from '../services/state/StateManager';
-import { useServiceContext } from '../providers/ServiceProvider';
 
 // Hook to access the service layer
 export function useServices(): ServiceLayer {
-  const { services, isInitialized, error } = useServiceContext();
+  const services = getServices();
   
-  if (error) {
-    throw error;
-  }
-  
-  if (!services || !isInitialized) {
-    // Return a mock service layer to prevent errors during initialization
-    console.warn('Services not yet initialized, returning mock layer');
-    return {
-      character: null as any,
-      inventory: null as any,
-      location: null as any,
-      combat: null as any,
-      initialize: async () => {},
-      destroy: async () => {},
-      isInitialized: () => false,
-      getWebSocketManager: () => ({
-        getState: () => 'disconnected',
-        on: () => {},
-        off: () => {},
-        connect: () => {},
-        disconnect: () => {},
-        emit: () => {},
-      }) as any,
-      getOfflineQueue: () => ({
-        size: () => 0,
-        process: async () => {},
-      }) as any,
-      getState: () => ({
-        selectSlice: () => undefined,
-        subscribe: () => () => {},
-        use: () => {},
-        loadPersistedState: async () => {},
-      }) as any,
-      getApiClient: () => null as any,
-      getCacheService: () => null as any,
-    } as ServiceLayer;
+  if (!services) {
+    throw new Error('Services not initialized. Make sure to call initializeServices() before using this hook.');
   }
   
   return services;
@@ -50,25 +15,18 @@ export function useServices(): ServiceLayer {
 
 // Hook to subscribe to state changes
 export function useServiceState<T>(key: string): StateSlice<T> | undefined {
-  const { services, isInitialized } = useServiceContext();
-  const [state, setState] = useState<StateSlice<T> | undefined>(undefined);
+  const services = useServices();
+  const [state, setState] = useState<StateSlice<T> | undefined>(() => 
+    services.getState().selectSlice<T>(key)
+  );
 
   useEffect(() => {
-    if (!services || !isInitialized) {
-      setState(undefined);
-      return;
-    }
-
-    // Initial state
-    setState(services.getState().selectSlice<T>(key));
-
-    // Subscribe to changes
     const unsubscribe = services.getState().subscribe<T>(key, (slice) => {
       setState(slice);
     });
 
     return unsubscribe;
-  }, [services, key, isInitialized]);
+  }, [services, key]);
 
   return state;
 }
@@ -81,201 +39,43 @@ export function useServiceData<T>(key: string): T | undefined {
 
 // Hook for combat service
 export function useCombat() {
-  const { services, isInitialized } = useServiceContext();
-  const combatService = services?.combat;
-  const combatState = useServiceState<any>('combat');
+  const services = useServices();
+  const combatService = services.combat;
+  
+  const activeCombat = useServiceData('combat:active');
+  const combatSessions = useServiceData<Map<string, any>>('combat:sessions');
+  const combatStats = useServiceData<Map<string, any>>('combat:stats');
 
-  const startCombat = useCallback(async (params: {
-    targetId: string;
-    targetType: 'monster' | 'player';
-    initiatorId: string;
-    initiatorPosition?: { x: number; y: number; z: number };
-  }) => {
-    if (!combatService) {
-      console.warn('Combat service not initialized');
-      return;
-    }
-    return combatService.startCombat(params);
+  const startCombat = useCallback(async (initiatorId: string, request: any) => {
+    return combatService.startCombat(initiatorId, request);
   }, [combatService]);
 
-  const performAction = useCallback(async (params: {
-    sessionId: string;
-    action: 'attack' | 'defend' | 'flee' | 'ability';
-    targetId?: string;
-    abilityId?: string;
-  }) => {
-    if (!combatService) {
-      console.warn('Combat service not initialized');
-      return;
-    }
-    return combatService.performAction(params);
+  const processAction = useCallback(async (sessionId: string, actorId: string, action: any) => {
+    return combatService.processAction(sessionId, actorId, action);
   }, [combatService]);
 
-  const fleeCombat = useCallback(async (sessionId: string) => {
-    if (!combatService) {
-      console.warn('Combat service not initialized');
-      return;
-    }
-    return combatService.fleeCombat(sessionId);
+  const fleeCombat = useCallback(async (sessionId: string, userId: string) => {
+    return combatService.fleeCombat(sessionId, userId);
   }, [combatService]);
 
   return {
-    session: combatState?.data?.session,
-    stats: combatState?.data?.stats,
-    isLoading: !isInitialized || combatState?.isLoading || false,
-    error: combatState?.error,
-    isInCombat: combatState?.data?.session?.isActive || false,
+    activeCombat,
+    combatSessions,
+    combatStats,
     startCombat,
-    performAction,
+    processAction,
     fleeCombat,
     service: combatService
   };
 }
 
-// Hook for character service
-export function useCharacter() {
-  const { services, isInitialized } = useServiceContext();
-  const characterService = services?.character;
-  const characterState = useServiceState<any>('character');
-
-  const getCharacter = useCallback(async () => {
-    if (!characterService) {
-      console.warn('Character service not initialized');
-      return;
-    }
-    return characterService.getCharacter();
-  }, [characterService]);
-
-  const updateStats = useCallback(async (stats: Partial<any>) => {
-    if (!characterService) {
-      console.warn('Character service not initialized');
-      return;
-    }
-    return characterService.updateStats(stats);
-  }, [characterService]);
-
-  const levelUp = useCallback(async () => {
-    if (!characterService) {
-      console.warn('Character service not initialized');
-      return;
-    }
-    return characterService.levelUp();
-  }, [characterService]);
-
-  return {
-    character: characterState?.data,
-    isLoading: !isInitialized || characterState?.isLoading || false,
-    error: characterState?.error,
-    getCharacter,
-    updateStats,
-    levelUp,
-    service: characterService
-  };
-}
-
-// Hook for inventory service
-export function useInventory() {
-  const { services, isInitialized } = useServiceContext();
-  const inventoryService = services?.inventory;
-  const inventoryState = useServiceState<any>('inventory');
-
-  const getInventory = useCallback(async () => {
-    if (!inventoryService) {
-      console.warn('Inventory service not initialized');
-      return;
-    }
-    return inventoryService.getInventory();
-  }, [inventoryService]);
-
-  const useItem = useCallback(async (itemId: string) => {
-    if (!inventoryService) {
-      console.warn('Inventory service not initialized');
-      return;
-    }
-    return inventoryService.useItem(itemId);
-  }, [inventoryService]);
-
-  const dropItem = useCallback(async (itemId: string, quantity?: number) => {
-    if (!inventoryService) {
-      console.warn('Inventory service not initialized');
-      return;
-    }
-    return inventoryService.dropItem(itemId, quantity);
-  }, [inventoryService]);
-
-  const moveItem = useCallback(async (itemId: string, toSlot: number) => {
-    if (!inventoryService) {
-      console.warn('Inventory service not initialized');
-      return;
-    }
-    return inventoryService.moveItem(itemId, toSlot);
-  }, [inventoryService]);
-
-  return {
-    items: inventoryState?.data?.items || [],
-    maxSlots: inventoryState?.data?.maxSlots || 50,
-    usedSlots: inventoryState?.data?.usedSlots || 0,
-    isLoading: !isInitialized || inventoryState?.isLoading || false,
-    error: inventoryState?.error,
-    getInventory,
-    useItem,
-    dropItem,
-    moveItem,
-    service: inventoryService
-  };
-}
-
-// Hook for location service
-export function useLocation() {
-  const { services, isInitialized } = useServiceContext();
-  const locationService = services?.location;
-  const locationState = useServiceState<any>('location');
-
-  const getLocations = useCallback(async () => {
-    if (!locationService) {
-      console.warn('Location service not initialized');
-      return;
-    }
-    return locationService.getLocations();
-  }, [locationService]);
-
-  const moveToLocation = useCallback(async (locationId: string) => {
-    if (!locationService) {
-      console.warn('Location service not initialized');
-      return;
-    }
-    return locationService.moveToLocation(locationId);
-  }, [locationService]);
-
-  const discoverLocation = useCallback(async (locationId: string) => {
-    if (!locationService) {
-      console.warn('Location service not initialized');
-      return;
-    }
-    return locationService.discoverLocation(locationId);
-  }, [locationService]);
-
-  return {
-    locations: locationState?.data?.locations || [],
-    currentLocation: locationState?.data?.currentLocation,
-    isLoading: !isInitialized || locationState?.isLoading || false,
-    error: locationState?.error,
-    getLocations,
-    moveToLocation,
-    discoverLocation,
-    service: locationService
-  };
-}
-
 // Hook for WebSocket connection status
 export function useWebSocketStatus() {
-  const { services, isInitialized } = useServiceContext();
-  const wsManager = services?.getWebSocketManager();
-  const [status, setStatus] = useState(() => wsManager?.getState() || 'disconnected');
+  const services = useServices();
+  const wsManager = services.getWebSocketManager();
+  const [status, setStatus] = useState(() => wsManager.getState());
 
   useEffect(() => {
-    if (!wsManager || !isInitialized) return;
-    
     const handleUpdate = () => {
       setStatus(wsManager.getState());
     };
@@ -291,32 +91,26 @@ export function useWebSocketStatus() {
       wsManager.off('error', handleUpdate);
       wsManager.off('reconnecting', handleUpdate);
     };
-  }, [wsManager, isInitialized]);
+  }, [wsManager]);
 
   return status;
 }
 
 // Hook for offline queue status
 export function useOfflineQueue() {
-  const { services, isInitialized } = useServiceContext();
-  const offlineQueue = services?.getOfflineQueue();
-  const [queueSize, setQueueSize] = useState(0);
+  const services = useServices();
+  const offlineQueue = services.getOfflineQueue();
+  const [queueSize, setQueueSize] = useState(() => offlineQueue.size());
 
   useEffect(() => {
-    if (!offlineQueue || !isInitialized) return;
-    
     const interval = setInterval(() => {
       setQueueSize(offlineQueue.size());
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [offlineQueue, isInitialized]);
+  }, [offlineQueue]);
 
   const processQueue = useCallback(async () => {
-    if (!offlineQueue) {
-      console.warn('Offline queue not initialized');
-      return;
-    }
     return offlineQueue.process();
   }, [offlineQueue]);
 
@@ -328,10 +122,10 @@ export function useOfflineQueue() {
 
 // Generic hook for any service
 export function useService<T>(serviceName: string): T {
-  const { services, isInitialized } = useServiceContext();
+  const services = useServices();
   const serviceRef = useRef<T>();
 
-  if (!serviceRef.current && services && isInitialized) {
+  if (!serviceRef.current) {
     const ServiceProvider = require('../services/provider/ServiceProvider').ServiceProvider;
     const service = ServiceProvider.get<T>(serviceName);
     
@@ -340,10 +134,6 @@ export function useService<T>(serviceName: string): T {
     }
     
     serviceRef.current = service;
-  }
-
-  if (!serviceRef.current) {
-    throw new Error(`Service "${serviceName}" not initialized yet`);
   }
 
   return serviceRef.current;

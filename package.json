@@ -33,7 +33,6 @@
     "npm": ">=8.0.0"
   },
   "dependencies": {
-    "@remix-run/router": "^1.23.0",
     "@socket.io/redis-adapter": "^8.3.0",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/compression": "^1.8.1",
@@ -60,7 +59,6 @@
     "express-rate-limit": "^7.5.1",
     "express-validator": "^7.2.1",
     "fresh": "^0.5.2",
-    "generic-pool": "^3.9.0",
     "helmet": "^8.1.0",
     "http-errors": "^2.0.0",
     "ioredis": "^5.6.1",

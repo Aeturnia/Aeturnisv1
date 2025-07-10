@@ -8,10 +8,8 @@ import { SafeArea } from './components/layout/SafeArea'
 import { LoadingScreen } from './components/common/LoadingScreen'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { InstallPrompt, ShareHandler } from './components/common'
-import { MockModeIndicator } from './components/common/MockModeIndicator'
-import { SimpleDevToggle } from './components/debug/SimpleDevToggle'
-import { ServiceTester } from './components/debug/ServiceTester'
-import { ServiceProvider, useServiceContext } from './providers/ServiceProvider'
+import { DeveloperTools } from './components/debug'
+import { ServiceProvider } from './providers/ServiceProvider'
 
 // Lazy load game screens for code splitting
 const GameScreen = lazy(() => import('./components/game/GameScreen').then(module => ({ default: module.GameScreen })))
@@ -22,15 +20,9 @@ const SettingsScreen = lazy(() => import('./components/game/SettingsScreen').the
 
 // Service configuration
 const serviceConfig = {
-  apiBaseUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000',
-  wsUrl: import.meta.env.VITE_WS_URL || 'ws://localhost:5000',
+  apiBaseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  wsUrl: import.meta.env.VITE_WS_URL || 'ws://localhost:3000',
   timeout: 30000,
-  useMockServices: import.meta.env.VITE_USE_MOCKS === 'true',
-  mockConfig: {
-    delay: 500, // 500ms simulated network delay
-    errorRate: 0, // No random errors by default
-    offlineMode: false
-  },
   cacheConfig: {
     storage: 'localStorage' as const,
     maxSize: 1000,
@@ -54,18 +46,14 @@ function App() {
   const isMobile = useIsMobile()
 
   useEffect(() => {
-    // Simple app initialization - services will be initialized by ServiceProvider
+    // Simulate app initialization
     const initializeApp = async () => {
       try {
-        console.log('Initializing Aeturnis Online app...')
-        console.log('Service config:', serviceConfig)
-        
-        // Brief delay for smooth loading transition
-        await new Promise(resolve => setTimeout(resolve, 100))
+        // Initialize app services
+        await new Promise(resolve => setTimeout(resolve, 1000))
         
         setIsAppReady(true)
         setIsLoading(false)
-        console.log('App initialized successfully!')
       } catch (error) {
         console.error('App initialization failed:', error)
         setIsLoading(false)
@@ -90,14 +78,13 @@ function App() {
   return (
     <ErrorBoundary>
       <ServiceProvider config={serviceConfig}>
-        <ServiceInitializationWrapper>
-          <SafeArea>
-            <div
-              className="min-h-screen bg-dark-900 flex flex-col"
-              style={getOrientationStyles()}
-            >
-              {/* Header */}
-              <Header />
+        <SafeArea>
+          <div
+            className="min-h-screen bg-dark-900 flex flex-col"
+            style={getOrientationStyles()}
+          >
+            {/* Header */}
+            <Header />
 
             {/* Main Content */}
             <main className="flex-1 overflow-hidden">
@@ -133,60 +120,13 @@ function App() {
             <InstallPrompt />
             <ShareHandler />
             
-            {/* Mock Mode Indicator */}
-            <MockModeIndicator />
-            
-            {/* Simple Dev Toggle - Always visible */}
-            <SimpleDevToggle />
-            
-            {/* Service Tester - Development only */}
-            <ServiceTester />
-            </div>
-          </SafeArea>
-        </ServiceInitializationWrapper>
+            {/* Developer Tools (dev only) */}
+            <DeveloperTools />
+          </div>
+        </SafeArea>
       </ServiceProvider>
     </ErrorBoundary>
   )
-}
-
-// Component to wait for service initialization
-function ServiceInitializationWrapper({ children }: { children: React.ReactNode }) {
-  const { services, isInitialized, error } = useServiceContext();
-
-  // Show error state if service initialization failed
-  if (error) {
-    return (
-      <div className="min-h-screen bg-dark-900 flex items-center justify-center p-4">
-        <div className="bg-red-900/20 border border-red-500 rounded-lg p-6 max-w-md w-full text-center">
-          <h2 className="text-red-400 text-xl font-bold mb-4">Service Error</h2>
-          <p className="text-red-300 mb-4">Failed to initialize game services:</p>
-          <p className="text-red-200 text-sm mb-6">{error.message}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
-          >
-            Reload Game
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Show loading state while services are initializing
-  if (!services || !isInitialized) {
-    return (
-      <div className="min-h-screen bg-dark-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-          <h2 className="text-cyan-400 text-xl font-semibold mb-2">Initializing Aeturnis Online</h2>
-          <p className="text-gray-400">Loading game services...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Render children only when services are ready
-  return <>{children}</>;
 }
 
 export default App

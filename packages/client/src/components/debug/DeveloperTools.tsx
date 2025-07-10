@@ -1,43 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { DevTouchDebugger } from './TouchDebugOverlay'
 import { DeviceEmulator } from './DeviceEmulator'
 import { PerformanceMonitor } from './PerformanceMonitor'
 
 export function DeveloperTools() {
   const [isOpen, setIsOpen] = useState(false)
-  const [isMockMode, setIsMockMode] = useState(import.meta.env.VITE_USE_MOCKS === 'true')
-  const [forceShow, setForceShow] = useState(false)
 
-  // Check for dev mode or force show
-  const shouldShow = import.meta.env.MODE === 'development' || 
-                     import.meta.env.DEV === true || 
-                     forceShow ||
-                     localStorage.getItem('SHOW_DEV_TOOLS') === 'true'
-
-  // Add keyboard shortcut to toggle dev tools
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      // Ctrl+Shift+D to toggle dev tools
-      if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-        e.preventDefault()
-        const newState = !shouldShow
-        localStorage.setItem('SHOW_DEV_TOOLS', newState ? 'true' : 'false')
-        setForceShow(newState)
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyPress)
-    return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [shouldShow])
-
-  // Check localStorage on mount
-  useEffect(() => {
-    if (localStorage.getItem('SHOW_DEV_TOOLS') === 'true') {
-      setForceShow(true)
-    }
-  }, [])
-
-  if (!shouldShow) return null
+  // Only show in development
+  if (process.env.NODE_ENV !== 'development') return null
 
   return (
     <>
@@ -45,7 +15,7 @@ export function DeveloperTools() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          fixed bottom-20 right-4 z-[10004] p-3 rounded-full shadow-lg
+          fixed bottom-4 right-4 z-[10000] p-3 rounded-full shadow-lg
           ${isOpen ? 'bg-purple-500' : 'bg-gray-700'}
           text-white transition-colors group
         `}
@@ -56,7 +26,7 @@ export function DeveloperTools() {
 
       {/* Developer tools panel */}
       {isOpen && (
-        <div className="fixed bottom-36 right-4 z-[10004] bg-dark-900 rounded-lg shadow-xl border border-dark-700 p-4 w-80">
+        <div className="fixed bottom-20 right-4 z-[9999] bg-dark-900 rounded-lg shadow-xl border border-dark-700 p-4 w-80">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-white font-bold text-lg">Developer Tools</h3>
             <button
@@ -131,40 +101,11 @@ export function DeveloperTools() {
               </div>
             </div>
 
-            {/* Service Mode Toggle */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-400 mb-1">Service Mode</h4>
-              <div className="px-3 py-2 bg-dark-800 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-300">
-                    {isMockMode ? '🎭 Mock Services' : '🔌 Real Services'}
-                  </span>
-                  <button
-                    onClick={() => {
-                      // Toggle mock mode (requires page reload)
-                      const newMockMode = !isMockMode
-                      localStorage.setItem('VITE_USE_MOCKS', newMockMode.toString())
-                      window.location.reload()
-                    }}
-                    className="px-3 py-1 text-xs rounded bg-purple-600 hover:bg-purple-700 text-white transition-colors"
-                  >
-                    Switch to {isMockMode ? 'Real' : 'Mock'}
-                  </button>
-                </div>
-                <div className="mt-2 text-xs text-gray-500">
-                  {isMockMode 
-                    ? 'Using local mock data with simulated delays'
-                    : 'Connected to backend API'}
-                </div>
-              </div>
-            </div>
-
             {/* Environment Info */}
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-gray-400 mb-1">Environment</h4>
               <div className="px-3 py-2 bg-dark-800 rounded-lg text-xs font-mono text-gray-300">
-                <div>Mode: {import.meta.env.MODE}</div>
-                <div>API: {import.meta.env.VITE_API_URL || 'http://localhost:3000'}</div>
+                <div>Mode: {process.env.NODE_ENV}</div>
                 <div>PWA: {('serviceWorker' in navigator) ? 'Supported' : 'Not Supported'}</div>
                 <div>Touch: {('ontouchstart' in window) ? 'Yes' : 'No'}</div>
                 <div>Screen: {window.innerWidth}x{window.innerHeight}</div>

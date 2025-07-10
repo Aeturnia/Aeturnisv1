@@ -47,24 +47,16 @@ export const createApp = () => {
   // Trust proxy for rate limiting and IP detection
   app.set('trust proxy', 1);
 
-  // Security middleware - Permissive CSP for development and Mock/Real Service Switching
+  // Security middleware
   app.use(helmet({
     crossOriginEmbedderPolicy: false,
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "blob:", "data:"],
-        imgSrc: ["'self'", "data:", "https:", "blob:"],
-        connectSrc: ["'self'", "ws:", "wss:", "https:"],
-        fontSrc: ["'self'", "data:", "https:"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
         frameAncestors: ["'self'", "*.replit.dev", "*.replit.com", "*.replit.app", "replit.com"],
-        objectSrc: ["'none'"],
-        mediaSrc: ["'self'", "data:", "blob:"],
-        workerSrc: ["'self'", "blob:"],
-        childSrc: ["'self'", "blob:"],
-        formAction: ["'self'"],
-        upgradeInsecureRequests: [],
       },
     },
   }));
@@ -103,8 +95,8 @@ export const createApp = () => {
 
   // Root route removed - now serves React testing frontend
 
-  // Serve React client from packages/client/dist
-  app.use(express.static(path.join(__dirname, '../../client/dist')));
+  // Serve production mobile client
+  app.use(express.static(path.join(__dirname, '../public')));
   
   // SPA fallback for React Router
   app.get('*', (req, res, next) => {
@@ -113,8 +105,8 @@ export const createApp = () => {
       return next();
     }
     
-    // Serve React app index.html for all non-API routes
-    res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+    // Serve index.html for all non-API routes
+    res.sendFile(path.join(__dirname, '../public/index.html'));
   });
 
   app.get('/health', (_req, res) => {

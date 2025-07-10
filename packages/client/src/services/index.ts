@@ -7,14 +7,7 @@ import { ServiceProvider } from './provider/ServiceProvider';
 
 // Import services
 import { CombatService } from './game/CombatService';
-import { MockCombatService } from './mocks/MockCombatService';
-import { MockCharacterService } from './mocks/MockCharacterService';
-import { MockInventoryService } from './mocks/MockInventoryService';
-import { MockLocationService } from './mocks/MockLocationService';
-// TODO: Import other real services as they are implemented
-// import { CharacterService } from './game/CharacterService';
-// import { InventoryService } from './game/InventoryService';
-// import { LocationService } from './game/LocationService';
+// TODO: Import other services as they are implemented
 // import { MonsterService } from './game/MonsterService';
 // import { NPCService } from './game/NPCService';
 // import { CurrencyService } from './game/CurrencyService';
@@ -28,12 +21,6 @@ export interface ServiceLayerConfig {
   apiBaseUrl: string;
   wsUrl: string;
   timeout?: number;
-  useMockServices?: boolean;
-  mockConfig?: {
-    delay?: number; // Simulate network delay in ms
-    errorRate?: number; // Probability of random errors (0-1)
-    offlineMode?: boolean; // Simulate offline state
-  };
   cacheConfig?: {
     storage: 'memory' | 'localStorage' | 'indexeddb';
     maxSize?: number;
@@ -58,9 +45,6 @@ export class ServiceLayer {
 
   // Service instances
   public combat: CombatService;
-  public character: MockCharacterService;
-  public inventory: MockInventoryService;
-  public location: MockLocationService;
   // TODO: Add other services
   // public monster: MonsterService;
   // public npc: NPCService;
@@ -113,25 +97,9 @@ export class ServiceLayer {
       offlineQueue: this.offlineQueue
     };
 
-    // Check if we should use mock services
-    // Priority: localStorage override > config > env variable
-    const localStorageOverride = localStorage.getItem('VITE_USE_MOCKS');
-    const useMocks = localStorageOverride !== null 
-      ? localStorageOverride === 'true'
-      : this.config.useMockServices || import.meta.env.VITE_USE_MOCKS === 'true';
-
-    // Initialize services using factory pattern
-    this.combat = useMocks 
-      ? new MockCombatService({ stateManager: this.stateManager }, this.config.mockConfig)
-      : new CombatService(dependencies);
-    
-    // For now, always use mock services for character, inventory, and location
-    // TODO: Add real service implementations when backend is ready
-    this.character = new MockCharacterService({ stateManager: this.stateManager }, this.config.mockConfig);
-    this.inventory = new MockInventoryService({ stateManager: this.stateManager }, this.config.mockConfig);
-    this.location = new MockLocationService({ stateManager: this.stateManager }, this.config.mockConfig);
-    
-    // TODO: Initialize other services when implemented
+    // Initialize services
+    this.combat = new CombatService(dependencies);
+    // TODO: Initialize other services
     // this.monster = new MonsterService(dependencies);
     // this.npc = new NPCService(dependencies);
     // this.currency = new CurrencyService(dependencies);
@@ -143,10 +111,7 @@ export class ServiceLayer {
 
     // Register services with ServiceProvider
     ServiceProvider.register('CombatService', this.combat);
-    ServiceProvider.register('CharacterService', this.character);
-    ServiceProvider.register('InventoryService', this.inventory);
-    ServiceProvider.register('LocationService', this.location);
-    // TODO: Register other services when implemented
+    // TODO: Register other services
     // ServiceProvider.register('MonsterService', this.monster);
     // ServiceProvider.register('NPCService', this.npc);
     // ServiceProvider.register('CurrencyService', this.currency);

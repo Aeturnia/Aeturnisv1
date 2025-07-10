@@ -51,31 +51,6 @@ export class StateManager extends EventEmitter {
     }
   }
 
-  public createSlice<T>(
-    key: string,
-    initialState: {
-      data: T;
-      isLoading?: boolean;
-      error?: string | null;
-    },
-    options: StateOptions = {}
-  ): void {
-    const slice: StateSlice<T> = {
-      data: initialState.data,
-      loading: initialState.isLoading || false,
-      error: initialState.error ? new Error(initialState.error) : null,
-      lastUpdated: Date.now(),
-      version: 0
-    };
-
-    this.state.set(key, slice);
-    
-    if (options.persist) {
-      this.persistedKeys.add(key);
-      this.loadPersistedState(key);
-    }
-  }
-
   public update<T>(
     key: string,
     updater: StateUpdater<T>,
@@ -193,7 +168,7 @@ export class StateManager extends EventEmitter {
     this.middleware.push(middleware);
   }
 
-  public async loadAllPersistedState(): Promise<void> {
+  public async loadPersistedState(): Promise<void> {
     for (const key of this.persistedKeys) {
       this.loadPersistedState(key);
     }

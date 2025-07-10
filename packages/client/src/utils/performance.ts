@@ -2,8 +2,6 @@
  * Performance monitoring and optimization utilities for mobile
  */
 
-import React, { useEffect } from 'react'
-
 // Performance metrics tracking
 interface PerformanceMetrics {
   loadTime: number
@@ -181,3 +179,5 @@ export const withPerformanceTracking = <P extends object>(
     return <Component {...props} />
   }
 }
+
+import { useState, useEffect } from 'react'
