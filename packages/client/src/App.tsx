@@ -10,6 +10,7 @@ import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { InstallPrompt, ShareHandler } from './components/common'
 import { MockModeIndicator } from './components/common/MockModeIndicator'
 import { SimpleDevToggle } from './components/debug/SimpleDevToggle'
+import { ServiceTester } from './components/debug/ServiceTester'
 import { ServiceProvider } from './providers/ServiceProvider'
 
 // Lazy load game screens for code splitting
@@ -53,11 +54,11 @@ function App() {
   const isMobile = useIsMobile()
 
   useEffect(() => {
-    // Simulate app initialization
+    // Simple app initialization - services will be initialized by ServiceProvider
     const initializeApp = async () => {
       try {
-        // Initialize app services
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        // Brief delay for smooth loading transition
+        await new Promise(resolve => setTimeout(resolve, 500))
         
         setIsAppReady(true)
         setIsLoading(false)
@@ -132,6 +133,9 @@ function App() {
             
             {/* Simple Dev Toggle - Always visible */}
             <SimpleDevToggle />
+            
+            {/* Service Tester - Development only */}
+            <ServiceTester />
           </div>
         </SafeArea>
       </ServiceProvider>

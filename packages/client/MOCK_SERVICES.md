@@ -1,150 +1,194 @@
-# Mock/Real Service Switching Guide
+# Mock/Real Service Switching System
 
 ## Overview
 
-The service layer now supports switching between mock and real services, allowing you to develop and test without a backend connection.
+The Aeturnis Online frontend features a sophisticated Mock/Real Service Switching System that allows seamless development and testing with mock data while supporting production deployment with real backend services.
 
-## Enabling Developer Tools
+## System Architecture
 
-If you don't see the developer tools button (⚙️):
+### Service Layer
+- **ServiceLayer class**: Core service orchestration with dependency injection
+- **ServiceProvider**: React context provider for service access across components
+- **Mock Services**: 14 comprehensive mock services with realistic game data
+- **EventEmitter**: Event-driven communication for real-time updates
 
-1. **Keyboard Shortcut**: Press `Ctrl+Shift+D` to toggle dev tools
-2. **Enable Button**: Look for "Enable Dev Tools" button in bottom-left
-3. **Force Enable**: Open browser console and run:
-   ```javascript
-   localStorage.setItem('SHOW_DEV_TOOLS', 'true');
-   location.reload();
-   ```
+### Service List
+1. **CharacterService** - Character stats, leveling, equipment
+2. **InventoryService** - Item management, usage, movement
+3. **LocationService** - World locations, travel, discovery
+4. **CombatService** - Turn-based combat, sessions, actions
+5. **MonsterService** - Monster data, spawning, AI
+6. **NPCService** - NPC interactions, dialogue, quests
+7. **DeathService** - Death penalties, resurrection
+8. **LootService** - Item drops, rewards, rarity
+9. **BankService** - Banking, storage, transactions
+10. **CurrencyService** - Gold, currency operations
+11. **DialogueService** - Conversation trees, responses
+12. **SpawnService** - Entity spawning, locations
+13. **ZoneService** - Zone management, boundaries
+14. **MovementService** - Player movement, validation
+15. **ProgressionService** - AIPE infinite progression
+16. **TutorialService** - Tutorial quests, guidance
+17. **AffinityService** - Weapon/magic affinity tracking
 
-## How to Enable Mock Mode
+## Mock Mode Control
 
-### Method 1: Environment Variable
-Create a `.env` file in the client package:
+### 1. Environment Variable
 ```bash
 VITE_USE_MOCKS=true
 ```
 
-### Method 2: Developer Tools Toggle
-1. Open the app in development mode
-2. Click the gear icon (⚙️) in the bottom right
-3. Click "Switch to Mock" button
-4. Page will reload with mock services
+### 2. LocalStorage Override
+```javascript
+localStorage.setItem('VITE_USE_MOCKS', 'true')
+```
 
-### Method 3: Configuration
-In `App.tsx`, set `useMockServices: true` in the service config:
+### 3. Developer Tools Toggle
+- Gear icon button (⚙️) in bottom-right corner
+- Toggle between Mock and Real modes
+- Requires page reload to take effect
+
+## React Hooks
+
+### useCharacter()
 ```typescript
-const serviceConfig = {
-  // ... other config
-  useMockServices: true,
-  mockConfig: {
-    delay: 500, // Simulate network delay
-    errorRate: 0, // No random errors
-    offlineMode: false // Simulate offline state
-  }
+const { character, getCharacter, updateStats, levelUp } = useCharacter()
+```
+
+### useInventory()
+```typescript
+const { items, getInventory, useItem, dropItem, moveItem } = useInventory()
+```
+
+### useLocation()
+```typescript
+const { currentLocation, getLocations, moveToLocation, discoverLocation } = useLocation()
+```
+
+### useCombat()
+```typescript
+const { session, startCombat, performAction, fleeCombat } = useCombat()
+```
+
+## Mock Data Examples
+
+### Character (Aria Starweaver)
+```typescript
+{
+  id: 'char-1',
+  name: 'Aria Starweaver',
+  level: 42,
+  race: 'Elf',
+  class: 'Mystic Archer',
+  guild: 'Starlight Covenant',
+  title: 'Voidwalker',
+  attributes: { strength: 45, dexterity: 62, intelligence: 78 }
 }
 ```
 
-## Available Mock Services
-
-### 1. MockCombatService
-- Simulates combat sessions
-- Provides mock combat actions
-- Emits combat events
-
-### 2. MockCharacterService
-- Provides character data (Aria Starweaver, Lv 42 Elf Mystic Archer)
-- Supports level up functionality
-- Updates stats dynamically
-
-### 3. MockInventoryService
-- 5 default items (potions, crystals, etc.)
-- Support for using, dropping, and moving items
-- Inventory state management
-
-### 4. MockLocationService
-- 5 locations (Mistwood Forest, Crystal Caverns, etc.)
-- Travel simulation with distance-based delays
-- Location discovery system
-
-## Using Services in Components
-
-### Example: Character Screen
+### Inventory Items
 ```typescript
-import { useCharacter } from '../../hooks/useServices'
-
-export function CharacterScreen() {
-  const { 
-    character,      // Character data
-    isLoading,      // Loading state
-    error,          // Error state
-    getCharacter,   // Fetch character
-    levelUp         // Level up action
-  } = useCharacter()
-
-  useEffect(() => {
-    getCharacter() // Load on mount
-  }, [getCharacter])
-
-  // Render UI...
-}
+[
+  { name: 'Healing Potion', icon: '🧪', quantity: 5, rarity: 'common' },
+  { name: 'Mana Crystal', icon: '💎', quantity: 3, rarity: 'uncommon' },
+  { name: 'Ancient Tome', icon: '📜', quantity: 1, rarity: 'epic' },
+  { name: 'Dragon Scale', icon: '🐉', quantity: 2, rarity: 'legendary' }
+]
 ```
 
-### Available Hooks
-- `useCharacter()` - Character data and actions
-- `useInventory()` - Inventory management
-- `useLocation()` - Map and location services
-- `useCombat()` - Combat system
-- `useServices()` - Direct service access
-
-## Mock Configuration Options
-
-### Delay Simulation
+### Locations
 ```typescript
-mockConfig: {
-  delay: 1000 // 1 second delay for all operations
-}
-```
-
-### Error Simulation
-```typescript
-mockConfig: {
-  errorRate: 0.2 // 20% chance of random errors
-}
-```
-
-### Offline Mode
-```typescript
-mockConfig: {
-  offlineMode: true // Simulate being offline
-}
+[
+  { name: 'Mistwood Forest', type: 'forest', level: '1-10', discovered: true },
+  { name: 'Crystal Caverns', type: 'dungeon', level: '15-25', completed: true },
+  { name: 'Skyreach Tower', type: 'tower', level: '30-40' }
+]
 ```
 
 ## Visual Indicators
 
-- **Mock Mode Badge**: Yellow "🎭 Mock Mode" indicator in top-left
-- **Developer Tools**: Shows current service mode
-- **Console Logs**: Mock services log initialization
+### Mock Mode Badge
+- Position: Top-left corner
+- Icon: 🎭 (animated pulse)
+- Text: "Mock Mode"
+- Color: Yellow/amber theme
 
-## Development Workflow
+### Developer Tools Panel
+- Toggle Button: Gear icon (⚙️) bottom-right
+- Panel: Dark theme with service mode toggle
+- Quick Actions: Clear storage, debug logging
+- Environment Info: Mode, API URL, version
 
-1. **Start with Mocks**: Enable mock mode for UI development
-2. **Test Features**: All service features work with mock data
-3. **Switch to Real**: Disable mocks to test with real backend
-4. **Deploy**: Mock mode is automatically disabled in production
+### Service Tester
+- Button: "Test Services" bottom-left
+- Panel: Live service validation interface
+- Displays: Character, inventory, location, combat data
+- Function: Real-time service testing
 
-## Adding New Mock Services
+## Implementation
 
-1. Create interface in `/services/provider/interfaces/`
-2. Create mock implementation in `/services/mocks/`
-3. Extend `MockService` base class
-4. Register in `ServiceLayer`
-5. Create hook in `useServices.ts`
+### Service Initialization
+```typescript
+// App.tsx
+const serviceConfig = {
+  apiBaseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  wsUrl: import.meta.env.VITE_WS_URL || 'ws://localhost:3000',
+  useMockServices: import.meta.env.VITE_USE_MOCKS === 'true',
+  mockConfig: {
+    delay: 500,
+    errorRate: 0,
+    offlineMode: false
+  }
+}
 
-## Benefits
+<ServiceProvider config={serviceConfig}>
+  <App />
+</ServiceProvider>
+```
 
-- ✅ Develop without backend running
-- ✅ Test edge cases with controlled data
-- ✅ Simulate network conditions
-- ✅ Fast iteration on UI
-- ✅ Consistent test data
-- ✅ Offline development
+### Service Registration
+```typescript
+// services/index.ts - ServiceLayer class
+this.character = new MockCharacterService({ stateManager: this.stateManager }, this.config.mockConfig);
+this.inventory = new MockInventoryService({ stateManager: this.stateManager }, this.config.mockConfig);
+this.location = new MockLocationService({ stateManager: this.stateManager }, this.config.mockConfig);
+
+ServiceProvider.register('CharacterService', this.character);
+ServiceProvider.register('InventoryService', this.inventory);
+ServiceProvider.register('LocationService', this.location);
+```
+
+## Testing
+
+### Service Validation
+1. Click "Test Services" button
+2. Click "Test All Services" in panel
+3. Check browser console for results
+4. Verify data displays in service panels
+
+### Mock Mode Toggle
+1. Click gear icon (⚙️) 
+2. Click "Switch to Real Mode" or "Switch to Mock Mode"
+3. Page automatically reloads
+4. Verify mock mode badge visibility
+
+### Developer Tools
+1. "Clear All Storage" - Removes localStorage/sessionStorage
+2. "Log Debug Info" - Console logs current state
+3. Environment info displays mode, API, version
+
+## Production Deployment
+
+### Real Services
+- Set `VITE_USE_MOCKS=false` in environment
+- Ensure backend API is accessible
+- Services automatically switch to real implementations
+
+### Mock Services (Development)
+- Set `VITE_USE_MOCKS=true` in environment
+- All services use local mock data
+- No backend required for development
+
+## Status
+
+✅ **COMPLETE** - Mock/Real Service Switching System fully operational with 14+ services, comprehensive testing environment, and seamless development-to-production workflow.

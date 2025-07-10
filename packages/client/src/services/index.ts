@@ -8,7 +8,13 @@ import { ServiceProvider } from './provider/ServiceProvider';
 // Import services
 import { CombatService } from './game/CombatService';
 import { MockCombatService } from './mocks/MockCombatService';
-// TODO: Import other services as they are implemented
+import { MockCharacterService } from './mocks/MockCharacterService';
+import { MockInventoryService } from './mocks/MockInventoryService';
+import { MockLocationService } from './mocks/MockLocationService';
+// TODO: Import other real services as they are implemented
+// import { CharacterService } from './game/CharacterService';
+// import { InventoryService } from './game/InventoryService';
+// import { LocationService } from './game/LocationService';
 // import { MonsterService } from './game/MonsterService';
 // import { NPCService } from './game/NPCService';
 // import { CurrencyService } from './game/CurrencyService';
@@ -52,6 +58,9 @@ export class ServiceLayer {
 
   // Service instances
   public combat: CombatService;
+  public character: MockCharacterService;
+  public inventory: MockInventoryService;
+  public location: MockLocationService;
   // TODO: Add other services
   // public monster: MonsterService;
   // public npc: NPCService;
@@ -115,7 +124,14 @@ export class ServiceLayer {
     this.combat = useMocks 
       ? new MockCombatService({ stateManager: this.stateManager }, this.config.mockConfig)
       : new CombatService(dependencies);
-    // TODO: Initialize other services
+    
+    // For now, always use mock services for character, inventory, and location
+    // TODO: Add real service implementations when backend is ready
+    this.character = new MockCharacterService({ stateManager: this.stateManager }, this.config.mockConfig);
+    this.inventory = new MockInventoryService({ stateManager: this.stateManager }, this.config.mockConfig);
+    this.location = new MockLocationService({ stateManager: this.stateManager }, this.config.mockConfig);
+    
+    // TODO: Initialize other services when implemented
     // this.monster = new MonsterService(dependencies);
     // this.npc = new NPCService(dependencies);
     // this.currency = new CurrencyService(dependencies);

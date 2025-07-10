@@ -47,16 +47,24 @@ export const createApp = () => {
   // Trust proxy for rate limiting and IP detection
   app.set('trust proxy', 1);
 
-  // Security middleware
+  // Security middleware - Permissive CSP for development
   app.use(helmet({
     crossOriginEmbedderPolicy: false,
-    contentSecurityPolicy: {
+    contentSecurityPolicy: process.env.NODE_ENV === 'development' ? false : {
       directives: {
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'"],
-        imgSrc: ["'self'", "data:", "https:"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "blob:", "data:"],
+        imgSrc: ["'self'", "data:", "https:", "blob:"],
+        connectSrc: ["'self'", "ws:", "wss:", "https:"],
+        fontSrc: ["'self'", "data:", "https:"],
         frameAncestors: ["'self'", "*.replit.dev", "*.replit.com", "*.replit.app", "replit.com"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'", "data:", "blob:"],
+        workerSrc: ["'self'", "blob:"],
+        childSrc: ["'self'", "blob:"],
+        formAction: ["'self'"],
+        upgradeInsecureRequests: [],
       },
     },
   }));
