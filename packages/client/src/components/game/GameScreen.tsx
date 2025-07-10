@@ -111,7 +111,9 @@ export function GameScreen() {
 
   // Load character data on mount
   useEffect(() => {
-    getCharacter()
+    if (getCharacter) {
+      getCharacter()
+    }
   }, [getCharacter])
 
   // Initialize mock data

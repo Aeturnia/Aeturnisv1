@@ -23,7 +23,9 @@ export function CharacterScreen() {
 
   // Load character data on mount
   useEffect(() => {
-    getCharacter()
+    if (getCharacter) {
+      getCharacter()
+    }
   }, [getCharacter])
 
   const getStatColor = (value: number) => {

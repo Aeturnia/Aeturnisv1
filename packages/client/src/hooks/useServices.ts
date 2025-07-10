@@ -19,10 +19,16 @@ export function useServices(): ServiceLayer {
       inventory: null as any,
       location: null as any,
       combat: null as any,
+      initialize: async () => {},
+      destroy: async () => {},
+      isInitialized: () => false,
       getWebSocketManager: () => ({
         getState: () => 'disconnected',
         on: () => {},
         off: () => {},
+        connect: () => {},
+        disconnect: () => {},
+        emit: () => {},
       }) as any,
       getOfflineQueue: () => ({
         size: () => 0,
@@ -31,8 +37,12 @@ export function useServices(): ServiceLayer {
       getState: () => ({
         selectSlice: () => undefined,
         subscribe: () => () => {},
+        use: () => {},
+        loadPersistedState: async () => {},
       }) as any,
-    };
+      getApiClient: () => null as any,
+      getCacheService: () => null as any,
+    } as ServiceLayer;
   }
   
   return services;
@@ -81,6 +91,10 @@ export function useCombat() {
     initiatorId: string;
     initiatorPosition?: { x: number; y: number; z: number };
   }) => {
+    if (!combatService) {
+      console.warn('Combat service not initialized');
+      return;
+    }
     return combatService.startCombat(params);
   }, [combatService]);
 
@@ -90,10 +104,18 @@ export function useCombat() {
     targetId?: string;
     abilityId?: string;
   }) => {
+    if (!combatService) {
+      console.warn('Combat service not initialized');
+      return;
+    }
     return combatService.performAction(params);
   }, [combatService]);
 
   const fleeCombat = useCallback(async (sessionId: string) => {
+    if (!combatService) {
+      console.warn('Combat service not initialized');
+      return;
+    }
     return combatService.fleeCombat(sessionId);
   }, [combatService]);
 
@@ -117,14 +139,26 @@ export function useCharacter() {
   const characterState = useServiceState<any>('character');
 
   const getCharacter = useCallback(async () => {
+    if (!characterService) {
+      console.warn('Character service not initialized');
+      return;
+    }
     return characterService.getCharacter();
   }, [characterService]);
 
   const updateStats = useCallback(async (stats: Partial<any>) => {
+    if (!characterService) {
+      console.warn('Character service not initialized');
+      return;
+    }
     return characterService.updateStats(stats);
   }, [characterService]);
 
   const levelUp = useCallback(async () => {
+    if (!characterService) {
+      console.warn('Character service not initialized');
+      return;
+    }
     return characterService.levelUp();
   }, [characterService]);
 
@@ -146,25 +180,41 @@ export function useInventory() {
   const inventoryState = useServiceState<any>('inventory');
 
   const getInventory = useCallback(async () => {
+    if (!inventoryService) {
+      console.warn('Inventory service not initialized');
+      return;
+    }
     return inventoryService.getInventory();
   }, [inventoryService]);
 
   const useItem = useCallback(async (itemId: string) => {
+    if (!inventoryService) {
+      console.warn('Inventory service not initialized');
+      return;
+    }
     return inventoryService.useItem(itemId);
   }, [inventoryService]);
 
   const dropItem = useCallback(async (itemId: string, quantity?: number) => {
+    if (!inventoryService) {
+      console.warn('Inventory service not initialized');
+      return;
+    }
     return inventoryService.dropItem(itemId, quantity);
   }, [inventoryService]);
 
   const moveItem = useCallback(async (itemId: string, toSlot: number) => {
+    if (!inventoryService) {
+      console.warn('Inventory service not initialized');
+      return;
+    }
     return inventoryService.moveItem(itemId, toSlot);
   }, [inventoryService]);
 
   return {
-    items: inventoryState?.items || [],
-    maxSlots: inventoryState?.maxSlots || 50,
-    usedSlots: inventoryState?.usedSlots || 0,
+    items: inventoryState?.data?.items || [],
+    maxSlots: inventoryState?.data?.maxSlots || 50,
+    usedSlots: inventoryState?.data?.usedSlots || 0,
     isLoading: !isInitialized || inventoryState?.isLoading || false,
     error: inventoryState?.error,
     getInventory,
@@ -182,20 +232,32 @@ export function useLocation() {
   const locationState = useServiceState<any>('location');
 
   const getLocations = useCallback(async () => {
+    if (!locationService) {
+      console.warn('Location service not initialized');
+      return;
+    }
     return locationService.getLocations();
   }, [locationService]);
 
   const moveToLocation = useCallback(async (locationId: string) => {
+    if (!locationService) {
+      console.warn('Location service not initialized');
+      return;
+    }
     return locationService.moveToLocation(locationId);
   }, [locationService]);
 
   const discoverLocation = useCallback(async (locationId: string) => {
+    if (!locationService) {
+      console.warn('Location service not initialized');
+      return;
+    }
     return locationService.discoverLocation(locationId);
   }, [locationService]);
 
   return {
-    locations: locationState?.locations || [],
-    currentLocation: locationState?.currentLocation,
+    locations: locationState?.data?.locations || [],
+    currentLocation: locationState?.data?.currentLocation,
     isLoading: !isInitialized || locationState?.isLoading || false,
     error: locationState?.error,
     getLocations,
@@ -238,7 +300,7 @@ export function useWebSocketStatus() {
 export function useOfflineQueue() {
   const { services, isInitialized } = useServiceContext();
   const offlineQueue = services?.getOfflineQueue();
-  const [queueSize, setQueueSize] = useState(() => offlineQueue?.size() || 0);
+  const [queueSize, setQueueSize] = useState(0);
 
   useEffect(() => {
     if (!offlineQueue || !isInitialized) return;
@@ -251,6 +313,10 @@ export function useOfflineQueue() {
   }, [offlineQueue, isInitialized]);
 
   const processQueue = useCallback(async () => {
+    if (!offlineQueue) {
+      console.warn('Offline queue not initialized');
+      return;
+    }
     return offlineQueue.process();
   }, [offlineQueue]);
 
