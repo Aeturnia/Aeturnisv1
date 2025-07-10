@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react'
 import { useTouch } from '../../hooks/useTouch'
 import { useCharacter } from '../../hooks/useServices'
 import { LoadingScreen } from '../common/LoadingScreen'
+import { EquipmentPanel } from './equipment/EquipmentPanel'
 
 export function CharacterScreen() {
-  const [activeTab, setActiveTab] = useState<'stats' | 'skills' | 'achievements'>('stats')
+  const [activeTab, setActiveTab] = useState<'stats' | 'equipment' | 'skills' | 'achievements'>('stats')
   
   const { hapticFeedback } = useTouch({
     onTap: () => {
@@ -128,20 +129,20 @@ export function CharacterScreen() {
 
       {/* Tab Navigation */}
       <div className="flex bg-dark-800 border-b border-dark-700">
-        {(['stats', 'skills', 'achievements'] as const).map((tab) => (
+        {(['stats', 'equipment', 'skills', 'achievements'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => {
               setActiveTab(tab)
               hapticFeedback('light')
             }}
-            className={`flex-1 py-3 text-sm font-medium capitalize transition-colors ${
+            className={`flex-1 py-3 px-2 text-xs sm:text-sm font-medium transition-colors ${
               activeTab === tab 
                 ? 'text-purple-400 border-b-2 border-purple-400' 
                 : 'text-gray-400 hover:text-white'
             }`}
           >
-            {tab}
+            {tab === 'equipment' ? '⚔️' : tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </div>
@@ -204,6 +205,12 @@ export function CharacterScreen() {
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'equipment' && (
+          <div className="p-4">
+            <EquipmentPanel />
           </div>
         )}
 

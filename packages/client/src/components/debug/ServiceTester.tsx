@@ -1,14 +1,36 @@
 import { useState } from 'react'
 import { useCharacter, useInventory, useLocation, useCombat } from '../../hooks/useServices'
+import { useServiceContext } from '../../providers/ServiceProvider'
 
 export function ServiceTester() {
   const [isVisible, setIsVisible] = useState(false)
-  const { character, getCharacter } = useCharacter()
-  const { items, getInventory } = useInventory()
-  const { currentLocation, getLocations } = useLocation()
-  const { session, startCombat } = useCombat()
+  const { isInitialized } = useServiceContext()
+  
+  // Only use service hooks if services are initialized
+  let character, getCharacter, items, getInventory, currentLocation, getLocations, session, startCombat;
+  
+  if (isInitialized) {
+    const characterHook = useCharacter()
+    const inventoryHook = useInventory()
+    const locationHook = useLocation()
+    const combatHook = useCombat()
+    
+    character = characterHook.character
+    getCharacter = characterHook.getCharacter
+    items = inventoryHook.items
+    getInventory = inventoryHook.getInventory
+    currentLocation = locationHook.currentLocation
+    getLocations = locationHook.getLocations
+    session = combatHook.session
+    startCombat = combatHook.startCombat
+  }
 
   const testServices = async () => {
+    if (!isInitialized || !getCharacter || !getInventory || !getLocations) {
+      console.warn('Services not initialized yet')
+      return
+    }
+    
     try {
       console.log('Testing services...')
       await getCharacter()
@@ -18,6 +40,11 @@ export function ServiceTester() {
     } catch (error) {
       console.error('Service test failed:', error)
     }
+  }
+
+  // Don't render anything if services aren't initialized
+  if (!isInitialized) {
+    return null
   }
 
   if (!isVisible) {
@@ -47,8 +74,9 @@ export function ServiceTester() {
         <button
           onClick={testServices}
           className="w-full py-2 px-3 bg-blue-600 hover:bg-blue-700 rounded"
+          disabled={!isInitialized}
         >
-          Test All Services
+          Test All Services {!isInitialized && '(Loading...)'}
         </button>
 
         {/* Character Service */}

@@ -1,13 +1,38 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { ServiceLayer, getServices } from '../services';
+import { ServiceLayer } from '../services';
 import { StateSlice } from '../services/state/StateManager';
+import { useServiceContext } from '../providers/ServiceProvider';
 
 // Hook to access the service layer
 export function useServices(): ServiceLayer {
-  const services = getServices();
+  const { services, isInitialized, error } = useServiceContext();
   
-  if (!services) {
-    throw new Error('Services not initialized. Make sure to call initializeServices() before using this hook.');
+  if (error) {
+    throw error;
+  }
+  
+  if (!services || !isInitialized) {
+    // Return a mock service layer to prevent errors during initialization
+    console.warn('Services not yet initialized, returning mock layer');
+    return {
+      character: null as any,
+      inventory: null as any,
+      location: null as any,
+      combat: null as any,
+      getWebSocketManager: () => ({
+        getState: () => 'disconnected',
+        on: () => {},
+        off: () => {},
+      }) as any,
+      getOfflineQueue: () => ({
+        size: () => 0,
+        process: async () => {},
+      }) as any,
+      getState: () => ({
+        selectSlice: () => undefined,
+        subscribe: () => () => {},
+      }) as any,
+    };
   }
   
   return services;
@@ -15,18 +40,25 @@ export function useServices(): ServiceLayer {
 
 // Hook to subscribe to state changes
 export function useServiceState<T>(key: string): StateSlice<T> | undefined {
-  const services = useServices();
-  const [state, setState] = useState<StateSlice<T> | undefined>(() => 
-    services.getState().selectSlice<T>(key)
-  );
+  const { services, isInitialized } = useServiceContext();
+  const [state, setState] = useState<StateSlice<T> | undefined>(undefined);
 
   useEffect(() => {
+    if (!services || !isInitialized) {
+      setState(undefined);
+      return;
+    }
+
+    // Initial state
+    setState(services.getState().selectSlice<T>(key));
+
+    // Subscribe to changes
     const unsubscribe = services.getState().subscribe<T>(key, (slice) => {
       setState(slice);
     });
 
     return unsubscribe;
-  }, [services, key]);
+  }, [services, key, isInitialized]);
 
   return state;
 }
@@ -39,8 +71,8 @@ export function useServiceData<T>(key: string): T | undefined {
 
 // Hook for combat service
 export function useCombat() {
-  const services = useServices();
-  const combatService = services.combat;
+  const { services, isInitialized } = useServiceContext();
+  const combatService = services?.combat;
   const combatState = useServiceState<any>('combat');
 
   const startCombat = useCallback(async (params: {
@@ -68,8 +100,9 @@ export function useCombat() {
   return {
     session: combatState?.data?.session,
     stats: combatState?.data?.stats,
-    isLoading: combatState?.isLoading || false,
+    isLoading: !isInitialized || combatState?.isLoading || false,
     error: combatState?.error,
+    isInCombat: combatState?.data?.session?.isActive || false,
     startCombat,
     performAction,
     fleeCombat,
@@ -79,8 +112,8 @@ export function useCombat() {
 
 // Hook for character service
 export function useCharacter() {
-  const services = useServices();
-  const characterService = services.character;
+  const { services, isInitialized } = useServiceContext();
+  const characterService = services?.character;
   const characterState = useServiceState<any>('character');
 
   const getCharacter = useCallback(async () => {
@@ -97,7 +130,7 @@ export function useCharacter() {
 
   return {
     character: characterState?.data,
-    isLoading: characterState?.isLoading || false,
+    isLoading: !isInitialized || characterState?.isLoading || false,
     error: characterState?.error,
     getCharacter,
     updateStats,
@@ -108,8 +141,8 @@ export function useCharacter() {
 
 // Hook for inventory service
 export function useInventory() {
-  const services = useServices();
-  const inventoryService = services.inventory;
+  const { services, isInitialized } = useServiceContext();
+  const inventoryService = services?.inventory;
   const inventoryState = useServiceState<any>('inventory');
 
   const getInventory = useCallback(async () => {
@@ -132,7 +165,7 @@ export function useInventory() {
     items: inventoryState?.items || [],
     maxSlots: inventoryState?.maxSlots || 50,
     usedSlots: inventoryState?.usedSlots || 0,
-    isLoading: inventoryState?.isLoading || false,
+    isLoading: !isInitialized || inventoryState?.isLoading || false,
     error: inventoryState?.error,
     getInventory,
     useItem,
@@ -144,8 +177,8 @@ export function useInventory() {
 
 // Hook for location service
 export function useLocation() {
-  const services = useServices();
-  const locationService = services.location;
+  const { services, isInitialized } = useServiceContext();
+  const locationService = services?.location;
   const locationState = useServiceState<any>('location');
 
   const getLocations = useCallback(async () => {
@@ -163,7 +196,7 @@ export function useLocation() {
   return {
     locations: locationState?.locations || [],
     currentLocation: locationState?.currentLocation,
-    isLoading: locationState?.isLoading || false,
+    isLoading: !isInitialized || locationState?.isLoading || false,
     error: locationState?.error,
     getLocations,
     moveToLocation,
@@ -174,11 +207,13 @@ export function useLocation() {
 
 // Hook for WebSocket connection status
 export function useWebSocketStatus() {
-  const services = useServices();
-  const wsManager = services.getWebSocketManager();
-  const [status, setStatus] = useState(() => wsManager.getState());
+  const { services, isInitialized } = useServiceContext();
+  const wsManager = services?.getWebSocketManager();
+  const [status, setStatus] = useState(() => wsManager?.getState() || 'disconnected');
 
   useEffect(() => {
+    if (!wsManager || !isInitialized) return;
+    
     const handleUpdate = () => {
       setStatus(wsManager.getState());
     };
@@ -194,24 +229,26 @@ export function useWebSocketStatus() {
       wsManager.off('error', handleUpdate);
       wsManager.off('reconnecting', handleUpdate);
     };
-  }, [wsManager]);
+  }, [wsManager, isInitialized]);
 
   return status;
 }
 
 // Hook for offline queue status
 export function useOfflineQueue() {
-  const services = useServices();
-  const offlineQueue = services.getOfflineQueue();
-  const [queueSize, setQueueSize] = useState(() => offlineQueue.size());
+  const { services, isInitialized } = useServiceContext();
+  const offlineQueue = services?.getOfflineQueue();
+  const [queueSize, setQueueSize] = useState(() => offlineQueue?.size() || 0);
 
   useEffect(() => {
+    if (!offlineQueue || !isInitialized) return;
+    
     const interval = setInterval(() => {
       setQueueSize(offlineQueue.size());
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [offlineQueue]);
+  }, [offlineQueue, isInitialized]);
 
   const processQueue = useCallback(async () => {
     return offlineQueue.process();
@@ -225,10 +262,10 @@ export function useOfflineQueue() {
 
 // Generic hook for any service
 export function useService<T>(serviceName: string): T {
-  const services = useServices();
+  const { services, isInitialized } = useServiceContext();
   const serviceRef = useRef<T>();
 
-  if (!serviceRef.current) {
+  if (!serviceRef.current && services && isInitialized) {
     const ServiceProvider = require('../services/provider/ServiceProvider').ServiceProvider;
     const service = ServiceProvider.get<T>(serviceName);
     
@@ -237,6 +274,10 @@ export function useService<T>(serviceName: string): T {
     }
     
     serviceRef.current = service;
+  }
+
+  if (!serviceRef.current) {
+    throw new Error(`Service "${serviceName}" not initialized yet`);
   }
 
   return serviceRef.current;
