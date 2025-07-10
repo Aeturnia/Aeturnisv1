@@ -3,10 +3,57 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Aeturnis Online - Testing Environment</title>
-    <script type="module" crossorigin src="/assets/index-CAHa10fh.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-Dq2UR-u8.css">
+    
+    <!-- Mobile-first viewport configuration -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Aeturnis Online">
+    <meta name="theme-color" content="#00bcd4">
+    
+    <!-- PWA manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="data:application/octet-stream;base64,aW1wb3J0IHsgU3RyaWN0TW9kZSB9IGZyb20gJ3JlYWN0JwppbXBvcnQgeyBjcmVhdGVSb290IH0gZnJvbSAncmVhY3QtZG9tL2NsaWVudCcKaW1wb3J0IHsgQnJvd3NlclJvdXRlciB9IGZyb20gJ3JlYWN0LXJvdXRlci1kb20nCmltcG9ydCB7IFF1ZXJ5Q2xpZW50LCBRdWVyeUNsaWVudFByb3ZpZGVyIH0gZnJvbSAnQHRhbnN0YWNrL3JlYWN0LXF1ZXJ5JwppbXBvcnQgQXBwIGZyb20gJy4vQXBwLnRzeCcKaW1wb3J0ICcuL2luZGV4LmNzcycKCi8vIENyZWF0ZSBhIGNsaWVudCBmb3IgUmVhY3QgUXVlcnkKY29uc3QgcXVlcnlDbGllbnQgPSBuZXcgUXVlcnlDbGllbnQoewogIGRlZmF1bHRPcHRpb25zOiB7CiAgICBxdWVyaWVzOiB7CiAgICAgIHJldHJ5OiAxLAogICAgICByZWZldGNoT25XaW5kb3dGb2N1czogZmFsc2UsCiAgICAgIC8vIE1vYmlsZS1zcGVjaWZpYyBzZXR0aW5ncwogICAgICBzdGFsZVRpbWU6IDUgKiA2MCAqIDEwMDAsIC8vIDUgbWludXRlcwogICAgICBnY1RpbWU6IDEwICogNjAgKiAxMDAwLCAvLyAxMCBtaW51dGVzCiAgICB9LAogIH0sCn0pCgovLyBSZWdpc3RlciBzZXJ2aWNlIHdvcmtlciBmb3IgUFdBCmlmICgnc2VydmljZVdvcmtlcicgaW4gbmF2aWdhdG9yKSB7CiAgd2luZG93LmFkZEV2ZW50TGlzdGVuZXIoJ2xvYWQnLCAoKSA9PiB7CiAgICBuYXZpZ2F0b3Iuc2VydmljZVdvcmtlci5yZWdpc3RlcignL3NlcnZpY2Utd29ya2VyLmpzJykKICAgICAgLnRoZW4oKHJlZ2lzdHJhdGlvbikgPT4gewogICAgICAgIGNvbnNvbGUubG9nKCdTVyByZWdpc3RlcmVkOiAnLCByZWdpc3RyYXRpb24pOwogICAgICB9KQogICAgICAuY2F0Y2goKHJlZ2lzdHJhdGlvbkVycm9yKSA9PiB7CiAgICAgICAgY29uc29sZS5sb2coJ1NXIHJlZ2lzdHJhdGlvbiBmYWlsZWQ6ICcsIHJlZ2lzdHJhdGlvbkVycm9yKTsKICAgICAgfSk7CiAgfSk7Cn0KCmNyZWF0ZVJvb3QoZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3Jvb3QnKSEpLnJlbmRlcigKICA8U3RyaWN0TW9kZT4KICAgIDxRdWVyeUNsaWVudFByb3ZpZGVyIGNsaWVudD17cXVlcnlDbGllbnR9PgogICAgICA8QnJvd3NlclJvdXRlcj4KICAgICAgICA8QXBwIC8+CiAgICAgIDwvQnJvd3NlclJvdXRlcj4KICAgIDwvUXVlcnlDbGllbnRQcm92aWRlcj4KICA8L1N0cmljdE1vZGU+LAop" as="script">
+    
+    <title>Aeturnis Online - Mobile MMORPG</title>
+    
+    <!-- Prevent zoom on form inputs -->
+    <style>
+      input, textarea, select {
+        font-size: 16px !important;
+      }
+      
+      /* CSS custom properties for safe areas */
+      :root {
+        --safe-area-inset-top: env(safe-area-inset-top);
+        --safe-area-inset-right: env(safe-area-inset-right);
+        --safe-area-inset-bottom: env(safe-area-inset-bottom);
+        --safe-area-inset-left: env(safe-area-inset-left);
+      }
+      
+      /* Prevent text selection on mobile */
+      * {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
+      
+      /* Allow text selection in input fields */
+      input, textarea {
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        user-select: text;
+      }
+    </style>
+    <script type="module" crossorigin src="/assets/index-B6pochvq.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/react-vendor-BtP0CW_r.js">
+    <link rel="modulepreload" crossorigin href="/assets/router-vendor-Cn6bChYk.js">
+    <link rel="modulepreload" crossorigin href="/assets/query-vendor-VBf2NspY.js">
+    <link rel="modulepreload" crossorigin href="/assets/gesture-vendor-CKK3uJth.js">
+    <link rel="modulepreload" crossorigin href="/assets/motion-vendor-CD8PLs6k.js">
   </head>
   <body>
     <div id="root"></div>
