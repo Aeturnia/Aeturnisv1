@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { onCLS, onFCP, onLCP, onTTFB, onINP, Metric } from 'web-vitals'
 import App from './App.tsx'
 import './index.css'
 
@@ -18,18 +19,28 @@ const queryClient = new QueryClient({
   },
 })
 
-// Register service worker for PWA
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then((registration) => {
-        console.log('SW registered: ', registration);
-      })
-      .catch((registrationError) => {
-        console.log('SW registration failed: ', registrationError);
-      });
-  });
+// Web Vitals reporting
+function sendToAnalytics(metric: Metric) {
+  // Log to console for now
+  const value = Math.round(metric.name === 'CLS' ? metric.value * 1000 : metric.value)
+  console.log(`[Web Vitals] ${metric.name}: ${value}`, {
+    value: metric.value,
+    rating: metric.rating,
+    delta: metric.delta,
+    id: metric.id,
+    navigationType: metric.navigationType
+  })
+  
+  // In production, you would send this to your analytics endpoint
+  // Example: fetch('/api/analytics', { method: 'POST', body: JSON.stringify(metric) })
 }
+
+// Monitor Core Web Vitals
+onCLS(sendToAnalytics)  // Cumulative Layout Shift
+onFCP(sendToAnalytics)  // First Contentful Paint
+onLCP(sendToAnalytics)  // Largest Contentful Paint
+onTTFB(sendToAnalytics) // Time to First Byte
+onINP(sendToAnalytics)  // Interaction to Next Paint (replaced FID)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

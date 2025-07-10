@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import { useTouch } from '../../hooks/useTouch'
 
 interface MapLocation {
@@ -70,12 +69,8 @@ export function MapScreen() {
   }
 
   return (
-    <motion.div
+    <div
       className="h-full bg-dark-900 relative overflow-hidden"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
     >
       {/* Map Controls */}
       <div className="absolute top-4 left-4 right-4 z-20">
@@ -117,7 +112,7 @@ export function MapScreen() {
 
         {/* Locations */}
         {mockLocations.map((location) => (
-          <motion.div
+          <div
             key={location.id}
             className={`absolute w-12 h-12 rounded-full ${getLocationColor(location.type, location.discovered, location.completed)} 
               border-2 border-white shadow-lg cursor-pointer flex items-center justify-center`}
@@ -127,33 +122,22 @@ export function MapScreen() {
               transform: 'translate(-50%, -50%)',
               opacity: location.discovered ? 1 : 0.3
             }}
-            whileHover={{ scale: 1.2 }}
-            whileTap={{ scale: 0.9 }}
             onClick={() => {
               setSelectedLocation(location)
               hapticFeedback('medium')
             }}
           >
             <span className="text-lg">{getLocationIcon(location.type)}</span>
-          </motion.div>
+          </div>
         ))}
 
         {/* Current player position */}
-        <motion.div
+        <div
           className="absolute w-4 h-4 bg-primary-500 rounded-full border-2 border-white shadow-lg"
           style={{
             left: '20%',
             top: '80%',
             transform: 'translate(-50%, -50%)'
-          }}
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [1, 0.7, 1]
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut"
           }}
         />
       </div>
@@ -187,18 +171,12 @@ export function MapScreen() {
 
       {/* Location Details Modal */}
       {selectedLocation && (
-        <motion.div
+        <div
           className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
           onClick={() => setSelectedLocation(null)}
         >
-          <motion.div
+          <div
             className="card p-6 max-w-sm w-full"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center mb-4">
@@ -235,9 +213,9 @@ export function MapScreen() {
                 Info
               </button>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
-    </motion.div>
+    </div>
   )
 }

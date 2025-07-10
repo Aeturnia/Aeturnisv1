@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import { useTouch } from '../../hooks/useTouch'
 
 interface NavItem {
@@ -48,12 +47,12 @@ export function Navigation() {
           const isActive = activeItem === item.id
           
           return (
-            <motion.button
+            <button
               key={item.id}
               onClick={() => handleNavigation(item)}
               className={`
                 flex flex-col items-center justify-center p-2 rounded-lg
-                min-w-touch min-h-touch relative transition-all duration-150
+                relative transition-all duration-150
                 ${isActive 
                   ? 'text-primary-400' 
                   : 'text-dark-400 hover:text-dark-300'
@@ -61,8 +60,7 @@ export function Navigation() {
                 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-500
                 no-tap-highlight touch-manipulation
               `}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              style={{ minWidth: '44px', minHeight: '44px' }}
               aria-label={item.description}
             >
               {/* Icon */}
@@ -77,12 +75,8 @@ export function Navigation() {
               
               {/* Active indicator */}
               {isActive && (
-                <motion.div
+                <div
                   className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary-400 rounded-full"
-                  layoutId="activeIndicator"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.2 }}
                 />
               )}
               
@@ -92,7 +86,7 @@ export function Navigation() {
                   <div className="w-1.5 h-1.5 bg-white rounded-full" />
                 </div>
               )}
-            </motion.button>
+            </button>
           )
         })}
       </div>

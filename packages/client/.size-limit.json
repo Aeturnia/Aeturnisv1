@@ -1,0 +1,33 @@
+[
+  {
+    "name": "Initial JS Bundle",
+    "path": "dist/assets/index-*.js",
+    "limit": "25 KB"
+  },
+  {
+    "name": "React Vendor",
+    "path": "dist/assets/react-vendor-*.js",
+    "limit": "145 KB"
+  },
+  {
+    "name": "Total Initial Bundle",
+    "path": [
+      "dist/assets/index-*.js",
+      "dist/assets/react-vendor-*.js",
+      "dist/assets/router-vendor-*.js",
+      "dist/assets/query-vendor-*.js",
+      "dist/assets/gesture-vendor-*.js"
+    ],
+    "limit": "200 KB"
+  },
+  {
+    "name": "CSS Bundle",
+    "path": "dist/assets/index-*.css",
+    "limit": "15 KB"
+  },
+  {
+    "name": "Lazy Routes (average)",
+    "path": "dist/assets/*Screen-*.js",
+    "limit": "8 KB"
+  }
+]

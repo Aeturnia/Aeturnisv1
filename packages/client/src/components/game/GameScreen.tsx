@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
 import { useTouch } from '../../hooks/useTouch'
 import { useIsMobile } from '../../utils/responsive'
 
@@ -49,30 +48,18 @@ export function GameScreen() {
   }, [])
 
   return (
-    <motion.div
+    <div
       className="h-full bg-gradient-to-b from-dark-800 to-dark-900 relative overflow-hidden"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
       {...gestureHandler()}
     >
       {/* Game World */}
       <div className="absolute inset-0 bg-gradient-to-b from-blue-900/20 to-green-900/20">
         {/* Player character */}
-        <motion.div
+        <div
           className="absolute w-8 h-8 bg-primary-500 rounded-full border-2 border-white shadow-lg"
           style={{
             left: `${playerPosition.x}%`,
             top: `${playerPosition.y}%`,
-          }}
-          animate={{
-            scale: [1, 1.1, 1],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut"
           }}
         />
         
@@ -111,30 +98,24 @@ export function GameScreen() {
 
       {/* Action buttons */}
       <div className="absolute bottom-20 right-4 flex flex-col space-y-2">
-        <motion.button
+        <button
           className="btn-touch bg-red-600 hover:bg-red-700 text-white rounded-full w-12 h-12 flex items-center justify-center"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
           onClick={() => hapticFeedback('heavy')}
         >
           ⚔️
-        </motion.button>
-        <motion.button
+        </button>
+        <button
           className="btn-touch bg-blue-600 hover:bg-blue-700 text-white rounded-full w-12 h-12 flex items-center justify-center"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
           onClick={() => hapticFeedback('medium')}
         >
           🛡️
-        </motion.button>
-        <motion.button
+        </button>
+        <button
           className="btn-touch bg-green-600 hover:bg-green-700 text-white rounded-full w-12 h-12 flex items-center justify-center"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
           onClick={() => hapticFeedback('light')}
         >
           🧪
-        </motion.button>
+        </button>
       </div>
 
       {/* Mobile-specific touch instructions */}
@@ -145,6 +126,6 @@ export function GameScreen() {
           </p>
         </div>
       )}
-    </motion.div>
+    </div>
   )
 }

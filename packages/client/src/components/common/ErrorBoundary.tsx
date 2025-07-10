@@ -1,5 +1,4 @@
 import { Component, ErrorInfo, ReactNode } from 'react'
-import { motion } from 'framer-motion'
 
 interface Props {
   children: ReactNode
@@ -34,11 +33,8 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-dark-900 flex items-center justify-center p-4">
-          <motion.div
+          <div
             className="text-center max-w-md"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
           >
             {/* Error icon */}
             <div className="text-6xl mb-4">⚠️</div>
@@ -66,25 +62,21 @@ export class ErrorBoundary extends Component<Props, State> {
             
             {/* Actions */}
             <div className="space-y-3">
-              <motion.button
+              <button
                 onClick={this.handleRetry}
                 className="btn-touch btn-primary w-full"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 Try Again
-              </motion.button>
+              </button>
               
-              <motion.button
+              <button
                 onClick={() => window.location.reload()}
                 className="btn-touch btn-secondary w-full"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 Reload Game
-              </motion.button>
+              </button>
             </div>
-          </motion.div>
+          </div>
         </div>
       )
     }

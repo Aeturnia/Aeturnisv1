@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
 import { useTouch } from '../../hooks/useTouch'
 import { useIsMobile } from '../../utils/responsive'
@@ -62,25 +61,21 @@ export function Header({
         {/* Left side - Back button or Menu */}
         <div className="flex items-center">
           {showBackButton ? (
-            <motion.button
+            <button
               onClick={handleBackClick}
               className="btn-touch btn-secondary mr-2"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
               aria-label="Go back"
             >
               <span className="text-lg">←</span>
-            </motion.button>
+            </button>
           ) : (
-            <motion.button
+            <button
               onClick={handleMenuToggle}
               className="btn-touch btn-secondary mr-2"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
               aria-label="Menu"
             >
               <span className="text-lg">☰</span>
-            </motion.button>
+            </button>
           )}
         </div>
 
@@ -105,19 +100,12 @@ export function Header({
 
       {/* Mobile menu overlay */}
       {isMenuOpen && (
-        <motion.div
+        <div
           className="fixed inset-0 bg-dark-900 bg-opacity-50 z-50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
           onClick={() => setIsMenuOpen(false)}
         >
-          <motion.div
+          <div
             className="absolute top-0 left-0 w-64 h-full bg-dark-800 shadow-lg"
-            initial={{ x: -256 }}
-            animate={{ x: 0 }}
-            exit={{ x: -256 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
           >
             <div className="p-4 safe-area-padding">
               <h2 className="text-xl font-bold text-white mb-4">Menu</h2>
@@ -138,8 +126,8 @@ export function Header({
                 </button>
               </div>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
     </header>
   )

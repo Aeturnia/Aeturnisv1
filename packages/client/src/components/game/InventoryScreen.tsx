@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import { useTouch } from '../../hooks/useTouch'
 
 interface InventoryItem {
@@ -42,12 +41,8 @@ export function InventoryScreen() {
   }
 
   return (
-    <motion.div
+    <div
       className="h-full bg-dark-900 p-4"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
     >
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
@@ -81,11 +76,9 @@ export function InventoryScreen() {
         {viewMode === 'grid' ? (
           <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
             {mockInventory.map((item) => (
-              <motion.div
+              <div
                 key={item.id}
                 className={`card p-2 border-2 ${getRarityColor(item.rarity)} cursor-pointer relative`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
                 onClick={() => {
                   setSelectedItem(item)
                   hapticFeedback('light')
@@ -98,17 +91,15 @@ export function InventoryScreen() {
                     {item.quantity}
                   </div>
                 )}
-              </motion.div>
+              </div>
             ))}
           </div>
         ) : (
           <div className="space-y-2">
             {mockInventory.map((item) => (
-              <motion.div
+              <div
                 key={item.id}
                 className={`card p-3 border-l-4 ${getRarityColor(item.rarity)} cursor-pointer flex items-center space-x-3`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
                 onClick={() => {
                   setSelectedItem(item)
                   hapticFeedback('light')
@@ -124,7 +115,7 @@ export function InventoryScreen() {
                     {item.quantity}
                   </div>
                 )}
-              </motion.div>
+              </div>
             ))}
           </div>
         )}
@@ -132,18 +123,12 @@ export function InventoryScreen() {
 
       {/* Item Details Modal */}
       {selectedItem && (
-        <motion.div
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
           onClick={() => setSelectedItem(null)}
         >
-          <motion.div
+          <div
             className="card p-6 max-w-sm w-full"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center mb-4">
@@ -162,9 +147,9 @@ export function InventoryScreen() {
               <button className="btn-touch btn-primary flex-1">Use</button>
               <button className="btn-touch btn-secondary flex-1">Drop</button>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
-    </motion.div>
+    </div>
   )
 }
