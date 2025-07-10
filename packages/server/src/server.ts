@@ -85,15 +85,15 @@ async function startServer() {
       process.exit(1);
     }
 
-    // Initialize Service Providers - FORCE MOCK SERVICES FOR TESTING ENVIRONMENT
-    logger.info('Initializing service providers...', { service: 'aeturnis-api' });
-    const useMocks = true; // Force mock services for testing environment
-    await initializeProviders(useMocks);
-    logger.info(`Service providers initialized with ${useMocks ? 'MOCK' : 'REAL'} services`, { 
-      service: 'aeturnis-api',
-      useMocks,
-      note: 'Forced to use MOCK services for testing environment'
-    });
+    // Initialize Service Providers - SKIP FOR NOW TO DEBUG RESTART LOOP
+    logger.info('SKIPPING service providers initialization to debug restart loop', { service: 'aeturnis-api' });
+    // const useMocks = true; // Force mock services for testing environment
+    // await initializeProviders(useMocks);
+    // logger.info(`Service providers initialized with ${useMocks ? 'MOCK' : 'REAL'} services`, { 
+    //   service: 'aeturnis-api',
+    //   useMocks,
+    //   note: 'Forced to use MOCK services for testing environment'
+    // });
 
     // Create Express app
     logger.info('Creating Express app...', { service: 'aeturnis-api' });
