@@ -2,6 +2,8 @@
  * Offline functionality and data synchronization utilities
  */
 
+import { useState, useEffect } from 'react'
+
 // Offline storage interface
 interface OfflineData {
   id: string
