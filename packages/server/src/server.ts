@@ -5,6 +5,7 @@ import { checkDatabaseConnection } from './database/config';
 import { logger } from './utils/logger';
 import { initializeProviders } from './providers';
 import { ServerMonitor } from './utils/server-monitor';
+import { RestartDebugger } from './utils/restart-debugger';
 import os from 'os';
 
 // Initialize environment variables
@@ -22,8 +23,9 @@ const HOST = process.env.HOST || '0.0.0.0';
 console.log(`🔍 Environment PORT: ${process.env.PORT}`);
 console.log(`🔍 Using PORT: ${PORT}`);
 
-// Initialize server monitor
+// Initialize server monitor and restart debugger
 const serverMonitor = new ServerMonitor();
+const restartDebugger = new RestartDebugger();
 
 
 // Environment validation
@@ -85,15 +87,15 @@ async function startServer() {
       process.exit(1);
     }
 
-    // Initialize Service Providers - SKIP FOR NOW TO DEBUG RESTART LOOP
-    logger.info('SKIPPING service providers initialization to debug restart loop', { service: 'aeturnis-api' });
-    // const useMocks = true; // Force mock services for testing environment
-    // await initializeProviders(useMocks);
-    // logger.info(`Service providers initialized with ${useMocks ? 'MOCK' : 'REAL'} services`, { 
-    //   service: 'aeturnis-api',
-    //   useMocks,
-    //   note: 'Forced to use MOCK services for testing environment'
-    // });
+    // Initialize Service Providers
+    logger.info('Initializing service providers...', { service: 'aeturnis-api' });
+    const useMocks = true; // Force mock services for testing environment
+    await initializeProviders(useMocks);
+    logger.info(`Service providers initialized with ${useMocks ? 'MOCK' : 'REAL'} services`, { 
+      service: 'aeturnis-api',
+      useMocks,
+      note: 'Forced to use MOCK services for testing environment'
+    });
 
     // Create Express app
     logger.info('Creating Express app...', { service: 'aeturnis-api' });
@@ -171,17 +173,27 @@ async function startServer() {
 
     logger.info('Express server listener registered', { service: 'aeturnis-api' });
 
-    // Socket.IO server TEMPORARILY DISABLED to isolate restart loop issue
+    // Socket.IO server initialization
+    logger.info('Initializing Socket.IO server...', { service: 'aeturnis-api' });
+    
     let socketServer: any = null;
+    try {
+      socketServer = await createSocketServer(expressServer);
+      logger.info('Socket.IO server initialized successfully', { service: 'aeturnis-api' });
+      
+      // eslint-disable-next-line no-console
+      console.log('🔌 Socket.IO server running on port 3001');
+    } catch (error) {
+      logger.error('Failed to initialize Socket.IO server', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        service: 'aeturnis-api',
+      });
+      // eslint-disable-next-line no-console
+      console.warn('⚠️  Socket.IO server failed to start - continuing with Express only');
+    }
 
-    logger.info('Socket.IO server temporarily disabled for debugging restart loop', {
-      service: 'aeturnis-api',
-    });
-
-    // eslint-disable-next-line no-console
-    console.log('🔌 Socket.IO server temporarily disabled - Express only mode');
-
-    // Wait a moment to ensure Express server is stable
+    // Wait a moment to ensure servers are stable
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Graceful shutdown handlers
