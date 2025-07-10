@@ -11,26 +11,13 @@
   "lang": "en-US",
   "icons": [
     {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-512.png", 
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "/screenshot-mobile.png",
-      "sizes": "320x640",
-      "type": "image/png",
-      "form_factor": "narrow"
-    }
-  ],
+  "screenshots": [],
   "prefer_related_applications": false,
   "related_applications": []
 }
