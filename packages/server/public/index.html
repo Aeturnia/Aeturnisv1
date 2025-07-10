@@ -374,6 +374,8 @@
       
       // Initialize mock mode on page load
       document.addEventListener('DOMContentLoaded', function() {
+        // Force Mock Mode for demo
+        localStorage.setItem('VITE_USE_MOCKS', 'true');
         const mockMode = localStorage.getItem('VITE_USE_MOCKS') === 'true';
         const indicator = document.getElementById('mock-mode-indicator');
         
@@ -397,7 +399,8 @@
           loadInventoryData();
           logAction('🎮 Game interface initialized');
           logAction('🔧 Mock/Real Service Switching System active');
-        }, 500);
+          logAction('🎭 Forced Mock Mode for demonstration');
+        }, 100);
       });
     </script>
   </body>
