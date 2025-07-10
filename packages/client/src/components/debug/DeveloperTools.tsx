@@ -6,9 +6,38 @@ import { PerformanceMonitor } from './PerformanceMonitor'
 export function DeveloperTools() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMockMode, setIsMockMode] = useState(import.meta.env.VITE_USE_MOCKS === 'true')
+  const [forceShow, setForceShow] = useState(false)
 
-  // Only show in development
-  if (process.env.NODE_ENV !== 'development') return null
+  // Check for dev mode or force show
+  const shouldShow = import.meta.env.MODE === 'development' || 
+                     import.meta.env.DEV === true || 
+                     forceShow ||
+                     localStorage.getItem('SHOW_DEV_TOOLS') === 'true'
+
+  // Add keyboard shortcut to toggle dev tools
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Ctrl+Shift+D to toggle dev tools
+      if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+        e.preventDefault()
+        const newState = !shouldShow
+        localStorage.setItem('SHOW_DEV_TOOLS', newState ? 'true' : 'false')
+        setForceShow(newState)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [shouldShow])
+
+  // Check localStorage on mount
+  useEffect(() => {
+    if (localStorage.getItem('SHOW_DEV_TOOLS') === 'true') {
+      setForceShow(true)
+    }
+  }, [])
+
+  if (!shouldShow) return null
 
   return (
     <>
@@ -134,7 +163,7 @@ export function DeveloperTools() {
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-gray-400 mb-1">Environment</h4>
               <div className="px-3 py-2 bg-dark-800 rounded-lg text-xs font-mono text-gray-300">
-                <div>Mode: {process.env.NODE_ENV}</div>
+                <div>Mode: {import.meta.env.MODE}</div>
                 <div>API: {import.meta.env.VITE_API_URL || 'http://localhost:3000'}</div>
                 <div>PWA: {('serviceWorker' in navigator) ? 'Supported' : 'Not Supported'}</div>
                 <div>Touch: {('ontouchstart' in window) ? 'Yes' : 'No'}</div>

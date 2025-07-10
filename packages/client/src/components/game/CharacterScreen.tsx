@@ -191,7 +191,7 @@ export function CharacterScreen() {
             )}
 
             {/* Dev Mode: Level Up Button */}
-            {process.env.NODE_ENV === 'development' && (
+            {import.meta.env.MODE === 'development' && (
               <div className="pt-4">
                 <button
                   onClick={async () => {

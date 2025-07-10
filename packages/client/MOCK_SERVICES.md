@@ -4,6 +4,18 @@
 
 The service layer now supports switching between mock and real services, allowing you to develop and test without a backend connection.
 
+## Enabling Developer Tools
+
+If you don't see the developer tools button (⚙️):
+
+1. **Keyboard Shortcut**: Press `Ctrl+Shift+D` to toggle dev tools
+2. **Enable Button**: Look for "Enable Dev Tools" button in bottom-left
+3. **Force Enable**: Open browser console and run:
+   ```javascript
+   localStorage.setItem('SHOW_DEV_TOOLS', 'true');
+   location.reload();
+   ```
+
 ## How to Enable Mock Mode
 
 ### Method 1: Environment Variable
