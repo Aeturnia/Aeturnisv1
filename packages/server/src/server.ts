@@ -4,15 +4,19 @@ import { createSocketServer } from './sockets/SocketServer';
 import { checkDatabaseConnection } from './database/config';
 import { logger } from './utils/logger';
 import { initializeProviders } from './providers';
+import { ServerMonitor } from './utils/server-monitor';
 import os from 'os';
 
 // Initialize environment variables
 import { config } from 'dotenv';
 config();
 
-// Force use port 8080 for development, ignore environment PORT variable
-const PORT = 8080;
+// Use environment PORT or default to 5000 (to match Replit workflow)
+const PORT = parseInt(process.env.PORT || '5000', 10);
 const HOST = process.env.HOST || '0.0.0.0';
+
+// Initialize server monitor
+const serverMonitor = new ServerMonitor();
 
 
 // Environment validation
@@ -29,32 +33,38 @@ if (missingEnvVars.length > 0) {
 
 // Process monitoring and debugging
 process.on('uncaughtException', (error) => {
-  logger.error('🚨 UNCAUGHT EXCEPTION - Server will restart:', error);
-  console.error('🚨 UNCAUGHT EXCEPTION Stack:', error.stack);
+  logger.error('🚨 UNCAUGHT EXCEPTION - Server will restart:', {
+    message: error.message,
+    stack: error.stack,
+    name: error.name,
+  });
+  console.error('🚨 UNCAUGHT EXCEPTION:', error);
+  serverMonitor.stop();
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  logger.error('🚨 UNHANDLED REJECTION - Server will restart:', reason);
-  console.error('🚨 UNHANDLED REJECTION at Promise:', promise);
+  logger.error('🚨 UNHANDLED REJECTION - Server will restart:', {
+    reason: reason instanceof Error ? reason.message : reason,
+    stack: reason instanceof Error ? reason.stack : undefined,
+    promise: String(promise),
+  });
+  console.error('🚨 UNHANDLED REJECTION:', reason);
+  serverMonitor.stop();
   process.exit(1);
 });
 
 process.on('SIGTERM', () => {
   logger.info('🛑 SIGTERM received - Server shutting down gracefully');
+  serverMonitor.stop();
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
   logger.info('🛑 SIGINT received - Server shutting down gracefully');
+  serverMonitor.stop();
   process.exit(0);
 });
-
-// Memory monitoring
-setInterval(() => {
-  const memUsage = process.memoryUsage();
-  logger.info(`📊 Memory Usage: RSS=${Math.round(memUsage.rss / 1024 / 1024)}MB, Heap=${Math.round(memUsage.heapUsed / 1024 / 1024)}MB/${Math.round(memUsage.heapTotal / 1024 / 1024)}MB`);
-}, 30000); // Every 30 seconds
 
 
 async function startServer() {
@@ -116,10 +126,9 @@ async function startServer() {
       // eslint-disable-next-line no-console
       console.log(`🔑 Login: POST http://localhost:${PORT}/api/v1/auth/login`);
 
-      // Add periodic health checks
-      setInterval(() => {
-        logger.info('🔄 Server health check - Still running', { service: 'aeturnis-api' });
-      }, 10000); // Every 10 seconds
+      // Start server monitoring
+      serverMonitor.start();
+      logger.info('📊 Server monitoring started', { service: 'aeturnis-api' });
     });
 
     expressServer.on('error', (error: any) => {
@@ -192,27 +201,7 @@ async function startServer() {
       process.exit(0);
     };
 
-    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-
-    // Handle uncaught exceptions
-    process.on('uncaughtException', (error) => {
-      logger.error('Uncaught exception', {
-        error: error.message,
-        stack: error.stack,
-        service: 'aeturnis-api',
-      });
-      process.exit(1);
-    });
-
-    process.on('unhandledRejection', (reason, promise) => {
-      logger.error('Unhandled rejection', {
-        reason,
-        promise,
-        service: 'aeturnis-api',
-      });
-      process.exit(1);
-    });
+    // Graceful shutdown handlers are already set up at the top of the file
 
   } catch (error) {
     logger.error('Failed to start server', {

@@ -53,7 +53,7 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npm run dev"
-waitForPort = 5000
+waitForPort = 8080
 
 [[workflows.workflow]]
 name = "Debug Server"
