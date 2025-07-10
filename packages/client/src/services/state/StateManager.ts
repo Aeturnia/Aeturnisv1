@@ -168,7 +168,7 @@ export class StateManager extends EventEmitter {
     this.middleware.push(middleware);
   }
 
-  public async loadPersistedState(): Promise<void> {
+  public async loadAllPersistedState(): Promise<void> {
     for (const key of this.persistedKeys) {
       this.loadPersistedState(key);
     }

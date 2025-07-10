@@ -13,13 +13,17 @@ export function MockModeIndicator() {
     setIsMockMode(mockMode)
   }, [])
 
-  // Only show when mock mode is active
-  if (!isMockMode) return null
+  // Always show in development for testing
+  // if (!isMockMode) return null
 
   return (
-    <div className="fixed top-4 left-4 z-[9999] bg-yellow-900/90 text-yellow-100 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm border border-yellow-700/50 flex items-center gap-2 shadow-lg">
-      <span className="animate-pulse">🎭</span>
-      <span>Mock Mode</span>
+    <div className={`fixed top-4 left-4 z-[9999] px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm border flex items-center gap-2 shadow-lg ${
+      isMockMode 
+        ? 'bg-yellow-900/90 text-yellow-100 border-yellow-700/50' 
+        : 'bg-green-900/90 text-green-100 border-green-700/50'
+    }`}>
+      <span className="animate-pulse">{isMockMode ? '🎭' : '🔌'}</span>
+      <span>{isMockMode ? 'Mock Mode' : 'Real Mode'}</span>
     </div>
   )
 }
