@@ -66,9 +66,21 @@ export class MonsterService {
         .from(monsters)
         .where(eq(monsters.zoneId, zoneId));
 
-      await this.cache.set(cacheKey, result, 30); // Cache for 30 seconds
-      logger.info(`Found ${result.length} monsters in zone: ${zoneId}`);
-      return result;
+      const formattedResult = result.map(m => ({
+        id: m.id,
+        name: m.name,
+        level: 1, // Default level, should be from monster type
+        hp: m.currentHp,
+        maxHp: m.maxHp,
+        position: {
+          x: m.position.x,
+          y: m.position.y
+        }
+      }));
+      
+      await this.cache.set(cacheKey, formattedResult, 30); // Cache for 30 seconds
+      logger.info(`Found ${formattedResult.length} monsters in zone: ${zoneId}`);
+      return formattedResult;
     } catch (error) {
       logger.error(`Error fetching monsters for zone ${zoneIdOrName}:`, error);
       throw error;
@@ -78,7 +90,24 @@ export class MonsterService {
   /**
    * Spawn a monster at a specific spawn point
    */
-  async spawnMonster(spawnPointId: string): Promise<any> {
+  async spawnMonster(spawnPointId: string): Promise<{
+    id: string;
+    monsterTypeId: string;
+    zoneId: string;
+    name: string;
+    position: {x: number, y: number, z: number};
+    currentHp: number;
+    maxHp: number;
+    state: string;
+    aggroRadius: number;
+    aggroList: string[];
+    targetId: string | null;
+    spawnPointId: string | null;
+    metadata: Record<string, unknown>;
+    createdAt: Date;
+    updatedAt: Date;
+    respawnTime: Date | null;
+  }> {
     try {
       logger.info(`Spawning monster at spawn point: ${spawnPointId}`);
       
@@ -130,7 +159,11 @@ export class MonsterService {
       await this.cache.delete(`monsters:zone:${spawnPoint[0].zoneId}`);
       
       logger.info(`Monster spawned successfully: ${result[0].id}`);
-      return result[0];
+      return {
+        ...result[0],
+        metadata: result[0].metadata || {},
+        respawnTime: null
+      };
     } catch (error) {
       logger.error(`Error spawning monster at spawn point ${spawnPointId}:`, error);
       throw error;
@@ -140,7 +173,24 @@ export class MonsterService {
   /**
    * Update monster state
    */
-  async updateMonsterState(monsterId: string, newState: string, targetId?: string): Promise<any> {
+  async updateMonsterState(monsterId: string, newState: string, targetId?: string): Promise<{
+    id: string;
+    monsterTypeId: string;
+    zoneId: string;
+    name: string;
+    position: {x: number, y: number, z: number};
+    currentHp: number;
+    maxHp: number;
+    state: string;
+    aggroRadius: number;
+    aggroList: string[];
+    targetId: string | null;
+    spawnPointId: string | null;
+    metadata: Record<string, unknown>;
+    createdAt: Date;
+    updatedAt: Date;
+    respawnTime: Date | null;
+  }> {
     try {
       logger.info(`Updating monster state: ${monsterId} to ${newState}`);
       
@@ -170,7 +220,11 @@ export class MonsterService {
       await this.cache.delete(`monsters:zone:${result[0].zoneId}`);
       
       logger.info(`Monster state updated successfully: ${monsterId}`);
-      return result[0];
+      return {
+        ...result[0],
+        metadata: result[0].metadata || {},
+        respawnTime: null
+      };
     } catch (error) {
       logger.error(`Error updating monster state ${monsterId}:`, error);
       throw error;
@@ -195,9 +249,21 @@ export class MonsterService {
         .select()
         .from(monsterTypes);
 
-      await this.cache.set(cacheKey, result, 300); // Cache for 5 minutes
-      logger.info(`Found ${result.length} monster types`);
-      return result;
+      const formattedResult = result.map(mt => ({
+        id: mt.id,
+        name: mt.name,
+        level: mt.level,
+        baseStats: {
+          hp: mt.baseHp,
+          attack: mt.baseAttack,
+          defense: mt.baseDefense
+        },
+        abilities: [] // No abilities data in the table
+      }));
+
+      await this.cache.set(cacheKey, formattedResult, 300); // Cache for 5 minutes
+      logger.info(`Found ${formattedResult.length} monster types`);
+      return formattedResult;
     } catch (error) {
       logger.error('Error fetching monster types:', error);
       throw error;
@@ -240,9 +306,20 @@ export class MonsterService {
         .from(spawnPoints)
         .where(eq(spawnPoints.zoneId, zoneId));
 
-      await this.cache.set(cacheKey, result, 60); // Cache for 1 minute
-      logger.info(`Found ${result.length} spawn points in zone: ${zoneId}`);
-      return result;
+      const formattedResult = result.map(sp => ({
+        id: sp.id,
+        zoneId: sp.zoneId,
+        position: {
+          x: sp.position.x,
+          y: sp.position.y
+        },
+        monsterType: sp.monsterTypeId,
+        respawnRate: sp.respawnTime
+      }));
+
+      await this.cache.set(cacheKey, formattedResult, 60); // Cache for 1 minute
+      logger.info(`Found ${formattedResult.length} spawn points in zone: ${zoneId}`);
+      return formattedResult;
     } catch (error) {
       logger.error(`Error fetching spawn points for zone ${zoneIdOrName}:`, error);
       throw error;
@@ -277,7 +354,7 @@ export class MonsterService {
       }
 
       // Calculate distance
-      const monsterPos = monster[0].position as any;
+      const monsterPos = monster[0].position as {x: number, y: number, z: number};
       const distance = Math.sqrt(
         Math.pow(characterPosition.x - monsterPos.x, 2) +
         Math.pow(characterPosition.y - monsterPos.y, 2) +

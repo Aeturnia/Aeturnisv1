@@ -20,6 +20,12 @@ import { logger } from '../../utils/logger';
  * Uses in-memory data storage with predictable RNG
  */
 export class MockLootService implements ILootService {
+  /**
+   * Get the service name (from IService)
+   */
+  getName(): string {
+    return 'MockLootService';
+  }
   // Mock loot tables storage
   private lootTables: Map<string, LootTable> = new Map();
   

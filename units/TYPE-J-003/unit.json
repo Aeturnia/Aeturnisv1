@@ -1,0 +1,25 @@
+{
+  "id": "TYPE-J-003",
+  "type": "J",
+  "subtype": "003",
+  "name": "Mock/Provider Unused Variables",
+  "description": "Remove or properly use unused variables in mock/provider files",
+  "assignedTo": "Provider Cleanup Specialist",
+  "status": "completed",
+  "startedAt": "2025-07-09T21:55:00Z",
+  "completedAt": "2025-07-09T22:00:00Z",
+  "files": [],
+  "errors": {
+    "baseline": {
+      "TS6133": 0,
+      "TS6138": 0,
+      "no-unused-vars": 0
+    },
+    "final": {
+      "TS6133": 0,
+      "TS6138": 0,
+      "no-unused-vars": 0
+    }
+  },
+  "notes": "No unused variables found in provider/mock/real files"
+}

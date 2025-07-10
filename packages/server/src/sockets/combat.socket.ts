@@ -16,12 +16,22 @@ interface AuthenticatedSocket extends Socket {
   data: SocketData;
 }
 
+// Interface for socket responses
+interface SocketResponse {
+  success: boolean;
+  message?: string;
+  data?: unknown;
+  timestamp?: number;
+  sessionId?: string;
+  socketId?: string;
+}
+
 export function registerCombatHandlers(io: Server): void {
   io.on('connection', (socket: AuthenticatedSocket) => {
     // Combat socket connected
 
     // Join combat room
-    socket.on('combat:join', async (data: { sessionId: string }, callback?: Function) => {
+    socket.on('combat:join', async (data: { sessionId: string }, callback?: (response: SocketResponse) => void) => {
       try {
         const { sessionId } = data;
         const userId = socket.data.userId;
@@ -63,7 +73,7 @@ export function registerCombatHandlers(io: Server): void {
     });
 
     // Leave combat room
-    socket.on('combat:leave', async (data: { sessionId: string }, callback?: Function) => {
+    socket.on('combat:leave', async (data: { sessionId: string }, callback?: (response: SocketResponse) => void) => {
       try {
         const { sessionId } = data;
         socket.leave(`combat:${sessionId}`);
@@ -80,7 +90,7 @@ export function registerCombatHandlers(io: Server): void {
     });
 
     // Handle combat actions
-    socket.on('combat:action', async (data: { sessionId: string; action: CombatAction }, callback?: Function) => {
+    socket.on('combat:action', async (data: { sessionId: string; action: CombatAction }, callback?: (response: SocketResponse) => void) => {
       try {
         const { sessionId, action } = data;
         const userId = socket.data.userId;
@@ -136,7 +146,7 @@ export function registerCombatHandlers(io: Server): void {
     });
 
     // Resource updates (real-time)
-    socket.on('combat:resource:request', async (data: { charId: string }, callback?: Function) => {
+    socket.on('combat:resource:request', async (data: { charId: string }, callback?: (response: SocketResponse) => void) => {
       try {
         const userId = socket.data.userId;
         
@@ -173,7 +183,7 @@ export function registerCombatHandlers(io: Server): void {
     });
 
     // Ping for connection testing
-    socket.on('combat:ping', (callback?: Function) => {
+    socket.on('combat:ping', (callback?: (response: SocketResponse) => void) => {
       const response = { 
         success: true, 
         message: 'Combat system online',
@@ -189,7 +199,7 @@ export function registerCombatHandlers(io: Server): void {
     });
 
     // Handle turn timer events
-    socket.on('combat:turn:timer', async (data: { sessionId: string }, callback?: Function) => {
+    socket.on('combat:turn:timer', async (data: { sessionId: string }, callback?: (response: SocketResponse) => void) => {
       try {
         const { sessionId } = data;
         const session = await combatService.getSession(sessionId);
@@ -225,7 +235,7 @@ export function registerCombatHandlers(io: Server): void {
     });
 
     // Error handler
-    socket.on('error', (error) => {
+    socket.on('error', () => {
       // Combat socket error occurred
       socket.emit('combat:error', {
         success: false,

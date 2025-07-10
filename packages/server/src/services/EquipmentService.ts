@@ -12,15 +12,14 @@ import type {
   EquipmentSlotType,
   BindType,
   ItemWithStats,
-  InventoryItemWithDetails,
-  EquipmentItemWithDetails,
   EquipmentSet,
   InventoryData,
   EquipmentOperationResult,
   InventoryOperationResult,
-  StatType
+  StatType,
+  ItemSetBonus
 } from '../types/equipment.types';
-import { BadRequestError, NotFoundError, ConflictError } from '../utils/errors';
+import { BadRequestError, NotFoundError } from '../utils/errors';
 import { logger } from '../utils/logger';
 
 export class EquipmentService {
@@ -38,7 +37,7 @@ export class EquipmentService {
     const cacheKey = `equipment:${charId}`;
     const cached = await this.cache.get(cacheKey);
     if (cached) {
-      return JSON.parse(cached);
+      return JSON.parse(cached as string);
     }
 
     try {
@@ -200,7 +199,7 @@ export class EquipmentService {
     const cacheKey = `inventory:${charId}`;
     const cached = await this.cache.get(cacheKey);
     if (cached) {
-      return JSON.parse(cached);
+      return JSON.parse(cached as string);
     }
 
     try {
@@ -321,6 +320,8 @@ export class EquipmentService {
       [STAT_TYPES.MANA]: 0,
       [STAT_TYPES.STAMINA]: 0,
       [STAT_TYPES.DAMAGE]: 0,
+      [STAT_TYPES.MIN_DAMAGE]: 0,
+      [STAT_TYPES.MAX_DAMAGE]: 0,
       [STAT_TYPES.DEFENSE]: 0,
       [STAT_TYPES.CRITICAL_CHANCE]: 0,
       [STAT_TYPES.CRITICAL_DAMAGE]: 0,
@@ -346,19 +347,49 @@ export class EquipmentService {
     }
 
     // Calculate set bonuses
-    const setBonuses: Record<StatType, number> = { ...baseStats };
+    const setBonuses: Record<StatType, number> = {
+      [STAT_TYPES.STRENGTH]: 0,
+      [STAT_TYPES.DEXTERITY]: 0,
+      [STAT_TYPES.INTELLIGENCE]: 0,
+      [STAT_TYPES.WISDOM]: 0,
+      [STAT_TYPES.CONSTITUTION]: 0,
+      [STAT_TYPES.CHARISMA]: 0,
+      [STAT_TYPES.HEALTH]: 0,
+      [STAT_TYPES.MANA]: 0,
+      [STAT_TYPES.STAMINA]: 0,
+      [STAT_TYPES.DAMAGE]: 0,
+      [STAT_TYPES.MIN_DAMAGE]: 0,
+      [STAT_TYPES.MAX_DAMAGE]: 0,
+      [STAT_TYPES.DEFENSE]: 0,
+      [STAT_TYPES.CRITICAL_CHANCE]: 0,
+      [STAT_TYPES.CRITICAL_DAMAGE]: 0,
+      [STAT_TYPES.ATTACK_SPEED]: 0,
+      [STAT_TYPES.MOVEMENT_SPEED]: 0,
+    };
+    
+    // Copy base stats to setBonuses
+    for (const statType of Object.keys(baseStats) as StatType[]) {
+      setBonuses[statType] = baseStats[statType];
+    }
+    
     const itemIds = equipment.map(eq => eq.itemId);
     const setInfo = await this.equipmentRepo.getItemSetInfo(itemIds);
     const activeSets = [];
 
     for (const [setId, info] of Object.entries(setInfo)) {
       if (info.equippedPieces > 0) {
+        const bonusesWithActive = info.bonuses as Array<ItemSetBonus & { active?: boolean }>;
         activeSets.push({
           setId: parseInt(setId),
-          setName: info.setName,
+          setName: info.setName || '',
           equippedPieces: info.equippedPieces,
           totalPieces: info.totalPieces,
-          activeBonuses: info.bonuses.filter((bonus: { active: boolean; bonusStats: Record<string, number> }) => bonus.active),
+          activeBonuses: bonusesWithActive.filter(bonus => bonus.active).map(({ id, setId, requiredPieces, bonusStats }) => ({
+            id,
+            setId,
+            requiredPieces,
+            bonusStats
+          })),
         });
 
         // Apply active set bonuses
@@ -375,7 +406,25 @@ export class EquipmentService {
     }
 
     // Calculate total stats (base + set bonuses)
-    const totalStats: Record<StatType, number> = {};
+    const totalStats: Record<StatType, number> = {
+      [STAT_TYPES.STRENGTH]: 0,
+      [STAT_TYPES.DEXTERITY]: 0,
+      [STAT_TYPES.INTELLIGENCE]: 0,
+      [STAT_TYPES.WISDOM]: 0,
+      [STAT_TYPES.CONSTITUTION]: 0,
+      [STAT_TYPES.CHARISMA]: 0,
+      [STAT_TYPES.HEALTH]: 0,
+      [STAT_TYPES.MANA]: 0,
+      [STAT_TYPES.STAMINA]: 0,
+      [STAT_TYPES.DAMAGE]: 0,
+      [STAT_TYPES.MIN_DAMAGE]: 0,
+      [STAT_TYPES.MAX_DAMAGE]: 0,
+      [STAT_TYPES.DEFENSE]: 0,
+      [STAT_TYPES.CRITICAL_CHANCE]: 0,
+      [STAT_TYPES.CRITICAL_DAMAGE]: 0,
+      [STAT_TYPES.ATTACK_SPEED]: 0,
+      [STAT_TYPES.MOVEMENT_SPEED]: 0,
+    };
     for (const statType of Object.keys(baseStats) as StatType[]) {
       totalStats[statType] = baseStats[statType] + (setBonuses[statType] - baseStats[statType]);
     }
@@ -392,7 +441,25 @@ export class EquipmentService {
     setBonuses: Record<StatType, number>,
     baseStats: Record<StatType, number>
   ): Record<StatType, number> {
-    const bonusOnly: Record<StatType, number> = {};
+    const bonusOnly: Record<StatType, number> = {
+      [STAT_TYPES.STRENGTH]: 0,
+      [STAT_TYPES.DEXTERITY]: 0,
+      [STAT_TYPES.INTELLIGENCE]: 0,
+      [STAT_TYPES.WISDOM]: 0,
+      [STAT_TYPES.CONSTITUTION]: 0,
+      [STAT_TYPES.CHARISMA]: 0,
+      [STAT_TYPES.HEALTH]: 0,
+      [STAT_TYPES.MANA]: 0,
+      [STAT_TYPES.STAMINA]: 0,
+      [STAT_TYPES.DAMAGE]: 0,
+      [STAT_TYPES.MIN_DAMAGE]: 0,
+      [STAT_TYPES.MAX_DAMAGE]: 0,
+      [STAT_TYPES.DEFENSE]: 0,
+      [STAT_TYPES.CRITICAL_CHANCE]: 0,
+      [STAT_TYPES.CRITICAL_DAMAGE]: 0,
+      [STAT_TYPES.ATTACK_SPEED]: 0,
+      [STAT_TYPES.MOVEMENT_SPEED]: 0,
+    };
     for (const statType of Object.keys(baseStats) as StatType[]) {
       bonusOnly[statType] = setBonuses[statType] - baseStats[statType];
     }
@@ -412,7 +479,7 @@ export class EquipmentService {
 
     return items.map(item => {
       const stats = itemStats[item.id] || [];
-      const itemSetData = Object.values(setInfo).find(set => 
+      const itemSetData = Object.entries(setInfo).find(([, set]) => 
         set.itemIds && set.itemIds.includes(item.id)
       );
 
@@ -420,9 +487,9 @@ export class EquipmentService {
         ...item,
         stats,
         setInfo: itemSetData ? {
-          setId: itemSetData.setId,
-          setName: itemSetData.setName,
-          totalPieces: itemSetData.totalPieces,
+          setId: parseInt(itemSetData[0]),
+          setName: itemSetData[1].setName || '',
+          totalPieces: itemSetData[1].totalPieces,
         } : undefined,
       };
     });

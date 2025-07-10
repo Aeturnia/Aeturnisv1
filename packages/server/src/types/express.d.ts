@@ -1,5 +1,3 @@
-import { Express } from 'express-serve-static-core';
-
 declare module 'express-serve-static-core' {
   interface Request {
     user?: {
@@ -9,5 +7,9 @@ declare module 'express-serve-static-core' {
     };
     sessionId?: string;
     id?: string; // For request ID tracking
+    validatedStats?: Record<string, unknown>; // For stat validation middleware
   }
 }
+
+// Ensure Express types are globally available
+export {}

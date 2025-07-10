@@ -2,7 +2,7 @@
  * Standardized API Response Types
  */
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;
@@ -15,10 +15,10 @@ export interface ApiErrorResponse {
   error: string;
   message: string;
   statusCode?: number;
-  details?: any;
+  details?: unknown;
 }
 
-export interface ApiSuccessResponse<T = any> {
+export interface ApiSuccessResponse<T = unknown> {
   success: true;
   data: T;
   message?: string;
@@ -33,7 +33,7 @@ export function createSuccessResponse<T>(data: T, message?: string): ApiSuccessR
   };
 }
 
-export function createErrorResponse(error: string, message: string, details?: any): ApiErrorResponse {
+export function createErrorResponse(error: string, message: string, details?: unknown): ApiErrorResponse {
   return {
     success: false,
     error,

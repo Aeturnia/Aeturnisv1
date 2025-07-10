@@ -8,7 +8,7 @@ export class MockSocket extends EventEmitter {
   public handshake: any;
   public user?: SocketUser;
   public joinedRooms: Set<string> = new Set();
-  public eventHandlers = new Map<string, Function[]>();
+  public eventHandlers = new Map<string, ((...args: any[]) => void | Promise<void>)[]>();
 
   // Vitest spy functions
   public join: MockedFunction<(room: string) => void>;
@@ -66,7 +66,7 @@ export class MockSocket extends EventEmitter {
     this.disconnect = vi.fn();
 
     // Create spy for the on method
-    this.on = vi.fn((event: string, handler: Function) => {
+    this.on = vi.fn((event: string, handler: (...args: any[]) => void | Promise<void>) => {
       if (!this.eventHandlers.has(event)) {
         this.eventHandlers.set(event, []);
       }
@@ -92,7 +92,7 @@ export class MockSocket extends EventEmitter {
   }
 
   // Helper to get registered handlers
-  public getHandlers(event: string): Function[] {
+  public getHandlers(event: string): ((...args: any[]) => void | Promise<void>)[] {
     return this.eventHandlers.get(event) || [];
   }
 }

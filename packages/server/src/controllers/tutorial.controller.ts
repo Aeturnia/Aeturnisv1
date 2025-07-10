@@ -7,7 +7,7 @@ import { Request, Response } from 'express';
 import { MockTutorialService } from '../services/mock/MockTutorialService';
 import { 
   UpdateTutorialProgressRequest, 
-  TutorialHelpRequest,
+  GetTutorialHelpRequest,
   TutorialHelpCategory 
 } from '@aeturnis/shared';
 import { logger } from '../utils/logger';
@@ -79,8 +79,8 @@ export class TutorialController {
     try {
       const request: UpdateTutorialProgressRequest = req.body;
       
-      if (!request.characterId || !request.questId || request.stepIndex === undefined) {
-        return sendValidationError(res, 'Missing required fields: characterId, questId, stepIndex');
+      if (!request.characterId || !request.questId || !request.stepId) {
+        return sendValidationError(res, 'Missing required fields: characterId, questId, stepId');
       }
 
       const result = await this.tutorialService.updateProgress(request);
@@ -121,7 +121,8 @@ export class TutorialController {
     try {
       const { context, category } = req.query;
       
-      const request: TutorialHelpRequest = {
+      const request: GetTutorialHelpRequest = {
+        characterId: 'anonymous', // Default for anonymous help requests
         context: context as string || '',
         category: category as TutorialHelpCategory
       };
@@ -158,12 +159,12 @@ export class TutorialController {
         },
         testStatus: {
           characterId: testStatus.characterId,
-          currentQuest: testStatus.currentQuestId,
+          currentPhase: testStatus.currentPhase,
           isComplete: testStatus.isComplete
         },
         testGuidance: {
-          currentMessage: testGuidance.currentMessage,
-          nextAction: testGuidance.nextAction
+          currentContext: testGuidance.currentContext,
+          suggestedActions: testGuidance.suggestedActions
         }
       }, 'Tutorial service test completed successfully');
     } catch (error) {

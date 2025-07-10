@@ -82,11 +82,13 @@ export class ResourceService {
     });
 
     // Log the event
+    const validSources = ['combat', 'regen', 'item', 'skill', 'rest'] as const;
+    const source = updates[0]?.reason || 'combat';
     const event: ResourceEvent = {
       charId,
       timestamp: Date.now(),
       updates,
-      source: updates[0]?.reason || 'unknown'
+      source: validSources.includes(source as any) ? source as ResourceEvent['source'] : 'combat'
     };
 
     const history = this.eventHistory.get(charId) || [];

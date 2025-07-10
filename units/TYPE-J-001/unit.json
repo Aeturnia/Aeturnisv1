@@ -1,0 +1,28 @@
+{
+  "id": "TYPE-J-001",
+  "type": "J",
+  "subtype": "001",
+  "name": "Controller Unused Variables",
+  "description": "Remove or properly use unused variables in controller and service files",
+  "assignedTo": "Code Cleanup Specialist",
+  "status": "completed",
+  "startedAt": "2025-07-09T21:10:00Z",
+  "completedAt": "2025-07-09T21:20:00Z",
+  "files": [
+    "src/services/DialogueService.ts",
+    "src/services/EquipmentService.ts",
+    "src/services/NPCService.ts",
+    "src/services/SpawnService.ts",
+    "src/app.ts"
+  ],
+  "errors": {
+    "baseline": {
+      "TS6133": 14,
+      "no-unused-vars": 15
+    },
+    "final": {
+      "TS6133": 0,
+      "no-unused-vars": 15
+    }
+  }
+}

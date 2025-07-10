@@ -1,5 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import { StatsService } from '../services/StatsService';
+import { Character } from '../types/character.types';
+import { logger } from '../utils/logger';
+
+// Global type augmentation for rate limiting
+declare global {
+  // eslint-disable-next-line no-var
+  var statModRateLimit: Map<string, number[]>;
+  // eslint-disable-next-line no-var
+  var statCalculations: Set<string>;
+}
 
 /**
  * Security middleware for stat modification endpoints
@@ -16,12 +26,13 @@ interface StatModificationRequest extends Request {
  * Validates stat modification requests for security
  */
 export const validateStatModification = (
-  req: StatModificationRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): void => {
+  const statReq = req as StatModificationRequest;
   try {
-    const statUpdates = req.body.statUpdates || req.body;
+    const statUpdates = statReq.body.statUpdates || statReq.body;
     
     if (!statUpdates || typeof statUpdates !== 'object') {
       res.status(400).json({
@@ -32,7 +43,7 @@ export const validateStatModification = (
     }
 
     // Get character from request (should be set by auth middleware)
-    const character = req.character;
+    const character = statReq.character;
     if (!character) {
       res.status(401).json({
         error: 'Authentication required',
@@ -43,7 +54,7 @@ export const validateStatModification = (
 
     // Validate the stat modification request
     const validation = StatsService.validateStatModification(
-      character as any, // Cast to any since we only have partial character data
+      character as unknown as Character, // Type conversion for Character
       statUpdates,
       'client' // Assume client requests unless explicitly marked as server
     );
@@ -58,12 +69,12 @@ export const validateStatModification = (
     }
 
     // Store validated stats for use in the route handler
-    req.validatedStats = statUpdates;
-    req.statUpdates = statUpdates;
+    statReq.validatedStats = statUpdates;
+    statReq.statUpdates = statUpdates;
     
     next();
   } catch (error) {
-    console.error('Stat validation error:', error);
+    logger.error('Stat validation error:', error);
     res.status(500).json({
       error: 'Stat validation failed',
       message: 'Internal error during stat validation'
@@ -83,17 +94,17 @@ export const statModificationRateLimit = (
   // Simple in-memory rate limiting for stat modifications
   // In production, this should use Redis
   
-  const key = `stat_mod:${req.ip}:${(req as any).user?.id || 'anonymous'}`;
+  const key = `stat_mod:${req.ip}:${req.user?.userId || 'anonymous'}`;
   const now = Date.now();
   const windowMs = 60000; // 1 minute
   const maxRequests = 10; // Max 10 stat modifications per minute
   
   // Simple implementation - in production use Redis with proper expiration
-  if (!(global as any).statModRateLimit) {
-    (global as any).statModRateLimit = new Map();
+  if (!global.statModRateLimit) {
+    global.statModRateLimit = new Map();
   }
   
-  const rateLimit = (global as any).statModRateLimit;
+  const rateLimit = global.statModRateLimit;
   const userRequests = rateLimit.get(key) || [];
   
   // Remove requests outside the window
@@ -144,11 +155,11 @@ export const preventStatRecursion = (
   }
   
   // Track ongoing stat calculations
-  if (!(global as any).statCalculations) {
-    (global as any).statCalculations = new Set();
+  if (!global.statCalculations) {
+    global.statCalculations = new Set();
   }
   
-  const calculations = (global as any).statCalculations;
+  const calculations = global.statCalculations;
   
   if (calculations.has(characterId)) {
     res.status(409).json({
@@ -181,10 +192,11 @@ export const preventStatRecursion = (
  * Logs all stat changes for security monitoring
  */
 export const auditStatModification = (
-  req: StatModificationRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): void => {
+  const statReq = req as StatModificationRequest;
   const originalSend = res.json;
   
   res.json = function(data) {
@@ -192,17 +204,17 @@ export const auditStatModification = (
     if (res.statusCode >= 200 && res.statusCode < 300) {
       const auditLog = {
         timestamp: new Date().toISOString(),
-        userId: (req as any).user?.id,
-        characterId: req.params.id || req.params.characterId,
+        userId: statReq.user?.userId,
+        characterId: statReq.params.id || statReq.params.characterId,
         action: 'stat_modification',
-        statUpdates: req.statUpdates,
-        ipAddress: req.ip,
-        userAgent: req.get('User-Agent'),
+        statUpdates: statReq.statUpdates,
+        ipAddress: statReq.ip,
+        userAgent: statReq.get('User-Agent'),
         success: true
       };
       
       // In production, this should be sent to a proper audit logging system
-      console.log('[AUDIT] Stat Modification:', JSON.stringify(auditLog));
+      logger.info('[AUDIT] Stat Modification:', JSON.stringify(auditLog));
     }
     
     return originalSend.call(this, data);

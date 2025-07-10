@@ -1,5 +1,6 @@
 // Import types from the actual service
 import type { BankTransferRequest as TypeBankTransferRequest } from '../../types/bank';
+import { IService } from './IService';
 
 /**
  * Bank types available
@@ -116,7 +117,7 @@ export interface BankTransferRequest extends TypeBankTransferRequest {
   toBankType?: 'personal' | 'shared';
 }
 
-export interface IBankService {
+export interface IBankService extends IService {
   /**
    * Get personal bank for a character
    * @param characterId - The character ID

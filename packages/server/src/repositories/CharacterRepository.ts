@@ -1,5 +1,5 @@
 import { eq, and, desc } from 'drizzle-orm';
-import { characters } from '../database/schema/index';
+import { characters } from '../database/schema';
 import { Character, CreateCharacterDTO, CharacterListItem } from '../types/character.types';
 import { StatsService } from '../services/StatsService';
 import { db } from '../database/config';
@@ -38,7 +38,7 @@ export class CharacterRepository {
     
     const derivedStats = StatsService.calculateDerivedStats(tempCharacter);
     
-    const result = await db.insert(characters).values({
+    const insertData = {
       accountId,
       name: data.name,
       level: 1,
@@ -77,12 +77,12 @@ export class CharacterRepository {
       paragonDistribution: {},
       
       // Set initial resource pools
-      currentHp: derivedStats.maxHp,
-      maxHp: derivedStats.maxHp,
-      currentMp: derivedStats.maxMp,
-      maxMp: derivedStats.maxMp,
-      currentStamina: derivedStats.maxStamina,
-      maxStamina: derivedStats.maxStamina,
+      currentHp: Number(derivedStats.maxHp),
+      maxHp: Number(derivedStats.maxHp),
+      currentMp: Number(derivedStats.maxMp),
+      maxMp: Number(derivedStats.maxMp),
+      currentStamina: Number(derivedStats.maxStamina),
+      maxStamina: Number(derivedStats.maxStamina),
       
       // Economy
       gold: 100,
@@ -102,9 +102,11 @@ export class CharacterRepository {
       // Set meta fields
       isDeleted: false,
       lastPlayedAt: null,
-    }).returning();
+    };
+
+    const [newCharacter] = await db.insert(characters).values(insertData).returning();
     
-    return result[0] as Character;
+    return newCharacter as Character;
   }
 
   async findById(id: string): Promise<Character | null> {
@@ -201,7 +203,7 @@ export class CharacterRepository {
     bonusCharisma?: bigint;
   }): Promise<Character | null> {
     // Convert bigint bonus stats to numbers for database
-    const updates: any = { ...statUpdates };
+    const updates: Record<string, number | Date | bigint | undefined> = { ...statUpdates };
     if (updates.bonusStrength !== undefined) updates.bonusStrength = Number(updates.bonusStrength);
     if (updates.bonusDexterity !== undefined) updates.bonusDexterity = Number(updates.bonusDexterity);
     if (updates.bonusIntelligence !== undefined) updates.bonusIntelligence = Number(updates.bonusIntelligence);
@@ -227,7 +229,7 @@ export class CharacterRepository {
     currentStamina?: bigint;
   }): Promise<Character | null> {
     // Convert bigint resources to numbers for database
-    const updates: any = { ...resources };
+    const updates: Record<string, number | bigint | undefined> = { ...resources };
     if (updates.currentHp !== undefined) updates.currentHp = Number(updates.currentHp);
     if (updates.currentMp !== undefined) updates.currentMp = Number(updates.currentMp);
     if (updates.currentStamina !== undefined) updates.currentStamina = Number(updates.currentStamina);
@@ -327,5 +329,24 @@ export class CharacterRepository {
       .limit(1);
     
     return result.length > 0;
+  }
+
+  async updateParagonDistribution(id: string, distribution: Record<string, bigint>): Promise<Character | null> {
+    // Convert bigint values to numbers for database storage
+    const numberDistribution: Record<string, number> = {};
+    for (const [key, value] of Object.entries(distribution)) {
+      numberDistribution[key] = Number(value);
+    }
+
+    const result = await db
+      .update(characters)
+      .set({
+        paragonDistribution: numberDistribution,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(characters.id, id), eq(characters.isDeleted, false)))
+      .returning();
+    
+    return result[0] as Character || null;
   }
 }

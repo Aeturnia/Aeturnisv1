@@ -7,9 +7,11 @@ import {
   CharacterCombatStats,
   Combatant as ActualCombatant,
   CombatOutcome as ActualCombatOutcome,
-  DamageType
+  DamageType,
+  CombatError
 } from '../../types/combat.types';
 import { ResourcePool } from '../../types/resources.types';
+import { IService } from './IService';
 
 // Re-export the actual types for consistency
 export { 
@@ -175,7 +177,7 @@ export interface Skill {
  * Interface for Combat-related operations
  * Handles combat initiation, turn processing, and resolution
  */
-export interface ICombatService {
+export interface ICombatService extends IService {
   /**
    * Start a new combat session
    * @param initiatorId - The initiator of combat
@@ -186,10 +188,12 @@ export interface ICombatService {
 
   /**
    * Process a combat action
+   * @param sessionId - The session ID
+   * @param actorId - The actor ID
    * @param action - The action to process
    * @returns Result of the action
    */
-  processAction(action: ActualCombatAction): Promise<ActualCombatResult>;
+  processAction(sessionId: string, actorId: string, action: ActualCombatAction): Promise<ActualCombatResult | CombatError>;
 
   /**
    * Get a combat session by ID

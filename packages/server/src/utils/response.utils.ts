@@ -20,7 +20,7 @@ export function sendSuccess<T>(res: Response, data: T, message?: string, statusC
 /**
  * Send an error response
  */
-export function sendError(res: Response, error: string, message: string, statusCode: number = 500, details?: any): Response {
+export function sendError(res: Response, error: string, message: string, statusCode: number = 500, details?: unknown): Response {
   const response: ApiErrorResponse = {
     success: false,
     error,
@@ -33,7 +33,7 @@ export function sendError(res: Response, error: string, message: string, statusC
 /**
  * Send a validation error response
  */
-export function sendValidationError(res: Response, message: string, details?: any): Response {
+export function sendValidationError(res: Response, message: string, details?: unknown): Response {
   return sendError(res, 'Validation Error', message, 400, details);
 }
 

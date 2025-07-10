@@ -1,7 +1,7 @@
 import { db, pool, checkDatabaseConnection } from '../src/database/config';
 import { users, auditLog } from '../src/database/schema';
 import { UserRole, AuditEventType } from '../src/types/db';
-import argon2 from 'argon2';
+import * as argon2 from 'argon2';
 
 async function seed() {
   console.log('🌱 Starting database seeding...');

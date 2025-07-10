@@ -1,0 +1,26 @@
+{
+  "id": "TYPE-I-005",
+  "type": "I",
+  "subtype": "005",
+  "name": "Test File Types",
+  "description": "Fix explicit any types in test files and remaining service/repository files",
+  "assignedTo": "Test Type Specialist",
+  "status": "completed",
+  "startedAt": "2025-07-09T20:16:00Z",
+  "completedAt": "2025-07-09T20:30:00Z",
+  "files": [
+    "src/repositories/CharacterRepository.ts",
+    "src/repositories/EquipmentRepository.ts", 
+    "src/repositories/death.repository.ts",
+    "src/services/BankService.ts",
+    "src/services/CharacterService.ts",
+    "src/services/MonsterService.ts",
+    "src/services/NPCService.ts",
+    "src/types/api.types.ts",
+    "src/utils/response.utils.ts"
+  ],
+  "errors": {
+    "baseline": 26,
+    "final": 0
+  }
+}

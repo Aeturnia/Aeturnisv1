@@ -16,6 +16,12 @@ import { v4 as uuidv4 } from 'uuid';
  * Uses in-memory storage for currency data
  */
 export class MockCurrencyService implements ICurrencyService {
+  /**
+   * Get the service name (from IService)
+   */
+  getName(): string {
+    return 'MockCurrencyService';
+  }
   // Mock character balances: characterId -> copper amount (as bigint)
   private balances: Map<string, bigint> = new Map();
   

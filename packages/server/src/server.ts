@@ -4,6 +4,7 @@ import { createSocketServer } from './sockets/SocketServer';
 import { checkDatabaseConnection } from './database/config';
 import { logger } from './utils/logger';
 import { initializeProviders } from './providers';
+import os from 'os';
 
 // Initialize environment variables
 import { config } from 'dotenv';
@@ -61,8 +62,8 @@ async function startServer() {
         environment: process.env.NODE_ENV || 'development',
         nodeVersion: process.version,
         platform: process.platform,
-        cpuCount: require('os').cpus().length,
-        totalMemory: `${Math.round(require('os').totalmem() / 1024 / 1024 / 1024)}GB`,
+        cpuCount: os.cpus().length,
+        totalMemory: `${Math.round(os.totalmem() / 1024 / 1024 / 1024)}GB`,
       });
 
       // eslint-disable-next-line no-console

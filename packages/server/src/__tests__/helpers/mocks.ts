@@ -105,7 +105,7 @@ export function createMockRedis() {
       store.set(key, value);
       return 'OK';
     }),
-    setex: vi.fn(async (key: string, ttl: number, value: string) => {
+    setex: vi.fn(async (key: string, _ttl: number, value: string) => {
       store.set(key, value);
       return 'OK';
     }),
@@ -171,10 +171,10 @@ export const mockTimers = {
  * Create mock event emitter
  */
 export function createMockEventEmitter() {
-  const listeners = new Map<string, Function[]>();
+  const listeners = new Map<string, ((...args: any[]) => void)[]>();
   
   return {
-    on: vi.fn((event: string, listener: Function) => {
+    on: vi.fn((event: string, listener: (...args: any[]) => void) => {
       if (!listeners.has(event)) {
         listeners.set(event, []);
       }
@@ -186,7 +186,7 @@ export function createMockEventEmitter() {
       eventListeners.forEach(listener => listener(...args));
     }),
     
-    off: vi.fn((event: string, listener: Function) => {
+    off: vi.fn((event: string, listener: (...args: any[]) => void) => {
       const eventListeners = listeners.get(event) || [];
       const index = eventListeners.indexOf(listener);
       if (index > -1) {

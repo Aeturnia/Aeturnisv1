@@ -23,11 +23,16 @@ jobs:
     - name: 📦 Install dependencies
       run: npm install
 
+    - name: 🏗️ Build shared package
+      run: npm run build --workspace=packages/shared
+
     - name: 🔍 Type checking
       run: npm run typecheck
 
     - name: 🧹 Lint code
-      run: npm run lint
+      run: npm run lint:ci
+      env:
+        CI: true
 
     - name: 🧪 Run tests with coverage
       run: npm run test:coverage

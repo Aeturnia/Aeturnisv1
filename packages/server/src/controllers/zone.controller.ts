@@ -7,11 +7,23 @@ import { Request, Response } from 'express';
 import { ZoneListResponse, ZoneDetailsResponse } from '@aeturnis/shared';
 import { logger } from '../utils/logger';
 
+// Zone boundary type for validation
+interface ZoneBoundaries {
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+}
+
+interface ZoneData {
+  boundaries: ZoneBoundaries;
+}
+
 /**
  * Get all zones
  * GET /api/v1/zones
  */
-export const getAllZones = async (_req: Request, res: Response): Promise<void> => {
+export const getAllZones = async (_req: Request, res: Response): Promise<Response> => {
   try {
     // Mock response - in production this would use ServiceProvider
     const mockZones = [
@@ -110,11 +122,11 @@ export const getAllZones = async (_req: Request, res: Response): Promise<void> =
       total: mockZones.length
     };
 
-    res.status(200).json(response);
     logger.info(`Retrieved ${mockZones.length} zones`);
+    return res.status(200).json(response);
   } catch (error) {
     logger.error('Error fetching zones:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Failed to fetch zones',
       message: 'An error occurred while retrieving zone information'
     });
@@ -125,17 +137,16 @@ export const getAllZones = async (_req: Request, res: Response): Promise<void> =
  * Get zone by ID
  * GET /api/v1/zones/:zoneId
  */
-export const getZoneById = async (req: Request, res: Response): Promise<void> => {
+export const getZoneById = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { zoneId } = req.params;
     const characterId = req.query.characterId as string;
 
     if (!zoneId) {
-      res.status(400).json({
+      return res.status(400).json({
         error: 'Zone ID required',
         message: 'Zone ID parameter is required'
       });
-      return;
     }
 
     // Mock zone lookup
@@ -166,11 +177,10 @@ export const getZoneById = async (req: Request, res: Response): Promise<void> =>
 
     const zone = zones[zoneId as keyof typeof zones];
     if (!zone) {
-      res.status(404).json({
+      return res.status(404).json({
         error: 'Zone not found',
         message: `Zone with ID '${zoneId}' does not exist`
       });
-      return;
     }
 
     // Mock character position if characterId provided
@@ -189,11 +199,11 @@ export const getZoneById = async (req: Request, res: Response): Promise<void> =>
       availableExits
     };
 
-    res.status(200).json(response);
     logger.info(`Retrieved zone details for ${zoneId}${characterId ? ` (character: ${characterId})` : ''}`);
+    return res.status(200).json(response);
   } catch (error) {
     logger.error('Error fetching zone details:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Failed to fetch zone details',
       message: 'An error occurred while retrieving zone information'
     });
@@ -204,7 +214,7 @@ export const getZoneById = async (req: Request, res: Response): Promise<void> =>
  * Get test zone data
  * GET /api/v1/zones/test
  */
-export const getTestZones = async (_req: Request, res: Response): Promise<void> => {
+export const getTestZones = async (_req: Request, res: Response): Promise<Response> => {
   try {
     const testData = {
       message: "Zone Service Test - Mock Data",
@@ -234,11 +244,11 @@ export const getTestZones = async (_req: Request, res: Response): Promise<void> 
       }
     };
 
-    res.status(200).json(testData);
     logger.info('Zone service test data retrieved');
+    return res.status(200).json(testData);
   } catch (error) {
     logger.error('Error in zone test endpoint:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Zone test failed',
       message: 'An error occurred during zone service testing'
     });
@@ -249,31 +259,29 @@ export const getTestZones = async (_req: Request, res: Response): Promise<void> 
  * Validate zone boundaries
  * POST /api/v1/zones/validate-position
  */
-export const validatePosition = async (req: Request, res: Response): Promise<void> => {
+export const validatePosition = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { zoneId, coordinates } = req.body;
 
     if (!zoneId || !coordinates || typeof coordinates.x !== 'number' || typeof coordinates.y !== 'number') {
-      res.status(400).json({
+      return res.status(400).json({
         error: 'Invalid request data',
         message: 'Zone ID and coordinates (x, y) are required'
       });
-      return;
     }
 
     // Mock boundary validation
-    const zones: Record<string, any> = {
+    const zones: Record<string, ZoneData> = {
       "starter_city": { boundaries: { minX: -50, maxX: 50, minY: -50, maxY: 50 } },
       "forest_edge": { boundaries: { minX: -50, maxX: 50, minY: 50, maxY: 150 } }
     };
 
     const zone = zones[zoneId];
     if (!zone) {
-      res.status(404).json({
+      return res.status(404).json({
         error: 'Zone not found',
         message: `Zone '${zoneId}' does not exist`
       });
-      return;
     }
 
     const { boundaries } = zone;
@@ -284,18 +292,18 @@ export const validatePosition = async (req: Request, res: Response): Promise<voi
       coordinates.y <= boundaries.maxY
     );
 
-    res.status(200).json({
+    logger.info(`Position validation for ${zoneId} at (${coordinates.x}, ${coordinates.y}): ${isValid ? 'VALID' : 'INVALID'}`);
+    
+    return res.status(200).json({
       valid: isValid,
       zoneId,
       coordinates,
       boundaries,
       message: isValid ? 'Position is within zone boundaries' : 'Position is outside zone boundaries'
     });
-
-    logger.info(`Position validation for ${zoneId} at (${coordinates.x}, ${coordinates.y}): ${isValid ? 'VALID' : 'INVALID'}`);
   } catch (error) {
     logger.error('Error validating position:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Position validation failed',
       message: 'An error occurred while validating position'
     });

@@ -12,24 +12,30 @@ import * as combatController from '../controllers/combat.controller';
 const router = Router();
 
 // Simple test endpoints for Combat Engine (no auth required)
-router.get('/test', (req, res) => {
+router.get('/test', (_req, res) => {
   return res.json({ success: true, message: 'Combat system operational' });
 });
 
 // Debug service registry
-router.get('/debug-services', (req, res) => {
-  const ServiceProvider = require('../providers/ServiceProvider');
-  const registeredServices = ServiceProvider.ServiceProvider.getRegisteredServices();
+router.get('/debug-services', async (_req, res) => {
+  const { ServiceProvider } = await import('../providers/ServiceProvider');
+  const registeredServices = ServiceProvider.getRegisteredServices();
+  
+  // Access internal properties for debugging
+  const providerInstance = ServiceProvider as unknown as {
+    globalServices?: Map<string, unknown>;
+  };
+  
   return res.json({
     success: true,
     data: {
       registeredServices,
-      globalServicesSize: ServiceProvider.globalServices.size,
-      globalServicesKeys: Array.from(ServiceProvider.globalServices.keys())
+      globalServicesSize: providerInstance.globalServices?.size || 0,
+      globalServicesKeys: Array.from(providerInstance.globalServices?.keys() || [])
     }
   });
 });
-router.get('/test-monsters', (req, res) => {
+router.get('/test-monsters', (_req, res) => {
   return res.json({ 
     success: true, 
     data: { 
@@ -40,7 +46,7 @@ router.get('/test-monsters', (req, res) => {
     } 
   });
 });
-router.get('/engine-info', (req, res) => {
+router.get('/engine-info', (_req, res) => {
   return res.json({
     success: true,
     data: {

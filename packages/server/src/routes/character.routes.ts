@@ -98,7 +98,7 @@ router.post(
         appearance
       });
 
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         data: character
       });

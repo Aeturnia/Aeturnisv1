@@ -36,7 +36,17 @@
       "Bash(npx drizzle-kit push:*)",
       "Bash(npx tsx:*)",
       "Bash(rm:*)",
-      "Bash(npm run test:*)"
+      "Bash(npm run test:*)",
+      "Bash(./scripts/unit-complete.sh:*)",
+      "Bash(cat:*)",
+      "Bash(for:*)",
+      "Bash(do [ -d \"$dir\" ])",
+      "Bash(echo \"=== $dir ===\")",
+      "Bash([ -f \"$dir/unit.json\" ])",
+      "Bash([ -s \"$dir/unit.json\" ])",
+      "Bash(head:*)",
+      "Bash(touch:*)",
+      "Bash(npx eslint:*)"
     ],
     "deny": []
   }

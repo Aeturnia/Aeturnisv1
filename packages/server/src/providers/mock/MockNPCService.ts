@@ -7,6 +7,12 @@ import { logger } from '../../utils/logger';
  * Uses in-memory data storage
  */
 export class MockNPCService implements INPCService {
+  /**
+   * Get the service name (from IService)
+   */
+  getName(): string {
+    return 'MockNPCService';
+  }
   // Mock NPCs data - copied from routes
   private mockNPCs: NPC[] = [
     {

@@ -12,7 +12,7 @@ const router = Router();
  * GET /api/v1/equipment/test
  * Test endpoint for equipment system
  */
-router.get('/test', asyncHandler((req, res) => {
+router.get('/test', asyncHandler((_req, res) => {
   try {
     return res.json({
       success: true,

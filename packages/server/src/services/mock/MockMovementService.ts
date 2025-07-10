@@ -14,6 +14,12 @@ import { MockZoneService } from './MockZoneService';
 import { logger } from '../../utils/logger';
 
 export class MockMovementService implements MovementValidation {
+  /**
+   * Get the service name (from IService)
+   */
+  getName(): string {
+    return 'MockMovementService';
+  }
   private zoneService: MockZoneService;
   private movementCooldowns: Map<string, MovementCooldown> = new Map();
   private transitionHistory: ZoneTransition[] = [];

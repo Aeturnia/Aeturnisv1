@@ -1,4 +1,5 @@
 import { SpawnPoint, Monster, Position3D } from '@aeturnis/shared';
+import { IService } from './IService';
 
 /**
  * Spawn check result for a spawn point
@@ -50,7 +51,7 @@ export interface SpawnEvent {
  * Interface for Spawn-related operations
  * Manages monster spawning and spawn points
  */
-export interface ISpawnService {
+export interface ISpawnService extends IService {
   /**
    * Check all spawn points in a zone for needed spawns
    * @param zoneId - The zone to check

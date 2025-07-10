@@ -1,5 +1,5 @@
 import { CharacterRepository } from '../repositories/CharacterRepository';
-import { Character, CreateCharacterDTO, CharacterListItem, CharacterRace } from '../types/character.types';
+import { Character, CreateCharacterDTO, CharacterListItem, CharacterRace, DerivedStats } from '../types/character.types';
 import { StatsService } from './StatsService';
 import { CacheService } from './CacheService';
 
@@ -84,7 +84,7 @@ export class CharacterService {
 
   async getCharacterWithStats(id: string): Promise<{
     character: Character;
-    derivedStats: Record<string, number>;
+    derivedStats: DerivedStats;
   } | null> {
     const character = await this.getCharacter(id);
     if (!character) {
@@ -192,14 +192,30 @@ export class CharacterService {
     // Check if we should upgrade to a new tier
     const tierProgress = StatsService.calculateStatTierProgress(newValue, points);
 
-    const updates: Partial<Character> = {
+    const updates: {
+      baseStrength?: number;
+      baseDexterity?: number;
+      baseIntelligence?: number;
+      baseWisdom?: number;
+      baseConstitution?: number;
+      baseCharisma?: number;
+      strengthTier?: number;
+      dexterityTier?: number;
+      intelligenceTier?: number;
+      wisdomTier?: number;
+      constitutionTier?: number;
+      charismaTier?: number;
+    } = {
       [stat]: tierProgress.newBase
     };
 
     // Add tier upgrade if applicable
     if (tierProgress.shouldUpgrade) {
       const tierStat = stat.replace('base', '').toLowerCase() + 'Tier';
-      updates[tierStat] = character[tierStat as keyof Character] as number + tierProgress.newTier;
+      const currentTierValue = character[tierStat as keyof Character];
+      if (typeof currentTierValue === 'number') {
+        (updates as any)[tierStat] = currentTierValue + tierProgress.newTier;
+      }
     }
 
     const updatedCharacter = await this.characterRepo.updateStats(id, updates);
@@ -226,9 +242,9 @@ export class CharacterService {
 
   async updateResources(id: string, hp?: bigint, mp?: bigint, stamina?: bigint): Promise<Character | null> {
     const resources: Record<string, number> = {};
-    if (hp !== undefined) resources.currentHp = hp;
-    if (mp !== undefined) resources.currentMp = mp;
-    if (stamina !== undefined) resources.currentStamina = stamina;
+    if (hp !== undefined) resources.currentHp = Number(hp);
+    if (mp !== undefined) resources.currentMp = Number(mp);
+    if (stamina !== undefined) resources.currentStamina = Number(stamina);
 
     const updatedCharacter = await this.characterRepo.updateResources(id, resources);
 
@@ -405,5 +421,53 @@ export class CharacterService {
     };
 
     return appearances[race] || appearances[CharacterRace.HUMAN];
+  }
+
+  async updateStats(id: string, statUpdates: Record<string, number>): Promise<Character | null> {
+    const character = await this.getCharacter(id);
+    if (!character) {
+      return null;
+    }
+
+    // Update character stats in the repository
+    const updatedCharacter = await this.characterRepo.updateStats(id, statUpdates);
+
+    if (updatedCharacter) {
+      await this.cacheService.delete(`character:${id}`);
+    }
+
+    return updatedCharacter;
+  }
+
+  async updateParagonDistribution(id: string, distribution: Record<string, bigint>): Promise<Character | null> {
+    const character = await this.getCharacter(id);
+    if (!character) {
+      return null;
+    }
+
+    // Validate paragon points
+    if (!StatsService.hasParagonUnlocked(character)) {
+      throw new Error('Paragon system not unlocked');
+    }
+
+    // Update paragon distribution in the repository
+    const updatedCharacter = await this.characterRepo.updateParagonDistribution(id, distribution);
+
+    if (updatedCharacter) {
+      await this.cacheService.delete(`character:${id}`);
+    }
+
+    return updatedCharacter;
+  }
+
+  async updatePrestige(id: string, newPrestigeLevel: number): Promise<Character | null> {
+    const updatedCharacter = await this.characterRepo.updatePrestige(id, newPrestigeLevel);
+
+    if (updatedCharacter) {
+      await this.cacheService.delete(`character:${id}`);
+      await this.recalculateResources(id);
+    }
+
+    return updatedCharacter;
   }
 }

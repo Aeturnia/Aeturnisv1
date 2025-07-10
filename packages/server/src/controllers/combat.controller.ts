@@ -5,6 +5,7 @@ import { logger } from '../utils/logger';
 import { assertServiceDefined } from '../utils/validators';
 import { createSuccessResponse, createErrorResponse } from '../types/api.types';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../utils/response.utils';
+import { TestMonster } from '../services/TestMonsterService';
 
 // Extend Request type for authenticated requests
 interface AuthRequest extends Request {
@@ -217,7 +218,7 @@ export const performTestAction = async (req: Request, res: Response): Promise<Re
     logger.debug('Processing action with combat service...');
     assertServiceDefined(combatService, 'CombatService');
     
-    const result = await combatService.performAction(sessionId, actorId, combatAction);
+    const result = await combatService.processAction(sessionId, actorId, combatAction);
     logger.debug('Combat service result:', JSON.stringify(result, null, 2));
 
     logger.debug('=== COMBAT ACTION DEBUG END ===');
@@ -326,7 +327,7 @@ export const fleeTestCombat = async (req: Request, res: Response): Promise<Respo
     const combatService = ServiceProvider.getInstance().get<ICombatService>('CombatService');
     assertServiceDefined(combatService, 'CombatService');
     
-    const result = await combatService.performAction(sessionId, actorId, fleeAction);
+    const result = await combatService.processAction(sessionId, actorId, fleeAction);
     
     // Handle flee-specific errors with helpful messages
     if ('error' in result) {
@@ -600,7 +601,7 @@ export const performAction = async (req: AuthRequest, res: Response): Promise<Re
 
     assertServiceDefined(combatService, 'CombatService');
     
-    const result = await combatService.processAction(action);
+    const result = await combatService.processAction(sessionId, userId, action);
 
     // Get updated session state
     const session = await combatService.getSession(sessionId);
@@ -697,7 +698,7 @@ export const getCharacterStats = async (req: Request, res: Response): Promise<Re
         maxStamina: 75
       }
     };
-    console.log(`Getting stats for character: ${charId}`);
+    logger.debug(`Getting stats for character: ${charId}`);
 
     return res.json({
       success: true,
@@ -896,7 +897,7 @@ export const testCombatSystem = async (_req: Request, res: Response): Promise<Re
 export const getTestMonsters = async (_req: Request, res: Response): Promise<Response> => {
   try {
     // Get monster service from ServiceProvider
-    const monsterService = ServiceProvider.getInstance().get('MonsterService') as any;
+    const monsterService = ServiceProvider.getInstance().get('MonsterService') as { getAllTestMonsters(): TestMonster[] };
     if (!monsterService || typeof monsterService.getAllTestMonsters !== 'function') {
       // Return hardcoded test monsters if service not available
       const monsters = [
@@ -936,7 +937,7 @@ export const getTestMonsters = async (_req: Request, res: Response): Promise<Res
     const monsters = monsterService.getAllTestMonsters();
     
     // Return monsters array directly for frontend compatibility
-    const monstersData = monsters.map((monster: any) => ({
+    const monstersData = monsters.map((monster: TestMonster) => ({
       id: monster.id,
       name: monster.name,
       level: monster.level,

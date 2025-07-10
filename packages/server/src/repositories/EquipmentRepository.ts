@@ -16,9 +16,26 @@ import type {
   InventoryItem, 
   ItemStat,
   EquipmentSlotType,
-  BindType
+  BindType,
+  StatType,
+  EquipmentSlot
 } from '../types/equipment.types';
 import { logger } from '../utils/logger';
+
+// Item Set Info interface
+export interface ItemSetInfo {
+  setName?: string;
+  description?: string | null;
+  totalPieces: number;
+  equippedPieces: number;
+  itemIds: number[];
+  equippedItemIds: number[];
+  bonuses: Array<{
+    requiredPieces: number;
+    bonusStats: Record<string, number>;
+    active: boolean;
+  }>;
+}
 
 export class EquipmentRepository {
   // =========================================================================
@@ -90,7 +107,7 @@ export class EquipmentRepository {
         statsByItem[stat.itemId].push({
           id: stat.id,
           itemId: stat.itemId,
-          statType: stat.statType as any,
+          statType: stat.statType as StatType,
           value: stat.value,
           isPercentage: stat.isPercentage,
         });
@@ -390,7 +407,7 @@ export class EquipmentRepository {
   // SET BONUS OPERATIONS
   // =========================================================================
 
-  async getItemSetInfo(itemIds: number[]): Promise<Record<number, any>> {
+  async getItemSetInfo(itemIds: number[]): Promise<Record<number, ItemSetInfo>> {
     if (itemIds.length === 0) return {};
     
     try {
@@ -423,7 +440,7 @@ export class EquipmentRepository {
         .where(inArray(itemSetBonuses.setId, setIds));
 
       // Group by set
-      const setInfo: Record<number, any> = {};
+      const setInfo: Record<number, ItemSetInfo> = {};
       
       setIds.forEach(setId => {
         const setData = setPieces.find(p => p.setId === setId);
@@ -457,12 +474,20 @@ export class EquipmentRepository {
   // EQUIPMENT SLOTS CONFIGURATION
   // =========================================================================
 
-  async getEquipmentSlots(): Promise<any[]> {
+  async getEquipmentSlots(): Promise<EquipmentSlot[]> {
     try {
-      return await db
+      const slots = await db
         .select()
         .from(equipmentSlots)
         .orderBy(equipmentSlots.sortOrder);
+      
+      return slots.map(slot => ({
+        id: slot.id,
+        slotType: slot.slotType as EquipmentSlotType,
+        displayName: slot.displayName,
+        sortOrder: slot.sortOrder,
+        createdAt: slot.createdAt,
+      }));
     } catch (error) {
       logger.error('Error fetching equipment slots:', error);
       throw error;
@@ -502,6 +527,7 @@ export class EquipmentRepository {
   // UTILITY METHODS
   // =========================================================================
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getInventoryWeight(_charId: string): Promise<number> {
     try {
       // Note: This would require a weight field on items table

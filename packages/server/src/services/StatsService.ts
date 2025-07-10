@@ -119,7 +119,7 @@ export class StatsService {
     const effectiveStr = this.calculateEffectiveStat(
       baseStats.strength,
       character.strengthTier,
-      BigInt(character.bonusStrength),
+      BigInt(character.bonusStrength || 0),
       paragonDist.strength || BigInt(0),
       character.prestigeLevel,
       classScaling.strength
@@ -128,7 +128,7 @@ export class StatsService {
     const effectiveDex = this.calculateEffectiveStat(
       baseStats.dexterity,
       character.dexterityTier,
-      BigInt(character.bonusDexterity),
+      BigInt(character.bonusDexterity || 0),
       paragonDist.dexterity || BigInt(0),
       character.prestigeLevel,
       classScaling.dexterity
@@ -137,7 +137,7 @@ export class StatsService {
     const effectiveInt = this.calculateEffectiveStat(
       baseStats.intelligence,
       character.intelligenceTier,
-      BigInt(character.bonusIntelligence),
+      BigInt(character.bonusIntelligence || 0),
       paragonDist.intelligence || BigInt(0),
       character.prestigeLevel,
       classScaling.intelligence
@@ -146,7 +146,7 @@ export class StatsService {
     const effectiveWis = this.calculateEffectiveStat(
       baseStats.wisdom,
       character.wisdomTier,
-      BigInt(character.bonusWisdom),
+      BigInt(character.bonusWisdom || 0),
       paragonDist.wisdom || BigInt(0),
       character.prestigeLevel,
       classScaling.wisdom
@@ -155,7 +155,7 @@ export class StatsService {
     const effectiveCon = this.calculateEffectiveStat(
       baseStats.constitution,
       character.constitutionTier,
-      BigInt(character.bonusConstitution),
+      BigInt(character.bonusConstitution || 0),
       paragonDist.constitution || BigInt(0),
       character.prestigeLevel,
       classScaling.constitution
@@ -164,7 +164,7 @@ export class StatsService {
     const effectiveCha = this.calculateEffectiveStat(
       baseStats.charisma,
       character.charismaTier,
-      BigInt(character.bonusCharisma),
+      BigInt(character.bonusCharisma || 0),
       paragonDist.charisma || BigInt(0),
       character.prestigeLevel,
       classScaling.charisma

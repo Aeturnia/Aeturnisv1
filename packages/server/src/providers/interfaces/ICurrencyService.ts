@@ -1,5 +1,6 @@
 // Import types from the actual service
 import { Transaction, TransactionType, TransactionMetadata } from '../../types/currency';
+import { IService } from './IService';
 
 // Re-export types for convenience
 export { Transaction, TransactionType, TransactionMetadata };
@@ -56,7 +57,7 @@ export interface TransactionStats {
  * Interface for Currency-related operations
  * Handles all monetary transactions in the game
  */
-export interface ICurrencyService {
+export interface ICurrencyService extends IService {
   /**
    * Get balance with currency denominations for a character
    * @param characterId - The character to check

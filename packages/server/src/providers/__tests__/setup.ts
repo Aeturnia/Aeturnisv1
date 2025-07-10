@@ -1,5 +1,6 @@
 // Test setup for Service Provider tests
 import { vi, beforeEach, afterEach } from 'vitest';
+import { ServiceProvider } from '../ServiceProvider';
 
 // Mock environment variables
 process.env.NODE_ENV = 'test';
@@ -22,6 +23,5 @@ beforeEach(() => {
 
 // Ensure ServiceProvider is cleared between tests
 afterEach(() => {
-  const { ServiceProvider } = require('../ServiceProvider');
   (ServiceProvider as any).instance = undefined;
 });

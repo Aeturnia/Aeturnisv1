@@ -4,7 +4,7 @@ import { ServiceProvider, globalServices } from '../providers';
 const router = Router();
 
 // Debug endpoint to check ServiceProvider state
-router.get('/services', (req, res) => {
+router.get('/services', (_req, res) => {
   try {
     const provider = ServiceProvider.getInstance();
     const registeredServices = Array.from(globalServices.keys());

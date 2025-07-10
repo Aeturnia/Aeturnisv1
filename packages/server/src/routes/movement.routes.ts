@@ -10,6 +10,7 @@ import {
   getCharacterPosition, 
   getMovementTest 
 } from '../controllers/movement.controller';
+import { asyncHandler } from '../middleware/asyncHandler';
 
 const router = Router();
 
@@ -18,7 +19,7 @@ const router = Router();
  * @desc Get movement service test data
  * @access Public
  */
-router.get('/test', getMovementTest);
+router.get('/test', asyncHandler(getMovementTest));
 
 /**
  * @route GET /api/v1/movement/position/:characterId
@@ -26,7 +27,7 @@ router.get('/test', getMovementTest);
  * @access Public (for testing)
  * @param characterId - Character ID
  */
-router.get('/position/:characterId', getCharacterPosition);
+router.get('/position/:characterId', asyncHandler(getCharacterPosition));
 
 /**
  * @route POST /api/v1/movement/move
@@ -34,7 +35,7 @@ router.get('/position/:characterId', getCharacterPosition);
  * @access Public (for testing)
  * @body { characterId: string, currentZoneId: string, direction: Direction }
  */
-router.post('/move', executeMovement);
+router.post('/move', asyncHandler(executeMovement));
 
 /**
  * @route POST /api/v1/movement/validate
@@ -42,6 +43,6 @@ router.post('/move', executeMovement);
  * @access Public (for testing)
  * @body { characterId: string, fromZoneId: string, toZoneId: string, direction: Direction }
  */
-router.post('/validate', validateMovement);
+router.post('/validate', asyncHandler(validateMovement));
 
 export default router;

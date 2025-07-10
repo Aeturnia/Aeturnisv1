@@ -172,7 +172,7 @@ export const createApp = () => {
   });
 
   // Testing environment endpoint
-  app.get('/testing', (req, res) => {
+  app.get('/testing', (_req, res) => {
     res.send(`
       <!DOCTYPE html>
       <html lang="en">

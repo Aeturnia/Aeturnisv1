@@ -28,6 +28,12 @@ import {
 import { logger } from '../../utils/logger';
 
 export class MockAffinityService {
+  /**
+   * Get the service name (from IService)
+   */
+  getName(): string {
+    return 'MockAffinityService';
+  }
   private readonly weaponAffinities: Map<string, WeaponAffinity[]>;
   private readonly magicAffinities: Map<string, MagicAffinity[]>;
   private readonly progressionConfig: AffinityProgression;

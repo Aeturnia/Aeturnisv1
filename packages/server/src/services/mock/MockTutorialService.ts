@@ -7,31 +7,38 @@ import {
   TutorialZone, 
   TutorialQuest, 
   TutorialStatus, 
-  TutorialGuidance, 
-  TutorialHelpMessage,
+  TutorialGuidance,
   TutorialObjectiveType,
   TutorialQuestDifficulty,
   TutorialRewardType,
-  TutorialUrgency,
   TutorialHelpCategory,
+  TutorialHelpTopic,
   UpdateTutorialProgressRequest,
   UpdateTutorialProgressResponse,
-  TutorialHelpRequest,
-  TutorialHelpResponse
+  GetTutorialHelpRequest,
+  GetTutorialHelpResponse,
+  TutorialProgress,
+  TutorialPhase
 } from '@aeturnis/shared';
 import { logger } from '../../utils/logger';
 
 export class MockTutorialService {
+  /**
+   * Get the service name (from IService)
+   */
+  getName(): string {
+    return 'MockTutorialService';
+  }
   private readonly tutorialZone: TutorialZone;
   private readonly tutorialQuests: TutorialQuest[];
   private readonly characterStatuses: Map<string, TutorialStatus>;
-  private readonly helpMessages: TutorialHelpMessage[];
+  private readonly helpTopics: TutorialHelpTopic[];
 
   constructor() {
     this.tutorialZone = this.createTutorialZone();
     this.tutorialQuests = this.createTutorialQuests();
     this.characterStatuses = new Map();
-    this.helpMessages = this.createHelpMessages();
+    this.helpTopics = this.createHelpTopics();
     this.initializeMockData();
   }
 
@@ -39,7 +46,7 @@ export class MockTutorialService {
    * Get tutorial zone information
    */
   async getTutorialZone(): Promise<TutorialZone> {
-    logger.info('Retrieved tutorial zone data');
+    logger.info('Retrieved tutorial zone information');
     return this.tutorialZone;
   }
 
@@ -47,8 +54,14 @@ export class MockTutorialService {
    * Get character's tutorial status
    */
   async getTutorialStatus(characterId: string): Promise<TutorialStatus> {
-    const status = this.characterStatuses.get(characterId) || this.createDefaultStatus(characterId);
-    logger.info(`Retrieved tutorial status for character ${characterId}: Quest ${status.currentQuestId}, Step ${status.currentStepIndex}`);
+    let status = this.characterStatuses.get(characterId);
+    
+    if (!status) {
+      status = this.createDefaultStatus(characterId);
+      this.characterStatuses.set(characterId, status);
+    }
+    
+    logger.info(`Retrieved tutorial status for character ${characterId}`);
     return status;
   }
 
@@ -56,7 +69,7 @@ export class MockTutorialService {
    * Get all tutorial quests
    */
   async getAllQuests(): Promise<TutorialQuest[]> {
-    logger.info('Retrieved all tutorial quests');
+    logger.info(`Retrieved ${this.tutorialQuests.length} tutorial quests`);
     return this.tutorialQuests;
   }
 
@@ -64,54 +77,69 @@ export class MockTutorialService {
    * Update tutorial progress
    */
   async updateProgress(request: UpdateTutorialProgressRequest): Promise<UpdateTutorialProgressResponse> {
-    const { characterId, questId, stepIndex } = request;
+    const { characterId, questId, stepId, action } = request;
     
-    const currentStatus = await this.getTutorialStatus(characterId);
+    const status = await this.getTutorialStatus(characterId);
     const quest = this.tutorialQuests.find(q => q.id === questId);
     
     if (!quest) {
-      throw new Error(`Quest ${questId} not found`);
+      return {
+        success: false,
+        updatedProgress: status.progress,
+        message: 'Quest not found'
+      };
     }
 
-    if (stepIndex >= quest.steps.length) {
-      throw new Error(`Invalid step index ${stepIndex} for quest ${questId}`);
+    // Create updated progress
+    const updatedProgress: TutorialProgress = {
+      ...status.progress,
+      currentQuest: questId,
+      currentStep: stepId
+    };
+
+    // Handle different actions
+    if (action === 'complete') {
+      const stepIndex = quest.steps.findIndex(s => s.id === stepId);
+      const isLastStep = stepIndex === quest.steps.length - 1;
+      
+      if (isLastStep) {
+        // Complete the quest
+        updatedProgress.completedQuests = [...status.progress.completedQuests, questId];
+        updatedProgress.currentQuest = this.getNextQuestId(questId);
+        updatedProgress.currentStep = updatedProgress.currentQuest ? 
+          this.tutorialQuests.find(q => q.id === updatedProgress.currentQuest)?.steps[0]?.id : 
+          undefined;
+      } else {
+        // Move to next step
+        updatedProgress.currentStep = quest.steps[stepIndex + 1]?.id;
+      }
     }
 
     // Update status
     const newStatus: TutorialStatus = {
-      ...currentStatus,
-      currentQuestId: questId,
-      currentStepIndex: stepIndex,
-      completedSteps: [...currentStatus.completedSteps, quest.steps[stepIndex - 1]?.id || ''].filter(Boolean)
+      ...status,
+      progress: updatedProgress,
+      currentPhase: updatedProgress.completedQuests.length >= this.tutorialQuests.length ? 
+        TutorialPhase.COMPLETED : 
+        TutorialPhase.IN_PROGRESS
     };
 
-    // Check for quest completion
-    const completedQuest = stepIndex >= quest.steps.length - 1;
-    if (completedQuest) {
-      newStatus.completedQuests = [...newStatus.completedQuests, questId];
-      newStatus.currentQuestId = this.getNextQuestId(questId);
-      newStatus.currentStepIndex = 0;
-      
-      // Check for full tutorial completion
-      if (newStatus.completedQuests.length >= this.tutorialQuests.length) {
-        newStatus.isComplete = true;
-        newStatus.completedAt = new Date();
-      }
+    if (newStatus.currentPhase === TutorialPhase.COMPLETED) {
+      newStatus.isComplete = true;
+      updatedProgress.completedAt = new Date();
     }
 
     this.characterStatuses.set(characterId, newStatus);
-
-    const guidance = await this.getGuidance(characterId);
     
-    logger.info(`Updated tutorial progress for ${characterId}: Quest ${questId}, Step ${stepIndex}, Completed: ${completedQuest}`);
+    logger.info(`Updated tutorial progress for ${characterId}: Quest ${questId}, Step ${stepId}, Action: ${action}`);
 
     return {
       success: true,
-      newStatus,
-      guidance,
-      completedStep: true,
-      completedQuest,
-      rewards: completedQuest ? quest.rewards : undefined
+      updatedProgress,
+      message: 'Tutorial progress updated successfully',
+      unlockedRewards: action === 'complete' && quest.steps.findIndex(s => s.id === stepId) === quest.steps.length - 1 ? 
+        quest.rewards : 
+        undefined
     };
   }
 
@@ -124,63 +152,63 @@ export class MockTutorialService {
     if (status.isComplete) {
       return {
         characterId,
-        currentMessage: "Tutorial complete! You're ready to explore Aeturnis Online.",
-        nextAction: "Leave the tutorial zone and begin your adventure!",
-        hints: ["Visit the main city", "Talk to NPCs for quests", "Practice combat with monsters"],
-        urgency: TutorialUrgency.LOW
+        currentContext: 'tutorial_complete',
+        suggestedActions: ['Leave the tutorial zone', 'Begin your adventure in the main world'],
+        availableHelp: [],
+        warnings: []
       };
     }
 
-    const currentQuest = this.tutorialQuests.find(q => q.id === status.currentQuestId);
-    if (!currentQuest) {
-      return this.getDefaultGuidance(characterId);
+    const currentQuest = this.tutorialQuests.find(q => q.id === status.progress.currentQuest);
+    const currentStep = currentQuest?.steps.find(s => s.id === status.progress.currentStep);
+    
+    const suggestedActions: string[] = [];
+    if (currentStep) {
+      suggestedActions.push(currentStep.instructions);
+      suggestedActions.push(...currentStep.hints);
     }
 
-    const currentStep = currentQuest.steps[status.currentStepIndex];
-    if (!currentStep) {
-      return this.getDefaultGuidance(characterId);
-    }
+    const relevantHelp = this.helpTopics.filter(topic => 
+      currentQuest ? topic.relatedQuests.includes(currentQuest.id) : true
+    );
 
     return {
       characterId,
-      currentMessage: currentStep.instructions,
-      nextAction: currentStep.description,
-      questName: currentQuest.name,
-      stepName: currentStep.name,
-      hints: currentStep.hints,
-      npcToTalk: currentStep.targetNPC,
-      urgency: TutorialUrgency.MEDIUM
+      currentContext: currentQuest?.id || 'tutorial_start',
+      suggestedActions,
+      availableHelp: relevantHelp.slice(0, 3),
+      warnings: []
     };
   }
 
   /**
    * Get help messages based on context
    */
-  async getHelp(request: TutorialHelpRequest): Promise<TutorialHelpResponse> {
+  async getHelp(request: GetTutorialHelpRequest): Promise<GetTutorialHelpResponse> {
     const { context, category } = request;
     
-    let filteredMessages = this.helpMessages;
+    let filteredTopics = this.helpTopics;
     
     if (category) {
-      filteredMessages = filteredMessages.filter(msg => msg.category === category);
+      filteredTopics = filteredTopics.filter(topic => topic.category === category);
     }
     
     if (context) {
-      filteredMessages = filteredMessages.filter(msg => 
-        msg.context.includes(context) || 
-        msg.title.toLowerCase().includes(context.toLowerCase()) ||
-        msg.message.toLowerCase().includes(context.toLowerCase())
+      filteredTopics = filteredTopics.filter(topic => 
+        topic.topic.toLowerCase().includes(context.toLowerCase()) ||
+        topic.content.toLowerCase().includes(context.toLowerCase())
       );
     }
 
     const suggestedActions = this.getSuggestedActions(context, category);
+    const relatedQuests = [...new Set(filteredTopics.flatMap(t => t.relatedQuests))];
 
-    logger.info(`Retrieved ${filteredMessages.length} help messages for context: ${context}`);
+    logger.info(`Retrieved ${filteredTopics.length} help topics for context: ${context}`);
 
     return {
-      messages: filteredMessages,
-      totalFound: filteredMessages.length,
-      suggestedActions
+      helpTopics: filteredTopics,
+      suggestedActions,
+      relatedQuests
     };
   }
 
@@ -196,33 +224,33 @@ export class MockTutorialService {
         maxY: 100
       },
       entryRequirements: [],
-      safeZone: true,
       npcs: [
         {
           id: 'trainer_marcus',
           name: 'Trainer Marcus',
           dialogueId: 'marcus_intro',
-          position: { x: 25, y: 50 },
+          position: { x: 50, y: 50 },
           questGiver: true,
-          relatedQuests: ['basic_movement', 'combat_basics']
+          relatedQuests: ['basic_movement']
         },
         {
           id: 'sage_elara',
           name: 'Sage Elara',
           dialogueId: 'elara_magic',
-          position: { x: 75, y: 30 },
+          position: { x: 75, y: 50 },
           questGiver: true,
           relatedQuests: ['magic_fundamentals']
         },
         {
-          id: 'merchant_finn',
-          name: 'Merchant Finn',
-          dialogueId: 'finn_trade',
-          position: { x: 50, y: 75 },
+          id: 'training_dummy',
+          name: 'Training Dummy',
+          dialogueId: '',
+          position: { x: 25, y: 50 },
           questGiver: false,
-          relatedQuests: ['inventory_management']
+          relatedQuests: ['combat_basics']
         }
-      ]
+      ],
+      safeZone: true
     };
   }
 
@@ -233,8 +261,6 @@ export class MockTutorialService {
         name: 'First Steps',
         description: 'Learn how to move around and navigate the world',
         difficulty: TutorialQuestDifficulty.BEGINNER,
-        order: 1,
-        optional: false,
         prerequisites: [],
         steps: [
           {
@@ -275,15 +301,15 @@ export class MockTutorialService {
             type: TutorialRewardType.GOLD,
             amount: 50
           }
-        ]
+        ],
+        order: 1,
+        optional: false
       },
       {
         id: 'combat_basics',
         name: 'Combat Training',
         description: 'Learn the fundamentals of combat in Aeturnis Online',
         difficulty: TutorialQuestDifficulty.INTERMEDIATE,
-        order: 2,
-        optional: false,
         prerequisites: ['basic_movement'],
         steps: [
           {
@@ -315,15 +341,15 @@ export class MockTutorialService {
             amount: 1,
             itemId: 'health_potion_small'
           }
-        ]
+        ],
+        order: 2,
+        optional: false
       },
       {
         id: 'magic_fundamentals',
         name: 'Magical Arts',
         description: 'Learn about magic and spellcasting',
         difficulty: TutorialQuestDifficulty.INTERMEDIATE,
-        order: 3,
-        optional: false,
         prerequisites: ['combat_basics'],
         steps: [
           {
@@ -356,91 +382,80 @@ export class MockTutorialService {
             amount: 1,
             itemId: 'mana_potion_small'
           }
-        ]
+        ],
+        order: 3,
+        optional: false
       }
     ];
   }
 
-  private createHelpMessages(): TutorialHelpMessage[] {
+  private createHelpTopics(): TutorialHelpTopic[] {
     return [
       {
         id: 'movement_help',
-        context: 'movement',
-        title: 'How to Move',
-        message: 'Use WASD keys or arrow keys to move your character around the world. Hold Shift to run faster.',
-        category: TutorialHelpCategory.NAVIGATION,
-        relatedTopics: ['controls', 'basic_movement'],
-        examples: ['W or ↑ to move forward', 'S or ↓ to move backward', 'A or ← to move left', 'D or → to move right']
+        topic: 'How to Move',
+        content: 'Use WASD keys or arrow keys to move your character around the world. Hold Shift to run faster.',
+        category: TutorialHelpCategory.MOVEMENT,
+        relatedQuests: ['basic_movement']
       },
       {
         id: 'combat_help',
-        context: 'combat',
-        title: 'Combat Basics',
-        message: 'Left-click on enemies to attack them. Watch your health (red bar) and stamina (yellow bar) during combat.',
+        topic: 'Combat Basics',
+        content: 'Left-click on enemies to attack them. Watch your health (red bar) and stamina (yellow bar) during combat.',
         category: TutorialHelpCategory.COMBAT,
-        relatedTopics: ['attacking', 'health', 'stamina'],
-        examples: ['Left-click to attack', 'Spacebar for quick attack', 'Right-click to block']
+        relatedQuests: ['combat_basics']
       },
       {
         id: 'inventory_help',
-        context: 'inventory',
-        title: 'Managing Your Inventory',
-        message: 'Press I to open your inventory. Right-click items to use them or equip them if they are equipment.',
+        topic: 'Managing Your Inventory',
+        content: 'Press I to open your inventory. Right-click items to use them or equip them if they are equipment.',
         category: TutorialHelpCategory.INVENTORY,
-        relatedTopics: ['items', 'equipment', 'storage'],
-        examples: ['Press I to open inventory', 'Right-click to use items', 'Drag items to move them']
+        relatedQuests: ['basic_movement', 'combat_basics']
       },
       {
         id: 'magic_help',
-        context: 'magic',
-        title: 'Using Magic',
-        message: 'Magic spells consume mana (blue bar). Press number keys 1-9 to cast spells you have learned.',
-        category: TutorialHelpCategory.MAGIC,
-        relatedTopics: ['spells', 'mana', 'casting'],
-        examples: ['Press 1-9 to cast spells', 'Watch your mana bar', 'Learn spells from NPCs']
+        topic: 'Using Magic',
+        content: 'Magic spells consume mana (blue bar). Press number keys 1-9 to cast spells you have learned.',
+        category: TutorialHelpCategory.SKILLS,
+        relatedQuests: ['magic_fundamentals']
       },
       {
-        id: 'progression_help',
-        context: 'leveling',
-        title: 'Character Progression',
-        message: 'Gain experience by completing quests and defeating enemies. Level up to increase your stats and unlock new abilities.',
-        category: TutorialHelpCategory.PROGRESSION,
-        relatedTopics: ['experience', 'leveling', 'stats'],
-        examples: ['Complete quests for XP', 'Defeat enemies for XP', 'Level up to get stronger']
+        id: 'quest_help',
+        topic: 'Quest System',
+        content: 'Talk to NPCs with exclamation marks to receive quests. Check your quest log (L) to track progress.',
+        category: TutorialHelpCategory.QUESTING,
+        relatedQuests: ['basic_movement']
       }
     ];
   }
 
   private createDefaultStatus(characterId: string): TutorialStatus {
-    return {
+    const progress: TutorialProgress = {
       characterId,
-      currentQuestId: 'basic_movement',
-      currentStepIndex: 0,
       completedQuests: [],
-      completedSteps: [],
-      isComplete: false,
+      currentQuest: 'basic_movement',
+      currentStep: 'talk_to_marcus',
       startedAt: new Date(),
-      totalTimeSpent: 0
+      skipCount: 0,
+      helpRequestCount: 0
     };
-  }
 
-  private getDefaultGuidance(characterId: string): TutorialGuidance {
     return {
       characterId,
-      currentMessage: "Welcome to Aeturnis Online! Start by talking to Trainer Marcus.",
-      nextAction: "Find and speak with Trainer Marcus to begin your tutorial",
-      hints: ["Look for NPCs with exclamation marks", "Use WASD to move around"],
-      npcToTalk: 'trainer_marcus',
-      urgency: TutorialUrgency.MEDIUM
+      isComplete: false,
+      currentPhase: TutorialPhase.IN_PROGRESS,
+      progress,
+      achievements: [],
+      unlockedFeatures: []
     };
   }
 
-  private getNextQuestId(currentQuestId: string): string | null {
+  private getNextQuestId(currentQuestId: string): string | undefined {
     const currentIndex = this.tutorialQuests.findIndex(q => q.id === currentQuestId);
     if (currentIndex >= 0 && currentIndex < this.tutorialQuests.length - 1) {
       return this.tutorialQuests[currentIndex + 1].id;
     }
-    return null;
+    return undefined;
   }
 
   private getSuggestedActions(_context?: string, category?: TutorialHelpCategory): string[] {
@@ -459,7 +474,7 @@ export class MockTutorialService {
       ];
     }
 
-    if (category === TutorialHelpCategory.MAGIC) {
+    if (category === TutorialHelpCategory.SKILLS) {
       return [
         "Talk to Sage Elara about magic",
         "Make sure you have enough mana before casting",
@@ -471,27 +486,43 @@ export class MockTutorialService {
   }
 
   private initializeMockData(): void {
-    // Initialize some mock character statuses
-    this.characterStatuses.set('test_player', {
-      characterId: 'test_player',
-      currentQuestId: 'basic_movement',
-      currentStepIndex: 1,
+    // Initialize test character statuses
+    const testProgress1: TutorialProgress = {
+      characterId: 'test-char-001',
       completedQuests: [],
-      completedSteps: ['talk_to_marcus'],
-      isComplete: false,
+      currentQuest: 'basic_movement',
+      currentStep: 'move_around',
       startedAt: new Date(Date.now() - 300000), // 5 minutes ago
-      totalTimeSpent: 5
+      skipCount: 0,
+      helpRequestCount: 1
+    };
+
+    this.characterStatuses.set('test-char-001', {
+      characterId: 'test-char-001',
+      isComplete: false,
+      currentPhase: TutorialPhase.IN_PROGRESS,
+      progress: testProgress1,
+      achievements: [],
+      unlockedFeatures: []
     });
+
+    const testProgress2: TutorialProgress = {
+      characterId: 'demo_user',
+      completedQuests: ['basic_movement', 'combat_basics'],
+      currentQuest: 'magic_fundamentals',
+      currentStep: 'talk_to_sage',
+      startedAt: new Date(Date.now() - 900000), // 15 minutes ago
+      skipCount: 0,
+      helpRequestCount: 3
+    };
 
     this.characterStatuses.set('demo_user', {
       characterId: 'demo_user',
-      currentQuestId: 'magic_fundamentals',
-      currentStepIndex: 0,
-      completedQuests: ['basic_movement', 'combat_basics'],
-      completedSteps: ['talk_to_marcus', 'move_around', 'open_character_panel', 'equip_weapon', 'attack_dummy'],
       isComplete: false,
-      startedAt: new Date(Date.now() - 900000), // 15 minutes ago
-      totalTimeSpent: 15
+      currentPhase: TutorialPhase.IN_PROGRESS,
+      progress: testProgress2,
+      achievements: ['fast_learner'],
+      unlockedFeatures: ['combat_system', 'inventory_system']
     });
 
     logger.info('Initialized MockTutorialService with mock data');

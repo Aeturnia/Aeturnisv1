@@ -10,6 +10,7 @@ import {
   getTestZones, 
   validatePosition 
 } from '../controllers/zone.controller';
+import { asyncHandler } from '../middleware/asyncHandler';
 
 const router = Router();
 
@@ -18,14 +19,14 @@ const router = Router();
  * @desc Get all zones
  * @access Public (for testing)
  */
-router.get('/', getAllZones);
+router.get('/', asyncHandler(getAllZones));
 
 /**
  * @route GET /api/v1/zones/test
  * @desc Get zone service test data
  * @access Public
  */
-router.get('/test', getTestZones);
+router.get('/test', asyncHandler(getTestZones));
 
 /**
  * @route GET /api/v1/zones/:zoneId
@@ -33,7 +34,7 @@ router.get('/test', getTestZones);
  * @access Public (for testing)
  * @query characterId - Optional character ID to include position data
  */
-router.get('/:zoneId', getZoneById);
+router.get('/:zoneId', asyncHandler(getZoneById));
 
 /**
  * @route POST /api/v1/zones/validate-position
@@ -41,6 +42,6 @@ router.get('/:zoneId', getZoneById);
  * @access Public (for testing)
  * @body { zoneId: string, coordinates: { x: number, y: number } }
  */
-router.post('/validate-position', validatePosition);
+router.post('/validate-position', asyncHandler(validatePosition));
 
 export default router;

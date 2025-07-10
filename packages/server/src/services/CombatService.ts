@@ -1260,7 +1260,7 @@ export class CombatService {
     // Clear existing session if participant is already in combat
     const existingSession = this.participantToSession.get(initiatorId);
     if (existingSession) {
-      console.log(`Forcing new combat for ${initiatorId}, clearing existing session ${existingSession}`);
+      logger.info(`Forcing new combat for ${initiatorId}, clearing existing session ${existingSession}`);
       this.cleanupSession(existingSession);
     }
     

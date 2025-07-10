@@ -6,6 +6,7 @@
 import { Router } from 'express';
 import { AffinityController } from '../controllers/affinity.controller';
 import rateLimit from 'express-rate-limit';
+import { asyncHandler } from '../middleware/asyncHandler';
 
 const router = Router();
 const affinityController = new AffinityController();
@@ -40,7 +41,7 @@ router.use(affinityRateLimit);
  * @desc Test affinity service functionality
  * @access Public
  */
-router.get('/test', affinityController.testAffinityService.bind(affinityController));
+router.get('/test', asyncHandler(affinityController.testAffinityService.bind(affinityController)));
 
 /**
  * @route GET /api/v1/affinity/summary/:characterId
@@ -50,7 +51,7 @@ router.get('/test', affinityController.testAffinityService.bind(affinityControll
  * @query {boolean} includeAchievements - Include achievements in response
  * @query {boolean} includeMilestones - Include milestones in response
  */
-router.get('/summary/:characterId', affinityController.getAffinitySummary.bind(affinityController));
+router.get('/summary/:characterId', asyncHandler(affinityController.getAffinitySummary.bind(affinityController)));
 
 /**
  * @route POST /api/v1/affinity/weapon/use
@@ -58,7 +59,7 @@ router.get('/summary/:characterId', affinityController.getAffinitySummary.bind(a
  * @access Public
  * @body {TrackWeaponUseRequest} weapon usage data
  */
-router.post('/weapon/use', usageRateLimit, affinityController.trackWeaponUse.bind(affinityController));
+router.post('/weapon/use', usageRateLimit, asyncHandler(affinityController.trackWeaponUse.bind(affinityController)));
 
 /**
  * @route POST /api/v1/affinity/magic/use
@@ -66,7 +67,7 @@ router.post('/weapon/use', usageRateLimit, affinityController.trackWeaponUse.bin
  * @access Public
  * @body {TrackMagicUseRequest} magic usage data
  */
-router.post('/magic/use', usageRateLimit, affinityController.trackMagicUse.bind(affinityController));
+router.post('/magic/use', usageRateLimit, asyncHandler(affinityController.trackMagicUse.bind(affinityController)));
 
 /**
  * @route POST /api/v1/affinity/simulate/weapon
@@ -74,7 +75,7 @@ router.post('/magic/use', usageRateLimit, affinityController.trackMagicUse.bind(
  * @access Public
  * @body {object} simulation parameters
  */
-router.post('/simulate/weapon', affinityController.simulateWeaponUse.bind(affinityController));
+router.post('/simulate/weapon', asyncHandler(affinityController.simulateWeaponUse.bind(affinityController)));
 
 /**
  * @route POST /api/v1/affinity/simulate/magic
@@ -82,6 +83,6 @@ router.post('/simulate/weapon', affinityController.simulateWeaponUse.bind(affini
  * @access Public
  * @body {object} simulation parameters
  */
-router.post('/simulate/magic', affinityController.simulateMagicUse.bind(affinityController));
+router.post('/simulate/magic', asyncHandler(affinityController.simulateMagicUse.bind(affinityController)));
 
 export { router as affinityRoutes };
