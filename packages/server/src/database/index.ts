@@ -1,35 +1,65 @@
-import { Pool } from 'pg';
-import { config } from 'dotenv';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
+import { databaseConfig } from './config';
+import { logger } from '../utils/logger';
 
-// Load environment variables
-config();
+let client: postgres.Sql;
+let db: ReturnType<typeof drizzle>;
 
-// Create PostgreSQL connection pool
-export const db = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }, // Required for Replit managed PostgreSQL
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
+export async function initializeDatabase() {
+  try {
+    logger.info('🔌 Creating database connection...');
 
-// Test connection
-db.on('connect', () => {
-  // eslint-disable-next-line no-console
-  console.log('🗄️  Connected to PostgreSQL database');
-});
+    client = postgres(databaseConfig.url, {
+      max: databaseConfig.maxConnections,
+      idle_timeout: 20,
+      connect_timeout: 10,
+      onnotice: (notice) => {
+        logger.info('📢 Database notice:', notice);
+      },
+    });
 
-db.on('error', (err: Error) => {
-  // eslint-disable-next-line no-console
-  console.error('🚨 Database connection error:', err);
-});
+    db = drizzle(client);
 
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  // eslint-disable-next-line no-console
-  console.log('🔌 Closing database connections...');
-  await db.end();
-  process.exit(0);
-});
+    // Test the connection
+    logger.info('🔍 Testing database connection...');
+    await client`SELECT 1`;
+    logger.info('✅ Database connection test passed');
 
-export default db;
+    // Run migrations
+    logger.info('🔄 Running database migrations...');
+    await migrate(db, { migrationsFolder: './src/database/migrations' });
+    logger.info('✅ Database migrations completed');
+
+    // Set up connection monitoring
+    setInterval(async () => {
+      try {
+        await client`SELECT 1`;
+        logger.info('💓 Database heartbeat OK');
+      } catch (error) {
+        logger.error('💔 Database heartbeat failed:', error);
+      }
+    }, 60000); // Every minute
+
+    logger.info('Database initialized successfully');
+  } catch (error) {
+    logger.error('🚨 Database initialization failed:', error);
+    console.error('🚨 Database error stack:', error.stack);
+    throw error;
+  }
+}
+
+export function getDatabase() {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+  return db;
+}
+
+export function getClient() {
+  if (!client) {
+    throw new Error('Database client not initialized');
+  }
+  return client;
+}

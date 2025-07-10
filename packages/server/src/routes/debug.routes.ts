@@ -69,3 +69,48 @@ router.get('/test/:serviceName', (req, res) => {
 });
 
 export { router as debugRoutes };
+import { Router } from 'express';
+import { ServiceProvider } from '../providers/ServiceProvider';
+import { logger } from '../utils/logger';
+
+const router = Router();
+
+router.get('/server-info', (req, res) => {
+  const uptime = process.uptime();
+  const memUsage = process.memoryUsage();
+  
+  res.json({
+    server: {
+      uptime: `${Math.floor(uptime)}s`,
+      nodeVersion: process.version,
+      platform: process.platform,
+      pid: process.pid,
+      startTime: new Date(Date.now() - uptime * 1000).toISOString()
+    },
+    memory: {
+      rss: `${Math.round(memUsage.rss / 1024 / 1024)}MB`,
+      heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)}MB`,
+      heapTotal: `${Math.round(memUsage.heapTotal / 1024 / 1024)}MB`,
+      external: `${Math.round(memUsage.external / 1024 / 1024)}MB`
+    },
+    services: {
+      count: ServiceProvider.getServiceNames().length,
+      names: ServiceProvider.getServiceNames(),
+      initialized: ServiceProvider.isInitialized
+    },
+    eventLoop: {
+      delay: process.hrtime.bigint()
+    }
+  });
+});
+
+router.get('/logs', (req, res) => {
+  // Return recent log entries if available
+  res.json({
+    message: 'Check server console for detailed logs',
+    logLevel: 'info',
+    timestamp: new Date().toISOString()
+  });
+});
+
+export default router;

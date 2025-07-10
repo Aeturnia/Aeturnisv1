@@ -97,24 +97,33 @@ export const createApp = () => {
 
   // Serve production mobile client
   app.use(express.static(path.join(__dirname, '../public')));
-  
+
   // SPA fallback for React Router
   app.get('*', (req, res, next) => {
     // Skip API routes
     if (req.path.startsWith('/api') || req.path.startsWith('/health')) {
       return next();
     }
-    
+
     // Serve index.html for all non-API routes
     res.sendFile(path.join(__dirname, '../public/index.html'));
   });
 
+  // Health check endpoint
   app.get('/health', (_req, res) => {
-    res.json({
-      status: 'healthy',
-      uptime: process.uptime(),
+    const uptime = process.uptime();
+    const memUsage = process.memoryUsage();
+
+    res.json({ 
+      status: 'healthy', 
       timestamp: new Date().toISOString(),
-      memory: process.memoryUsage(),
+      uptime: `${Math.floor(uptime)}s`,
+      memory: {
+        rss: `${Math.round(memUsage.rss / 1024 / 1024)}MB`,
+        heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)}MB`,
+        heapTotal: `${Math.round(memUsage.heapTotal / 1024 / 1024)}MB`,
+        external: `${Math.round(memUsage.external / 1024 / 1024)}MB`
+      },
       services: {
         database: 'connected',
         redis: 'disabled',
@@ -125,7 +134,7 @@ export const createApp = () => {
   // API routes
   app.use('/api/v1/auth', authLimiter, authRoutes);
   app.use('/api/v1/sessions', generalLimiter, sessionRoutes);
-  
+
   // Debug routes for ServiceProvider troubleshooting
   app.use('/api/debug', debugRoutes);
   app.use('/api/v1/characters', generalLimiter, characterRoutes);
@@ -229,7 +238,7 @@ export const createApp = () => {
         path: req.originalUrl,
       });
     }
-    
+
     // Serve React app for all other routes
     return res.sendFile(path.join(__dirname, '../public/index.html'));
   });
