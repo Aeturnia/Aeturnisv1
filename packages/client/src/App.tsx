@@ -135,7 +135,8 @@ function App() {
             </div>
           </SafeArea>
           
-          {/* Developer Overlay Portal - Completely isolated from main app layout */}
+          {/* Developer Overlay - Disabled for now */}
+          {/* 
           <div style={{
             position: 'fixed',
             top: 0,
@@ -155,6 +156,7 @@ function App() {
               <SimpleDevToggle />
             </div>
           </div>
+          */}
         </ServiceInitializationWrapper>
       </ServiceProvider>
     </ErrorBoundary>

@@ -868,6 +868,7 @@ The expanded monorepo now includes:
 - **Z-Index Management**: Unique z-index values (10001-10003) to prevent stacking conflicts
 - **Frontend Rebuilt**: index-Dy2qc9Hc.js with structural positioning fixes
 - **Issue Resolution**: Persistent developer overlay clustering in top-left corner should now be completely resolved
+- **Developer Overlay Disabled**: Commented out developer overlay components (index-0sxr1mUo.js) to focus on main React UI development
 - **CSP Conflict Identified**: Content Security Policy blocking inline event handlers (script-src-attr 'none') preventing HTML-based Mock/Real switching
 - **Architecture Decision**: Abandoning HTML-based Mock/Real switching approach in favor of proper React UI development
 - **Focus Shift**: Moving from temporary testing interface to production React client in packages/client
