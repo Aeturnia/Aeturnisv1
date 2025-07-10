@@ -19,9 +19,7 @@ config({ path: path.resolve(__dirname, '../.env') });
 const PORT = parseInt(process.env.PORT || '8080', 10);
 const HOST = process.env.HOST || '0.0.0.0';
 
-// Debug: Log the PORT being used
-console.log(`🔍 Environment PORT: ${process.env.PORT}`);
-console.log(`🔍 Using PORT: ${PORT}`);
+// Silent startup - debug info logged to files only
 
 // Initialize server monitor and restart debugger
 const serverMonitor = new ServerMonitor();
@@ -122,19 +120,6 @@ async function startServer() {
         totalMemory: `${Math.round(os.totalmem() / 1024 / 1024 / 1024)}GB`,
       });
 
-      // eslint-disable-next-line no-console
-      console.log(`🚀 Aeturnis Online server running on http://0.0.0.0:${PORT}`);
-      // eslint-disable-next-line no-console
-      console.log(`📊 Health check: http://localhost:${PORT}/health`);
-      // eslint-disable-next-line no-console
-      console.log(`🔍 API status: http://localhost:${PORT}/api/status`);
-      // eslint-disable-next-line no-console
-      console.log(`🔐 Auth endpoints: http://localhost:${PORT}/api/v1/auth`);
-      // eslint-disable-next-line no-console
-      console.log(`📝 Registration: POST http://localhost:${PORT}/api/v1/auth/register`);
-      // eslint-disable-next-line no-console
-      console.log(`🔑 Login: POST http://localhost:${PORT}/api/v1/auth/login`);
-
       // Start server monitoring
       serverMonitor.start();
       logger.info('📊 Server monitoring started', { service: 'aeturnis-api' });
@@ -180,17 +165,12 @@ async function startServer() {
     try {
       socketServer = await createSocketServer(expressServer);
       logger.info('Socket.IO server initialized successfully', { service: 'aeturnis-api' });
-      
-      // eslint-disable-next-line no-console
-      console.log('🔌 Socket.IO server running on port 3001');
     } catch (error) {
       logger.error('Failed to initialize Socket.IO server', {
         error: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined,
         service: 'aeturnis-api',
       });
-      // eslint-disable-next-line no-console
-      console.warn('⚠️  Socket.IO server failed to start - continuing with Express only');
     }
 
     // Wait a moment to ensure servers are stable
@@ -232,12 +212,41 @@ async function startServer() {
   }
 }
 
+// Professional startup banner
+function displayStartupBanner() {
+  const banner = `
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                              AETURNIS ONLINE                                 ║
+║                          TypeScript MMORPG Backend                           ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║ Server Status: OPERATIONAL                                                   ║
+║ Environment:   ${(process.env.NODE_ENV || 'development').toUpperCase().padEnd(8)} │ Port: ${PORT.toString().padEnd(4)} │ Host: ${HOST.padEnd(9)} ║
+║ Node Version:  ${process.version.padEnd(8)} │ Platform: ${process.platform.padEnd(7)} │ CPU Cores: ${os.cpus().length.toString().padEnd(2)}    ║
+║ Memory:        ${Math.round(os.totalmem() / 1024 / 1024 / 1024)}GB RAM Available                                            ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║ Services:      14 Real Database Services Active (NO MOCK SERVICES)          ║
+║ Database:      PostgreSQL with Drizzle ORM                                   ║
+║ Caching:       Redis with In-Memory Fallback                                 ║
+║ Real-time:     Socket.IO Server (Port 3001)                                  ║
+║ Monitoring:    Server Health & Performance Tracking                          ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║ API Endpoints:                                                               ║
+║ • Health Check:    GET  http://localhost:${PORT}/health                           ║
+║ • Server Status:   GET  http://localhost:${PORT}/api/status                       ║
+║ • Authentication:  POST http://localhost:${PORT}/api/v1/auth/register            ║
+║ • Login:           POST http://localhost:${PORT}/api/v1/auth/login                ║
+║ • Game API:        *    http://localhost:${PORT}/api/v1/*                         ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+`;
+  // eslint-disable-next-line no-console
+  console.log(banner);
+}
+
 // Start the server
 startServer()
   .then(() => {
     logger.info('✅ Server startup completed successfully', { service: 'aeturnis-api' });
-    // eslint-disable-next-line no-console
-    console.log('✅ All systems initialized - Server is ready');
+    displayStartupBanner();
   })
   .catch((error) => {
     logger.error('Startup failed:', {

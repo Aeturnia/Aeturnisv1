@@ -184,135 +184,46 @@ export async function initializeProviders(useMocks: boolean): Promise<void> {
     // Load real services when not using mocks
     logger.info('Loading real database-connected services...');
     
-    // Register real services from the services directory
-    try {
-      logger.info('Registering real MonsterService...');
-      const { MonsterService } = await import('../services/MonsterService');
-      provider.register('MonsterService', new MonsterService());
-      logger.info('✅ MonsterService registered');
-    } catch (error) {
-      logger.error('❌ Failed to register MonsterService:', error);
-    }
+    // Load production database services
+    logger.info('Loading production services with database connections...');
     
-    try {
-      logger.info('Registering real NPCService...');
-      const { NPCService } = await import('../services/NPCService');
-      provider.register('NPCService', new NPCService());
-      logger.info('✅ NPCService registered');
-    } catch (error) {
-      logger.error('❌ Failed to register NPCService:', error);
-    }
-    
-    try {
-      logger.info('Registering real DeathService...');
-      const { DeathService } = await import('../services/death.service');
-      provider.register('DeathService', new DeathService());
-      logger.info('✅ DeathService registered');
-    } catch (error) {
-      logger.error('❌ Failed to register DeathService:', error);
-    }
-    
-    try {
-      logger.info('Registering real LootService...');
-      const { LootService } = await import('../services/loot.service');
-      provider.register('LootService', new LootService());
-      logger.info('✅ LootService registered');
-    } catch (error) {
-      logger.error('❌ Failed to register LootService:', error);
-    }
-    
-    try {
-      logger.info('Registering real CombatService...');
-      const { CombatService } = await import('../services/CombatService');
-      provider.register('CombatService', new CombatService());
-      logger.info('✅ CombatService registered');
-    } catch (error) {
-      logger.error('❌ Failed to register CombatService:', error);
-    }
-    
-    try {
-      logger.info('Registering real BankService...');
-      const { BankService } = await import('../services/BankService');
-      provider.register('BankService', new BankService());
-      logger.info('✅ BankService registered');
-    } catch (error) {
-      logger.error('❌ Failed to register BankService:', error);
-    }
-    
-    try {
-      logger.info('Registering real CurrencyService...');
-      const { CurrencyService } = await import('../services/CurrencyService');
-      provider.register('CurrencyService', new CurrencyService());
-      logger.info('✅ CurrencyService registered');
-    } catch (error) {
-      logger.error('❌ Failed to register CurrencyService:', error);
-    }
-    
-    try {
-      logger.info('Registering real DialogueService...');
-      const { DialogueService } = await import('../services/DialogueService');
-      provider.register('DialogueService', new DialogueService());
-      logger.info('✅ DialogueService registered');
-    } catch (error) {
-      logger.error('❌ Failed to register DialogueService:', error);
-    }
-    
-    try {
-      logger.info('Registering real SpawnService...');
-      const { SpawnService } = await import('../services/SpawnService');
-      provider.register('SpawnService', new SpawnService());
-      logger.info('✅ SpawnService registered');
-    } catch (error) {
-      logger.error('❌ Failed to register SpawnService:', error);
-    }
-    
-    // Continue loading remaining real services
-    try {
-      logger.info('Registering real ZoneService...');
-      const { ZoneService } = await import('../services/ZoneService');
-      provider.register('ZoneService', new ZoneService());
-      logger.info('✅ ZoneService registered');
-    } catch (error) {
-      logger.error('❌ Failed to register ZoneService:', error);
-    }
+    const services = [
+      { name: 'MonsterService', path: '../services/MonsterService' },
+      { name: 'NPCService', path: '../services/NPCService' },
+      { name: 'DeathService', path: '../services/death.service' },
+      { name: 'LootService', path: '../services/loot.service' },
+      { name: 'CombatService', path: '../services/CombatService' },
+      { name: 'BankService', path: '../services/BankService' },
+      { name: 'CurrencyService', path: '../services/CurrencyService' },
+      { name: 'DialogueService', path: '../services/DialogueService' },
+      { name: 'SpawnService', path: '../services/SpawnService' },
+      { name: 'ZoneService', path: '../services/ZoneService' },
+      { name: 'MovementService', path: '../services/MovementService' },
+      { name: 'ProgressionService', path: '../services/ProgressionService' },
+      { name: 'TutorialService', path: '../services/TutorialService' },
+      { name: 'AffinityService', path: '../services/AffinityService' }
+    ];
 
-    try {
-      logger.info('Registering real MovementService...');
-      const { MovementService } = await import('../services/MovementService');
-      provider.register('MovementService', new MovementService());
-      logger.info('✅ MovementService registered');
-    } catch (error) {
-      logger.error('❌ Failed to register MovementService:', error);
-    }
+    const loadedServices: string[] = [];
+    const failedServices: string[] = [];
 
-    try {
-      logger.info('Registering real ProgressionService...');
-      const { ProgressionService } = await import('../services/ProgressionService');
-      provider.register('ProgressionService', new ProgressionService());
-      logger.info('✅ ProgressionService registered');
-    } catch (error) {
-      logger.error('❌ Failed to register ProgressionService:', error);
-    }
-
-    try {
-      logger.info('Registering real TutorialService...');
-      const { TutorialService } = await import('../services/TutorialService');
-      provider.register('TutorialService', new TutorialService());
-      logger.info('✅ TutorialService registered');
-    } catch (error) {
-      logger.error('❌ Failed to register TutorialService:', error);
-    }
-
-    try {
-      logger.info('Registering real AffinityService...');
-      const { AffinityService } = await import('../services/AffinityService');
-      provider.register('AffinityService', new AffinityService());
-      logger.info('✅ AffinityService registered');
-    } catch (error) {
-      logger.error('❌ Failed to register AffinityService:', error);
+    for (const service of services) {
+      try {
+        const serviceModule = await import(service.path);
+        const ServiceClass = serviceModule[service.name];
+        provider.register(service.name, new ServiceClass());
+        loadedServices.push(service.name);
+      } catch (error) {
+        logger.error(`Failed to register ${service.name}:`, error);
+        failedServices.push(service.name);
+      }
     }
     
     const registeredServices = provider.getRegisteredServices();
-    logger.info(`Service Provider initialized with ${registeredServices.length} REAL services: ${registeredServices.join(', ')}`);
+    logger.info(`Service Provider: ${registeredServices.length}/14 real database services active`);
+    
+    if (failedServices.length > 0) {
+      logger.warn(`Failed services: ${failedServices.join(', ')}`);
+    }
   }
 }
