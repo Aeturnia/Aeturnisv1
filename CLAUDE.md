@@ -1,8 +1,10 @@
-# CLAUDE.md - Project Memory
+# CLAUDE.md
 
-**IMPORTANT**: This file should ALWAYS be kept in the root folder (/home/runner/workspace/)
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
----
+## Project Overview
+
+Aeturnis Online is a production-ready MMORPG platform built with TypeScript. It features real-time multiplayer capabilities, turn-based combat with AI, character progression (AIPE - Aeturnis Infinite Progression Engine), equipment systems, economy/banking, and comprehensive game mechanics.
 
 # Frontend Integration Test Suite Debug Session
 
