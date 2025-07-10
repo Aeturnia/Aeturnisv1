@@ -47,10 +47,10 @@ export const createApp = () => {
   // Trust proxy for rate limiting and IP detection
   app.set('trust proxy', 1);
 
-  // Security middleware - Permissive CSP for development
+  // Security middleware - Permissive CSP for development and Mock/Real Service Switching
   app.use(helmet({
     crossOriginEmbedderPolicy: false,
-    contentSecurityPolicy: process.env.NODE_ENV === 'development' ? false : {
+    contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
