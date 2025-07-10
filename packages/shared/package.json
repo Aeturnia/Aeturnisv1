@@ -19,6 +19,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint \"src/**/*.ts\" --ignore-pattern \"**/*.d.ts\"",
+    "lint:ci": "eslint \"src/**/*.ts\" --ignore-pattern \"**/*.d.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --ignore-pattern \"**/*.d.ts\" --fix",
     "format": "prettier --write src/**/*.ts",
     "format:check": "prettier --check src/**/*.ts"

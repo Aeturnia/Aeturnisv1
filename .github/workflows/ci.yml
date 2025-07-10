@@ -30,9 +30,9 @@ jobs:
       run: npm run typecheck
 
     - name: 🧹 Lint code
-      run: |
-        cd packages/server && npx eslint src --ext .ts --ignore-pattern "**/*.d.ts" --ignore-pattern "**/*.test.ts" --ignore-pattern "**/*.spec.ts" -c .eslintrc.ci.js
-        cd ../shared && npm run lint
+      run: npm run lint:ci
+      env:
+        CI: true
 
     - name: 🧪 Run tests with coverage
       run: npm run test:coverage

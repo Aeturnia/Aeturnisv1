@@ -12,6 +12,7 @@
     "test": "npm run test --workspaces --if-present",
     "test:coverage": "npm run test:coverage --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
+    "lint:ci": "npm run lint:ci --workspaces --if-present",
     "typecheck": "npm run build:shared && npm run typecheck --workspaces --if-present",
     "typecheck:ci": "npm run clean:build && npm run build:shared && npm run typecheck --workspaces --if-present",
     "format": "npm run format --workspaces --if-present",

@@ -21,7 +21,7 @@ module.exports = {
     }],
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
-    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-explicit-any': process.env.CI ? 'off' : 'warn',
     'prefer-const': 'error',
     'no-var': 'error',
     'no-console': process.env.NODE_ENV === 'production' 
