@@ -42,13 +42,13 @@ export class ServerMonitor {
       });
     }, 30000);
 
-    // Health check every 10 seconds
+    // Health check every 60 seconds to reduce log noise
     this.healthInterval = setInterval(() => {
       logger.info('💚 Server heartbeat', {
         uptime: `${Math.round((performance.now() - this.startTime) / 1000)}s`,
         port: process.env.PORT || '8080',
       });
-    }, 10000);
+    }, 60000);
 
     // Process event monitoring
     this.setupProcessMonitoring();
@@ -69,14 +69,14 @@ export class ServerMonitor {
       const now = process.hrtime.bigint();
       const lag = Number(now - lastCheck) / 1000000; // Convert to ms
       
-      if (lag > 500) { // Only warn if event loop is delayed by more than 500ms
+      if (lag > 1000) { // Only warn if event loop is delayed by more than 1 second
         logger.warn('🐌 Event loop lag detected', {
           lag: `${lag}ms`,
         });
       }
       
       lastCheck = now;
-    }, 5000); // Check every 5 seconds instead of 1 second
+    }, 15000); // Check every 15 seconds to reduce monitoring overhead
   }
 
   stop() {
