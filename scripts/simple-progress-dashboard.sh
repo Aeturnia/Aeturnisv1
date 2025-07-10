@@ -75,7 +75,7 @@ echo ""
 # Quality indicators
 echo "## System Health"
 echo -n "- Server Status: "
-if curl -s http://localhost:5000/health >/dev/null 2>&1; then
+if curl -s http://localhost:8080/health >/dev/null 2>&1; then
   echo "✅ Running"
 else
   echo "❌ Down"

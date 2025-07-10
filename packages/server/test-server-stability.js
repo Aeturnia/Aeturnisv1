@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const http = require('http');
 
-console.log('🔍 Testing server stability on port 5000...\n');
+console.log('🔍 Testing server stability on port 8080...\n');
 
 let testCount = 0;
 let successCount = 0;
@@ -12,7 +12,7 @@ function checkServer() {
   
   const options = {
     hostname: 'localhost',
-    port: 5000,
+    port: 8080,
     path: '/health',
     method: 'GET',
     timeout: 5000

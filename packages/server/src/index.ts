@@ -37,7 +37,7 @@ const startServer = async () => {
     const app = createApp();
     
     // Configure server
-    const PORT = Number(process.env.PORT) || 5000;
+    const PORT = Number(process.env.PORT) || 8080;
     const HOST = '0.0.0.0';
     
     // Start server

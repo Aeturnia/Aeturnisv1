@@ -73,7 +73,7 @@ echo ""
 
 # Quality indicators
 echo "## Quality Indicators"
-echo "- Server Status: $(curl -s http://localhost:5000/health >/dev/null && echo "✅ Running" || echo "❌ Down")"
+echo "- Server Status: $(curl -s http://localhost:8080/health >/dev/null && echo "✅ Running" || echo "❌ Down")"
 echo "- Build Status: $(npm run typecheck >/dev/null 2>&1 && echo "✅ Clean" || echo "❌ Errors")"
 echo "- Test Status: $(npm test >/dev/null 2>&1 && echo "✅ Passing" || echo "❌ Failing")"
 echo ""

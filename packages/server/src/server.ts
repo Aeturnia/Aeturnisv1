@@ -9,11 +9,18 @@ import os from 'os';
 
 // Initialize environment variables
 import { config } from 'dotenv';
-config();
+import path from 'path';
 
-// Use environment PORT or default to 5000 (to match Replit workflow)
-const PORT = parseInt(process.env.PORT || '5000', 10);
+// Load .env file from the server package directory
+config({ path: path.resolve(__dirname, '../.env') });
+
+// Use environment PORT or default to 8080
+const PORT = parseInt(process.env.PORT || '8080', 10);
 const HOST = process.env.HOST || '0.0.0.0';
+
+// Debug: Log the PORT being used
+console.log(`🔍 Environment PORT: ${process.env.PORT}`);
+console.log(`🔍 Using PORT: ${PORT}`);
 
 // Initialize server monitor
 const serverMonitor = new ServerMonitor();
