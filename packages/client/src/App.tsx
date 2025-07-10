@@ -9,8 +9,7 @@ import { LoadingScreen } from './components/common/LoadingScreen'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { InstallPrompt, ShareHandler } from './components/common'
 import { MockModeIndicator } from './components/common/MockModeIndicator'
-import { DeveloperTools } from './components/debug'
-import { DevToolsToggle } from './components/debug/DevToolsToggle'
+import { SimpleDevToggle } from './components/debug/SimpleDevToggle'
 import { ServiceProvider } from './providers/ServiceProvider'
 
 // Lazy load game screens for code splitting
@@ -131,9 +130,8 @@ function App() {
             {/* Mock Mode Indicator */}
             <MockModeIndicator />
             
-            {/* Developer Tools */}
-            <DeveloperTools />
-            <DevToolsToggle />
+            {/* Simple Dev Toggle - Always visible */}
+            <SimpleDevToggle />
           </div>
         </SafeArea>
       </ServiceProvider>

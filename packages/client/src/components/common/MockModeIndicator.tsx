@@ -13,8 +13,8 @@ export function MockModeIndicator() {
     setIsMockMode(mockMode)
   }, [])
 
-  // Only show in development and when mock mode is active
-  if (import.meta.env.MODE !== 'development' || !isMockMode) return null
+  // Only show when mock mode is active
+  if (!isMockMode) return null
 
   return (
     <div className="fixed top-4 left-4 z-[9999] bg-yellow-900/90 text-yellow-100 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm border border-yellow-700/50 flex items-center gap-2 shadow-lg">

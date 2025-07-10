@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enable Mock Mode</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #6B46C1;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #553C9A;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            background: #374151;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Aeturnis Online - Development Tools</h1>
+    
+    <div class="status">
+        <h2>Current Status:</h2>
+        <p>Mock Mode: <span id="mockStatus">Checking...</span></p>
+        <p>Dev Tools: <span id="devStatus">Checking...</span></p>
+    </div>
+    
+    <div>
+        <h2>Quick Actions:</h2>
+        <button onclick="enableMocks()">Enable Mock Mode</button>
+        <button onclick="disableMocks()">Disable Mock Mode</button>
+        <button onclick="enableDevTools()">Show Dev Tools</button>
+        <button onclick="clearAll()">Clear All Settings</button>
+    </div>
+    
+    <div class="status">
+        <h2>Instructions:</h2>
+        <ol>
+            <li>Click "Enable Mock Mode" to use local mock data</li>
+            <li>Click "Show Dev Tools" to display the gear icon</li>
+            <li>Return to the main app and refresh the page</li>
+            <li>You should see a ⚙️ button in the bottom-right corner</li>
+        </ol>
+    </div>
+
+    <script>
+        function updateStatus() {
+            const mockMode = localStorage.getItem('VITE_USE_MOCKS') === 'true';
+            const devTools = localStorage.getItem('SHOW_DEV_TOOLS') === 'true';
+            
+            document.getElementById('mockStatus').textContent = mockMode ? '✅ Enabled' : '❌ Disabled';
+            document.getElementById('devStatus').textContent = devTools ? '✅ Visible' : '❌ Hidden';
+        }
+        
+        function enableMocks() {
+            localStorage.setItem('VITE_USE_MOCKS', 'true');
+            updateStatus();
+            alert('Mock mode enabled! Refresh the main app to apply changes.');
+        }
+        
+        function disableMocks() {
+            localStorage.setItem('VITE_USE_MOCKS', 'false');
+            updateStatus();
+            alert('Mock mode disabled! Refresh the main app to apply changes.');
+        }
+        
+        function enableDevTools() {
+            localStorage.setItem('SHOW_DEV_TOOLS', 'true');
+            updateStatus();
+            alert('Dev tools enabled! Refresh the main app to see the gear icon.');
+        }
+        
+        function clearAll() {
+            localStorage.clear();
+            sessionStorage.clear();
+            updateStatus();
+            alert('All settings cleared! Refresh the main app.');
+        }
+        
+        // Initial status check
+        updateStatus();
+    </script>
+</body>
+</html>
