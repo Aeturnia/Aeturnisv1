@@ -132,17 +132,13 @@ function App() {
             {/* PWA Components */}
             <InstallPrompt />
             <ShareHandler />
-            
-            {/* Mock Mode Indicator */}
-            <MockModeIndicator />
-            
-            {/* Simple Dev Toggle - Always visible */}
-            <SimpleDevToggle />
-            
-            {/* Service Tester - Development only */}
-            <ServiceTester />
             </div>
           </SafeArea>
+          
+          {/* Developer Overlay Components - Outside SafeArea to avoid container constraints */}
+          <MockModeIndicator />
+          <ServiceTester />
+          <SimpleDevToggle />
         </ServiceInitializationWrapper>
       </ServiceProvider>
     </ErrorBoundary>

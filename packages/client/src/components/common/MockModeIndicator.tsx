@@ -17,7 +17,7 @@ export function MockModeIndicator() {
   // if (!isMockMode) return null
 
   return (
-    <div className={`fixed top-4 left-4 z-[10001] px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm border flex items-center gap-2 shadow-lg ${
+    <div className={`fixed top-6 left-6 z-[10001] px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm border flex items-center gap-2 shadow-lg ${
       isMockMode 
         ? 'bg-yellow-900/90 text-yellow-100 border-yellow-700/50' 
         : 'bg-green-900/90 text-green-100 border-green-700/50'
