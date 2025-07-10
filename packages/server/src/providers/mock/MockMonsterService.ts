@@ -8,6 +8,12 @@ import { logger } from '../../utils/logger';
  * Uses in-memory data storage
  */
 export class MockMonsterService implements IMonsterService {
+  /**
+   * Get the service name (from IService)
+   */
+  getName(): string {
+    return 'MockMonsterService';
+  }
   // Mock monsters data - copied from routes
   private mockMonsters: any[] = [
     {

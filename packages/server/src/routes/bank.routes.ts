@@ -62,7 +62,13 @@ router.get('/users/:userId/shared-bank',
     try {
       const bankService = ServiceProvider.getInstance().get<IBankService>('BankService');
       // Note: Shared bank uses userId, not characterId - need to handle this
-      const bank = await bankService.getBankContents(req.params.userId, BankType.SHARED);
+      let bank;
+      if (bankService.getBankContents) {
+        bank = await bankService.getBankContents(req.params.userId, BankType.SHARED);
+      } else {
+        // Fallback to getSharedBank method
+        bank = await bankService.getSharedBank(req.params.userId);
+      }
       return res.json(bank);
     } catch (error) {
       logger.error('Failed to get shared bank', { 
@@ -94,12 +100,24 @@ router.post('/characters/:characterId/bank/items',
       
       const bankService = ServiceProvider.getInstance().get<IBankService>('BankService');
       const bankTypeEnum = bankType === 'shared' ? BankType.SHARED : BankType.PERSONAL;
-      await bankService.depositItem(
-        req.params.characterId,
-        itemId,
-        bankTypeEnum,
-        quantity
-      );
+      
+      if (bankService.depositItem) {
+        await bankService.depositItem(
+          req.params.characterId,
+          itemId.toString(),
+          bankTypeEnum,
+          quantity
+        );
+      } else {
+        // Fallback to addItemToBank method
+        await bankService.addItemToBank(
+          req.params.characterId,
+          slot,
+          itemId,
+          quantity,
+          bankType
+        );
+      }
 
       return res.json({
         success: true,
@@ -144,19 +162,37 @@ router.delete('/characters/:characterId/bank/items/:slot',
       
       const bankService = ServiceProvider.getInstance().get<IBankService>('BankService');
       const bankTypeEnum = bankType === 'shared' ? BankType.SHARED : BankType.PERSONAL;
-      const result = await bankService.withdrawItem(
-        req.params.characterId,
-        '', // TODO: Need itemId from slot
-        bankTypeEnum,
-        quantity
-      );
+      
+      let result;
+      if (bankService.withdrawItem) {
+        result = await bankService.withdrawItem(
+          req.params.characterId,
+          '', // TODO: Need itemId from slot
+          bankTypeEnum,
+          quantity
+        );
+      } else {
+        // Fallback to removeItemFromBank method
+        const removeResult = await bankService.removeItemFromBank(
+          req.params.characterId,
+          slot,
+          quantity,
+          bankType
+        );
+        result = {
+          success: true,
+          itemId: removeResult.itemId.toString(),
+          quantity: removeResult.removedQuantity,
+          message: 'Item removed from bank'
+        };
+      }
 
       return res.json({
         success: true,
         message: 'Item removed from bank',
         slot,
         itemId: result.itemId,
-        removedQuantity: result.removedQuantity
+        removedQuantity: result.quantity
       });
     } catch (error) {
       logger.error('Failed to remove item from bank', { 
@@ -195,9 +231,9 @@ router.post('/characters/:characterId/bank/transfer',
     }
 
     try {
-      const _userId = (req as any).user?.id; // From auth middleware
+      // const userId = req.user?.userId; // From auth middleware
       
-      const _bankService = ServiceProvider.getInstance().get<IBankService>('BankService');
+      // const bankService = ServiceProvider.getInstance().get<IBankService>('BankService');
       // TODO: transferItem method not in IBankService interface
       // await bankService.transferItem(
       //   req.params.characterId,
@@ -237,7 +273,7 @@ router.post('/characters/:characterId/bank/expand',
       const bankService = ServiceProvider.getInstance().get<IBankService>('BankService');
       const result = await bankService.expandBankSlots(
         req.params.characterId,
-        BankType.PERSONAL
+        req.body.slots
       );
 
       return res.json({

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { MockNPCService } from '../providers/mock/MockNPCService';
 import { logger } from '../utils/logger';
+import { NPCInteraction } from '@aeturnis/shared';
 
 // Create a singleton instance for all controller methods
 const mockNPCService = new MockNPCService();
@@ -91,7 +92,7 @@ export const getNPCInteractions = async (_req: Request, res: Response) => {
     
     // TODO: getAvailableInteractions not in INPCService interface
     // const interactions = await mockNPCService.getAvailableInteractions(npcId, characterId as string);
-    const interactions: any[] = [];
+    const interactions: NPCInteraction[] = [];
     
     return res.json({ 
       success: true, 

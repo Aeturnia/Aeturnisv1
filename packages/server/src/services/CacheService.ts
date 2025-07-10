@@ -1,5 +1,6 @@
 import { Redis } from 'ioredis';
 import { CacheConfig } from '../types/cache.types';
+import { logger } from '../utils/logger';
 
 export class CacheService {
   private redis: Redis | null = null;
@@ -22,7 +23,7 @@ export class CacheService {
         lazyConnect: true // Don't connect immediately
       });
     } else {
-      console.log('CacheService: Using in-memory cache (Redis disabled)');
+      logger.info('CacheService: Using in-memory cache (Redis disabled)');
     }
   }
 

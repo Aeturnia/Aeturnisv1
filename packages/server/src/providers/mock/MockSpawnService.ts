@@ -14,6 +14,12 @@ import { v4 as uuidv4 } from 'uuid';
  * Uses in-memory spawn management with instant spawning options
  */
 export class MockSpawnService implements ISpawnService {
+  /**
+   * Get the service name (from IService)
+   */
+  getName(): string {
+    return 'MockSpawnService';
+  }
   // Mock spawn points
   private spawnPoints: Map<string, SpawnPoint> = new Map();
   

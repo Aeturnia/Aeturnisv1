@@ -1,4 +1,5 @@
 import { DialogueNode, DialogueAction, DialogueCondition } from '@aeturnis/shared';
+import { logger } from '../utils/logger';
 
 interface DialogueTree {
   id: string;
@@ -16,7 +17,9 @@ interface DialogueRepository {
 export class DialogueService {
   private dialogueTrees: Map<string, DialogueTree> = new Map();
 
-  constructor(private dialogueRepository: DialogueRepository) {}
+  constructor(private dialogueRepository: DialogueRepository) {
+    // Repository will be used for dialogue operations
+  }
 
   /**
    * Get a complete dialogue tree
@@ -24,12 +27,22 @@ export class DialogueService {
    * @returns The dialogue tree or null if not found
    */
   async getDialogueTree(treeId: string): Promise<DialogueNode[]> {
-    // TODO: Implement dialogue tree loading
-    // 1. Load tree from database/cache
-    // 2. Parse dialogue nodes
-    // 3. Return node array
-    console.log(`Loading dialogue tree: ${treeId}`);
-    throw new Error('Not implemented');
+    // Check cache first
+    const cached = this.dialogueTrees.get(treeId);
+    if (cached) {
+      return Array.from(cached.nodes.values());
+    }
+
+    // Load from repository
+    const tree = await this.dialogueRepository.findTreeById(treeId);
+    if (!tree) {
+      logger.debug(`Dialogue tree not found: ${treeId}`);
+      return [];
+    }
+
+    // Cache for future use
+    this.dialogueTrees.set(treeId, tree);
+    return Array.from(tree.nodes.values());
   }
 
   /**
@@ -43,7 +56,7 @@ export class DialogueService {
     // 1. Load dialogue tree
     // 2. Find specific node
     // 3. Return node data
-    console.log(`Getting dialogue node: ${nodeId} from tree: ${treeId}`);
+    logger.debug(`Getting dialogue node: ${nodeId} from tree: ${treeId}`);
     throw new Error('Not implemented');
   }
 
@@ -66,7 +79,7 @@ export class DialogueService {
     // 2. Check choice conditions
     // 3. Execute choice actions
     // 4. Return next node
-    console.log(`Processing dialogue choice: tree=${treeId}, node=${nodeId}, choice=${choiceId}, character=${characterId}`);
+    logger.debug(`Processing dialogue choice: tree=${treeId}, node=${nodeId}, choice=${choiceId}, character=${characterId}`);
     throw new Error('Not implemented');
   }
 
@@ -76,7 +89,8 @@ export class DialogueService {
    * @param characterId The character ID
    * @returns Whether all conditions are satisfied
    */
-  async checkConditions(conditions: DialogueCondition[], characterId: string): Promise<boolean> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async checkConditions(_conditions: DialogueCondition[], _characterId: string): Promise<boolean> {
     // TODO: Implement condition checking
     // 1. Iterate through conditions
     // 2. Check each condition type
@@ -90,7 +104,8 @@ export class DialogueService {
    * @param characterId The character ID
    * @param npcId The NPC ID
    */
-  async executeActions(actions: DialogueAction[], characterId: string, npcId: string): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async executeActions(_actions: DialogueAction[], _characterId: string, _npcId: string): Promise<void> {
     // TODO: Implement action execution
     // 1. Iterate through actions
     // 2. Execute each action based on type
@@ -104,7 +119,8 @@ export class DialogueService {
    * @param npcId The NPC ID
    * @param state The dialogue state to save
    */
-  async saveDialogueState(characterId: string, npcId: string, state: Record<string, unknown>): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async saveDialogueState(_characterId: string, _npcId: string, _state: Record<string, unknown>): Promise<void> {
     // TODO: Implement state saving
     // 1. Validate state data
     // 2. Save to database
@@ -118,7 +134,8 @@ export class DialogueService {
    * @param npcId The NPC ID
    * @returns The saved dialogue state
    */
-  async getDialogueState(characterId: string, npcId: string): Promise<Record<string, unknown>> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async getDialogueState(_characterId: string, _npcId: string): Promise<Record<string, unknown>> {
     // TODO: Implement state retrieval
     // 1. Query database for saved state
     // 2. Return state data or empty object

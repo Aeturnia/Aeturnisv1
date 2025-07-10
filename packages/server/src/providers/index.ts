@@ -3,10 +3,13 @@
  * Central location for all provider-related exports
  */
 
+import { logger } from '../utils/logger';
+
 // Core provider
 export { ServiceProvider, globalServices } from './ServiceProvider';
 
 // Interfaces
+export { IService } from './interfaces/IService';
 export { IMonsterService } from './interfaces/IMonsterService';
 export { INPCService } from './interfaces/INPCService';
 export { IDeathService } from './interfaces/IDeathService';
@@ -54,24 +57,24 @@ export async function initializeProviders(useMocks: boolean): Promise<void> {
 
   // Load all mock services
   if (useMocks) {
-    console.log('Loading all mock services...');
+    logger.info('Loading all mock services...');
   
   const { MockMonsterService } = await import('./mock/MockMonsterService');
   const { MockNPCService } = await import('./mock/MockNPCService');
   const { MockDeathService } = await import('./mock/MockDeathService');
   
     // Add remaining services incrementally
-    console.log('Loading MockLootService...');
+    logger.info('Loading MockLootService...');
     const { MockLootService } = await import('./mock/MockLootService');
-    console.log('Loading MockCombatService...');
+    logger.info('Loading MockCombatService...');
     const { MockCombatService } = await import('./mock/MockCombatService');
-    console.log('Loading MockBankService...');
+    logger.info('Loading MockBankService...');
     const { MockBankService } = await import('./mock/MockBankService');
-    console.log('Loading MockCurrencyService...');
+    logger.info('Loading MockCurrencyService...');
     const { MockCurrencyService } = await import('./mock/MockCurrencyService');
-    console.log('Loading MockDialogueService...');
+    logger.info('Loading MockDialogueService...');
     const { MockDialogueService } = await import('./mock/MockDialogueService');
-    console.log('Loading MockSpawnService...');
+    logger.info('Loading MockSpawnService...');
     const { MockSpawnService } = await import('./mock/MockSpawnService');
     
     // Register all services incrementally with error handling
@@ -81,104 +84,104 @@ export async function initializeProviders(useMocks: boolean): Promise<void> {
   
   // Try registering additional services with error handling
   try {
-    console.log('Registering MockLootService...');
+    logger.info('Registering MockLootService...');
     provider.register('LootService', new MockLootService());
-    console.log('✅ LootService registered');
+    logger.info('✅ LootService registered');
   } catch (error) {
-    console.error('❌ Failed to register LootService:', error);
+    logger.error('❌ Failed to register LootService:', error);
   }
   
   try {
-    console.log('Registering MockCombatService...');
+    logger.info('Registering MockCombatService...');
     provider.register('CombatService', new MockCombatService());
-    console.log('✅ CombatService registered');
+    logger.info('✅ CombatService registered');
   } catch (error) {
-    console.error('❌ Failed to register CombatService:', error);
+    logger.error('❌ Failed to register CombatService:', error);
   }
   
   try {
-    console.log('Registering MockBankService...');
+    logger.info('Registering MockBankService...');
     provider.register('BankService', new MockBankService());
-    console.log('✅ BankService registered');
+    logger.info('✅ BankService registered');
   } catch (error) {
-    console.error('❌ Failed to register BankService:', error);
+    logger.error('❌ Failed to register BankService:', error);
   }
   
   try {
-    console.log('Registering MockCurrencyService...');
+    logger.info('Registering MockCurrencyService...');
     provider.register('CurrencyService', new MockCurrencyService());
-    console.log('✅ CurrencyService registered');
+    logger.info('✅ CurrencyService registered');
   } catch (error) {
-    console.error('❌ Failed to register CurrencyService:', error);
+    logger.error('❌ Failed to register CurrencyService:', error);
   }
   
   try {
-    console.log('Registering MockDialogueService...');
+    logger.info('Registering MockDialogueService...');
     provider.register('DialogueService', new MockDialogueService());
-    console.log('✅ DialogueService registered');
+    logger.info('✅ DialogueService registered');
   } catch (error) {
-    console.error('❌ Failed to register DialogueService:', error);
+    logger.error('❌ Failed to register DialogueService:', error);
   }
   
   try {
-    console.log('Registering MockSpawnService...');
+    logger.info('Registering MockSpawnService...');
     provider.register('SpawnService', new MockSpawnService());
-    console.log('✅ SpawnService registered');
+    logger.info('✅ SpawnService registered');
   } catch (error) {
-    console.error('❌ Failed to register SpawnService:', error);
+    logger.error('❌ Failed to register SpawnService:', error);
   }
 
   // Register World & Movement System services (Step 2.7)
   try {
-    console.log('Registering MockZoneService...');
+    logger.info('Registering MockZoneService...');
     const { MockZoneService } = await import('../services/mock/MockZoneService');
     provider.register('ZoneService', new MockZoneService());
-    console.log('✅ ZoneService registered');
+    logger.info('✅ ZoneService registered');
   } catch (error) {
-    console.error('❌ Failed to register ZoneService:', error);
+    logger.error('❌ Failed to register ZoneService:', error);
   }
 
   try {
-    console.log('Registering MockMovementService...');
+    logger.info('Registering MockMovementService...');
     const { MockMovementService } = await import('../services/mock/MockMovementService');
     provider.register('MovementService', new MockMovementService());
-    console.log('✅ MovementService registered');
+    logger.info('✅ MovementService registered');
   } catch (error) {
-    console.error('❌ Failed to register MovementService:', error);
+    logger.error('❌ Failed to register MovementService:', error);
   }
 
   try {
-    console.log('Registering MockProgressionService...');
+    logger.info('Registering MockProgressionService...');
     const { MockProgressionService } = await import('../services/mock/MockProgressionService');
     provider.register('ProgressionService', new MockProgressionService());
-    console.log('✅ ProgressionService registered');
+    logger.info('✅ ProgressionService registered');
   } catch (error) {
-    console.error('❌ Failed to register ProgressionService:', error);
+    logger.error('❌ Failed to register ProgressionService:', error);
   }
 
   // Register Tutorial & Affinity System services (Step 2.8)
   try {
-    console.log('Registering MockTutorialService...');
+    logger.info('Registering MockTutorialService...');
     const { MockTutorialService } = await import('../services/mock/MockTutorialService');
     provider.register('TutorialService', new MockTutorialService());
-    console.log('✅ TutorialService registered');
+    logger.info('✅ TutorialService registered');
   } catch (error) {
-    console.error('❌ Failed to register TutorialService:', error);
+    logger.error('❌ Failed to register TutorialService:', error);
   }
 
   try {
-    console.log('Registering MockAffinityService...');
+    logger.info('Registering MockAffinityService...');
     const { MockAffinityService } = await import('../services/mock/MockAffinityService');
     provider.register('AffinityService', new MockAffinityService());
-    console.log('✅ AffinityService registered');
+    logger.info('✅ AffinityService registered');
   } catch (error) {
-    console.error('❌ Failed to register AffinityService:', error);
+    logger.error('❌ Failed to register AffinityService:', error);
   }
   
     const registeredServices = provider.getRegisteredServices();
-    console.log(`Service Provider initialized with ${registeredServices.length} MOCK services: ${registeredServices.join(', ')}`);
+    logger.info(`Service Provider initialized with ${registeredServices.length} MOCK services: ${registeredServices.join(', ')}`);
   } else {
     // Load real services when not using mocks
-    console.log('Loading real services (not implemented yet)...');
+    logger.info('Loading real services (not implemented yet)...');
   }
 }

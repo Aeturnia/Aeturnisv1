@@ -1,0 +1,25 @@
+{
+  "id": "TYPE-J-004",
+  "type": "J",
+  "subtype": "004",
+  "name": "Test File Unused Variables",
+  "description": "Remove or properly use unused variables in test files",
+  "assignedTo": "Test Cleanup Specialist",
+  "status": "completed",
+  "startedAt": "2025-07-09T22:00:00Z",
+  "completedAt": "2025-07-09T22:10:00Z",
+  "files": [],
+  "errors": {
+    "baseline": {
+      "TS6133": 0,
+      "TS6138": 0,
+      "no-unused-vars": 0
+    },
+    "final": {
+      "TS6133": 0,
+      "TS6138": 0,
+      "no-unused-vars": 0
+    }
+  },
+  "notes": "No unused variables found in test files"
+}

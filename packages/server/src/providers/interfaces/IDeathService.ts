@@ -8,6 +8,7 @@ import {
   DeathReason,
   ReviveType
 } from '../../types/death';
+import { IService } from './IService';
 
 // Re-export types for convenience
 export { 
@@ -24,7 +25,7 @@ export {
  * Interface for Death-related operations
  * Handles character death, respawning, and penalties
  */
-export interface IDeathService {
+export interface IDeathService extends IService {
   /**
    * Process character death with penalties and event logging
    * @param characterId - The character who died

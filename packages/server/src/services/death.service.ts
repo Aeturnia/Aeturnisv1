@@ -1,5 +1,6 @@
 import { DeathRepository } from '../repositories/death.repository';
 import { CacheService } from './CacheService';
+import { logger } from '../utils/logger';
 import { 
   IDeathEvent, 
   IDeathRequest, 
@@ -12,7 +13,6 @@ import {
   ReviveType
 } from '../types/death';
 import { ValidationError, ConflictError, NotFoundError } from '../utils/errors';
-import { logger } from '../utils/logger';
 
 export class DeathService {
   private static readonly RESPAWN_COOLDOWN_MS = 30000; // 30 seconds
@@ -183,7 +183,7 @@ export class DeathService {
    */
   private async calculateDeathPenalties(characterId: string): Promise<IPenaltyBreakdown> {
     // TODO: Get character level and experience from character repository
-    console.log(`Calculating death penalties for character: ${characterId}`);
+    logger.debug(`Calculating death penalties for character: ${characterId}`);
     const mockExperience = 5000; // Mock data for now
     const mockGold = 1000; // Mock data for now
     

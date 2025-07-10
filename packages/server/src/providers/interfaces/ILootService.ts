@@ -5,6 +5,7 @@ import {
   ILootClaimRequest, 
   ILootClaimResponse 
 } from '../../types/loot';
+import { IService } from './IService';
 
 // Re-export types that are used by the interface
 export { ILootDrop, IDropModifierInput, ILootClaimRequest, ILootClaimResponse };
@@ -91,7 +92,7 @@ export interface LootHistoryEntry {
  * Interface for Loot-related operations
  * Handles loot generation, distribution, and claiming
  */
-export interface ILootService {
+export interface ILootService extends IService {
   /**
    * Calculate and generate loot drops from a loot table
    * @param lootTableName - Name of the loot table

@@ -1,4 +1,5 @@
 import { DialogueNode, DialogueChoice, DialogueAction, DialogueCondition } from '@aeturnis/shared';
+import { IService } from './IService';
 
 /**
  * Active dialogue session
@@ -60,7 +61,7 @@ export interface ActionResult {
  * Interface for Dialogue-related operations
  * Handles NPC conversations and dialogue trees
  */
-export interface IDialogueService {
+export interface IDialogueService extends IService {
   /**
    * Start a dialogue session with an NPC
    * @param npcId - The NPC to talk to

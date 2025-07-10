@@ -162,7 +162,7 @@ const playerCooldowns = new Map<string, number>();
  * Anti-spam cooldown for combat actions (3 seconds)
  */
 export const combatActionCooldown = (req: Request, res: Response, next: NextFunction): void => {
-  const userId = (req as any).user?.userId;
+  const userId = req.user?.userId;
   
   if (!userId) {
     res.status(401).json({

@@ -1,11 +1,12 @@
 import { MonsterType, SpawnPoint, Position3D } from '@aeturnis/shared';
 import { Monster } from '../../types/monster.types';
+import { IService } from './IService';
 
 /**
  * Interface for Monster-related operations
  * This interface defines the contract that both mock and real implementations must follow
  */
-export interface IMonsterService {
+export interface IMonsterService extends IService {
   /**
    * Get all monsters in a specific zone
    * @param zoneIdOrName - Zone UUID or zone name

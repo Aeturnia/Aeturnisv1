@@ -8,6 +8,7 @@ import {
   CharacterCombatStats,
   ResourcePool
 } from '../interfaces/ICombatService';
+import { CombatError } from '../../types/combat.types';
 import { CombatService } from '../../services/CombatService';
 import { logger } from '../../utils/logger';
 
@@ -30,19 +31,9 @@ export class RealCombatService implements ICombatService {
     return this.combatService.startCombat(initiatorId, request);
   }
 
-  async processAction(action: CombatAction): Promise<CombatResult> {
-    logger.info(`RealCombatService: Processing action ${action.type}`);
-    
-    // For the new interface, we need to find the session ID and user ID
-    // In a real implementation, this would be tracked properly
-    // For now, we'll return an error response
-    return {
-      sessionId: 'unknown',
-      action,
-      actorId: 'unknown',
-      message: 'RealCombatService: Session tracking not implemented. Use MockCombatService for testing.',
-      combatStatus: 'ended'
-    };
+  async processAction(sessionId: string, actorId: string, action: CombatAction): Promise<CombatResult | CombatError> {
+    logger.info(`RealCombatService: Processing action ${action.type} for session ${sessionId}`);
+    return this.combatService.processAction(sessionId, actorId, action);
   }
 
   async getSession(sessionId: string): Promise<CombatSession | null> {
@@ -78,7 +69,20 @@ export class RealCombatService implements ICombatService {
       timestamp: Date.now()
     };
     
-    return this.processAction(fleeAction);
+    const result = await this.processAction(sessionId, userId, fleeAction);
+    
+    // If it's a CombatError, convert it to a CombatResult
+    if ('error' in result) {
+      return {
+        sessionId,
+        action: fleeAction,
+        actorId: userId,
+        message: result.error,
+        combatStatus: 'active'
+      };
+    }
+    
+    return result;
   }
 
   async getCharacterStats(charId: string): Promise<CharacterCombatStats> {
@@ -156,11 +160,4 @@ export class RealCombatService implements ICombatService {
 
   // Legacy interface methods (optional) - not implemented in real service
   // These would only be implemented if needed for backward compatibility
-  
-  // Helper method to get all active sessions
-  private async getAllActiveSessions(): Promise<CombatSession[]> {
-    // In real implementation, this would query the database
-    // For now, we'll use the service's internal method if available
-    return [];
-  }
 }

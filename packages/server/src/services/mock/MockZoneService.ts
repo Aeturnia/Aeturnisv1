@@ -7,6 +7,12 @@ import { Zone, ZoneListResponse, ZoneDetailsResponse, CharacterPosition } from '
 import { logger } from '../../utils/logger';
 
 export class MockZoneService {
+  /**
+   * Get the service name (from IService)
+   */
+  getName(): string {
+    return 'MockZoneService';
+  }
   private zones: Map<string, Zone> = new Map();
   private characterPositions: Map<string, CharacterPosition> = new Map();
 

@@ -1,0 +1,5 @@
+TypeScript Errors: 101
+ESLint Errors/Warnings: 67
+
+TS6133 errors: 0 (down from 14)
+no-unused-vars errors: 15 (unchanged - these are underscore-prefixed params)

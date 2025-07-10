@@ -13,6 +13,12 @@ import { logger } from '../../utils/logger';
  * Uses in-memory data storage
  */
 export class MockDeathService implements IDeathService {
+  /**
+   * Get the service name (from IService)
+   */
+  getName(): string {
+    return 'MockDeathService';
+  }
   // Mock death records: characterId -> death status
   private deathRecords: Map<string, IDeathStatus> = new Map();
   

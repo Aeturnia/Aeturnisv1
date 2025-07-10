@@ -15,6 +15,12 @@ import { v4 as uuidv4 } from 'uuid';
  * Uses in-memory dialogue trees and sessions
  */
 export class MockDialogueService implements IDialogueService {
+  /**
+   * Get the service name (from IService)
+   */
+  getName(): string {
+    return 'MockDialogueService';
+  }
   // Active dialogue sessions
   private sessions: Map<string, DialogueSession> = new Map();
   

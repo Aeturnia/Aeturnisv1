@@ -4,6 +4,28 @@ import { ILootClaimRequest, IDropModifierInput } from '../types/loot';
 import { ValidationError, NotFoundError } from '../utils/errors';
 import { logger } from '../utils/logger';
 
+// Mock loot table structure
+interface MockLootTable {
+  tableId: string;
+  name: string;
+  enemyType: string;
+  levelRange: [number, number];
+  dropRates: {
+    common: number;
+    uncommon: number;
+    rare: number;
+    epic: number;
+    legendary: number;
+  };
+  items: Array<{
+    name: string;
+    rarity: string;
+    dropChance: number;
+  }>;
+  goldRange: { min: number; max: number };
+  experienceBase: number;
+}
+
 /**
  * Claim loot from combat session
  * POST /api/v1/loot/combat/:sessionId/claim
@@ -389,7 +411,7 @@ export const getLootTable = async (req: Request, res: Response): Promise<Respons
     const { tableId } = req.params;
     
     // Mock different loot tables based on tableId
-    const mockLootTables: Record<string, any> = {
+    const mockLootTables: Record<string, MockLootTable> = {
       'basic_monster_loot': {
         tableId: 'basic_monster_loot',
         name: 'Basic Monster Loot Table',

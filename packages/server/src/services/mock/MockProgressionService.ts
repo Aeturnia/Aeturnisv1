@@ -16,6 +16,12 @@ import {
 import { logger } from '../../utils/logger';
 
 export class MockProgressionService {
+  /**
+   * Get the service name (from IService)
+   */
+  getName(): string {
+    return 'MockProgressionService';
+  }
   private characterProgressions: Map<string, CharacterProgression> = new Map();
   private experienceHistory: ExperienceGain[] = [];
   private statHistory: StatAllocation[] = [];

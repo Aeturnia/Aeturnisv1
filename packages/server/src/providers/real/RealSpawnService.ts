@@ -6,8 +6,8 @@ import {
   SpawnEvent 
 } from '../interfaces/ISpawnService';
 import { SpawnPoint, Monster } from '@aeturnis/shared';
-import { SpawnService } from '../../services/SpawnService';
-// SpawnPointRepository not implemented yet
+// SpawnService not fully integrated yet - using MonsterService directly
+// import { SpawnService } from '../../services/SpawnService';
 // import { SpawnPointRepository } from '../../repositories/spawnPoint.repository';
 import { MonsterService } from '../../services/MonsterService';
 
@@ -16,20 +16,11 @@ import { MonsterService } from '../../services/MonsterService';
  * Implements ISpawnService interface and delegates to actual SpawnService
  */
 export class RealSpawnService implements ISpawnService {
-  private spawnService: SpawnService;
   private monsterService: MonsterService;
 
   constructor() {
-    // SpawnPointRepository not implemented yet
-    const spawnPointRepository = {
-      findById: async () => null,
-      findByZone: async () => [],
-      findActive: async () => []
-    };
-    const monsterService = {
-      spawnMonster: async () => {}
-    };
-    this.spawnService = new SpawnService(spawnPointRepository, monsterService);
+    // SpawnService and SpawnPointRepository not fully implemented yet
+    // For now, we'll use MonsterService directly
     this.monsterService = new MonsterService();
   }
 

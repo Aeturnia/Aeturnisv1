@@ -1,7 +1,7 @@
 import { db } from '../database/config';
 import { characters, respawnPoints } from '../database/schema';
 import { eq, and, sql } from 'drizzle-orm';
-import { IDeathEvent, IRespawnPoint } from '../types/death';
+import { IDeathEvent, IRespawnPoint, IRespawnRestrictions } from '../types/death';
 import { NotFoundError } from '../utils/errors';
 
 export class DeathRepository {
@@ -123,7 +123,7 @@ export class DeathRepository {
       y: point.y,
       isGraveyard: point.isGraveyard,
       name: point.name,
-      restrictions: point.restrictions as any,
+      restrictions: point.restrictions as IRespawnRestrictions,
     }));
   }
 
@@ -154,7 +154,7 @@ export class DeathRepository {
       y: point.y,
       isGraveyard: point.isGraveyard,
       name: point.name,
-      restrictions: point.restrictions as any,
+      restrictions: point.restrictions as IRespawnRestrictions,
     };
   }
 

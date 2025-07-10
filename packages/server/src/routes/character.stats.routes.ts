@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { CharacterService } from '../services/CharacterService';
 import { StatsService } from '../services/StatsService';
 import { authenticate as authenticateToken } from '../middleware/auth';
+import { asyncHandler } from '../middleware/asyncHandler';
 import { 
   validateStatModification, 
   statModificationRateLimit, 
@@ -18,10 +19,10 @@ const characterService = new CharacterService();
  */
 router.get('/:id/stats', 
   authenticateToken,
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     try {
       const characterId = req.params.id;
-      const userId = (req as any).user.id;
+      const userId = req.user?.userId;
       
       const character = await characterService.getCharacter(characterId);
       if (!character || character.accountId !== userId) {
@@ -67,7 +68,7 @@ router.get('/:id/stats',
       console.error('Error fetching character stats:', error);
       return res.status(500).json({ error: 'Failed to fetch character stats' });
     }
-  }
+  })
 );
 
 /**
@@ -76,11 +77,11 @@ router.get('/:id/stats',
  */
 router.get('/:id/stats/breakdown/:stat',
   authenticateToken,
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     try {
       const characterId = req.params.id;
       const statName = req.params.stat as keyof import('../types/character.types').BaseStats;
-      const userId = (req as any).user.id;
+      const userId = req.user?.userId;
       
       const character = await characterService.getCharacter(characterId);
       if (!character || character.accountId !== userId) {
@@ -97,7 +98,7 @@ router.get('/:id/stats/breakdown/:stat',
       console.error('Error in stat breakdown:', error);
       return res.status(500).json({ error: 'Failed to get stat breakdown' });
     }
-  });
+  }));
 
 /**
  * POST /api/v1/characters/:id/stats/update
@@ -109,10 +110,10 @@ router.post('/:id/stats/update',
   preventStatRecursion,
   validateStatModification,
   auditStatModification,
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     try {
       const characterId = req.params.id;
-      const userId = (req as any).user.id;
+      const userId = req.user?.userId;
       const statUpdates = (req as any).validatedStats;
       
       const character = await characterService.getCharacter(characterId);
@@ -147,7 +148,7 @@ router.post('/:id/stats/update',
       console.error('Error updating character stats:', error);
       return res.status(500).json({ error: 'Failed to update character stats' });
     }
-  }
+  })
 );
 
 /**
@@ -159,10 +160,10 @@ router.post('/:id/paragon/redistribute',
   statModificationRateLimit,
   preventStatRecursion,
   auditStatModification,
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     try {
       const characterId = req.params.id;
-      const userId = (req as any).user.id;
+      const userId = req.user?.userId;
       const { paragonDistribution } = req.body;
       
       if (!paragonDistribution || typeof paragonDistribution !== 'object') {
@@ -200,7 +201,7 @@ router.post('/:id/paragon/redistribute',
         message: error instanceof Error ? error.message : 'Unknown error'
       });
     }
-  }
+  })
 );
 
 /**
@@ -212,10 +213,10 @@ router.post('/:id/prestige',
   statModificationRateLimit,
   preventStatRecursion,
   auditStatModification,
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     try {
       const characterId = req.params.id;
-      const userId = (req as any).user.id;
+      const userId = req.user?.userId;
       
       const character = await characterService.getCharacter(characterId);
       if (!character || character.accountId !== userId) {
@@ -251,7 +252,7 @@ router.post('/:id/prestige',
         message: error instanceof Error ? error.message : 'Unknown error'
       });
     }
-  }
+  })
 );
 
 export default router;

@@ -1,0 +1,117 @@
+
+> @aeturnis/monorepo@1.0.0 typecheck
+> npm run typecheck --workspaces --if-present
+
+
+> @aeturnis/server@1.0.0 typecheck
+> tsc --noEmit
+
+src/app.ts(175,24): error TS6133: 'req' is declared but its value is never read.
+src/controllers/tutorial.controller.ts(82,63): error TS2551: Property 'stepIndex' does not exist on type 'UpdateTutorialProgressRequest'. Did you mean 'stepId'?
+src/middleware/statSecurity.middleware.ts(55,7): error TS2352: Conversion of type '{ [key: string]: unknown; id: string; level: number; statPoints: number; }' to type 'Character' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ [key: string]: unknown; id: string; level: number; statPoints: number; }' is missing the following properties from type 'Character': accountId, name, experience, race, and 38 more.
+src/providers/index.ts(79,41): error TS2559: Type 'MockMonsterService' has no properties in common with type 'IService'.
+src/providers/index.ts(80,37): error TS2559: Type 'MockNPCService' has no properties in common with type 'IService'.
+src/providers/index.ts(81,39): error TS2559: Type 'MockDeathService' has no properties in common with type 'IService'.
+src/providers/index.ts(86,38): error TS2559: Type 'MockLootService' has no properties in common with type 'IService'.
+src/providers/index.ts(94,40): error TS2559: Type 'MockCombatService' has no properties in common with type 'IService'.
+src/providers/index.ts(102,38): error TS2559: Type 'MockBankService' has no properties in common with type 'IService'.
+src/providers/index.ts(110,42): error TS2559: Type 'MockCurrencyService' has no properties in common with type 'IService'.
+src/providers/index.ts(118,42): error TS2559: Type 'MockDialogueService' has no properties in common with type 'IService'.
+src/providers/index.ts(126,39): error TS2559: Type 'MockSpawnService' has no properties in common with type 'IService'.
+src/providers/index.ts(136,38): error TS2559: Type 'MockZoneService' has no properties in common with type 'IService'.
+src/providers/index.ts(145,42): error TS2559: Type 'MockMovementService' has no properties in common with type 'IService'.
+src/providers/index.ts(154,45): error TS2559: Type 'MockProgressionService' has no properties in common with type 'IService'.
+src/providers/index.ts(164,42): error TS2559: Type 'MockTutorialService' has no properties in common with type 'IService'.
+src/providers/index.ts(173,42): error TS2559: Type 'MockAffinityService' has no properties in common with type 'IService'.
+src/providers/mock/MockCombatService.ts(622,45): error TS2552: Cannot find name 'sessionId'. Did you mean '_sessionId'?
+src/providers/mock/MockCombatService.ts(622,56): error TS2304: Cannot find name 'participantId'.
+src/routes/character.stats.routes.ts(111,3): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: StatModificationRequest, res: Response, next: NextFunction) => void' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+      Type '(req: StatModificationRequest, res: Response, next: NextFunction) => void' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+        Types of parameters 'req' and 'req' are incompatible.
+          Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'StatModificationRequest'.
+            Types of property 'validatedStats' are incompatible.
+              Type 'Record<string, unknown> | undefined' is not assignable to type 'Record<string, number> | undefined'.
+                Type 'Record<string, unknown>' is not assignable to type 'Record<string, number>'.
+                  'string' index signatures are incompatible.
+                    Type 'unknown' is not assignable to type 'number'.
+src/routes/character.stats.routes.ts(124,80): error TS2345: Argument of type 'Record<string, unknown> | undefined' is not assignable to parameter of type 'Record<string, number>'.
+  Type 'undefined' is not assignable to type 'Record<string, number>'.
+src/routes/character.stats.routes.ts(162,3): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: StatModificationRequest, res: Response, next: NextFunction) => void' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+      Type '(req: StatModificationRequest, res: Response, next: NextFunction) => void' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+        Types of parameters 'req' and 'req' are incompatible.
+          Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'StatModificationRequest'.
+            Types of property 'validatedStats' are incompatible.
+              Type 'Record<string, unknown> | undefined' is not assignable to type 'Record<string, number> | undefined'.
+                Type 'Record<string, unknown>' is not assignable to type 'Record<string, number>'.
+                  'string' index signatures are incompatible.
+                    Type 'unknown' is not assignable to type 'number'.
+src/routes/character.stats.routes.ts(215,3): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: StatModificationRequest, res: Response, next: NextFunction) => void' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+      Type '(req: StatModificationRequest, res: Response, next: NextFunction) => void' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+        Types of parameters 'req' and 'req' are incompatible.
+          Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'StatModificationRequest'.
+            Types of property 'validatedStats' are incompatible.
+              Type 'Record<string, unknown> | undefined' is not assignable to type 'Record<string, number> | undefined'.
+                Type 'Record<string, unknown>' is not assignable to type 'Record<string, number>'.
+                  'string' index signatures are incompatible.
+                    Type 'unknown' is not assignable to type 'number'.
+src/services/CharacterService.ts(98,7): error TS2322: Type 'DerivedStats' is not assignable to type 'Record<string, number>'.
+  Index signature for type 'string' is missing in type 'DerivedStats'.
+src/services/CharacterService.ts(215,7): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ baseStrength?: number | undefined; baseDexterity?: number | undefined; baseIntelligence?: number | undefined; baseWisdom?: number | undefined; baseConstitution?: number | undefined; ... 6 more ...; charismaTier?: number | undefined; }'.
+  No index signature with a parameter of type 'string' was found on type '{ baseStrength?: number | undefined; baseDexterity?: number | undefined; baseIntelligence?: number | undefined; baseWisdom?: number | undefined; baseConstitution?: number | undefined; ... 6 more ...; charismaTier?: number | undefined; }'.
+src/services/DialogueService.ts(19,23): error TS6138: Property 'dialogueRepository' is declared but its value is never read.
+src/services/DialogueService.ts(79,25): error TS6133: 'conditions' is declared but its value is never read.
+src/services/DialogueService.ts(79,58): error TS6133: 'characterId' is declared but its value is never read.
+src/services/DialogueService.ts(93,24): error TS6133: 'actions' is declared but its value is never read.
+src/services/DialogueService.ts(93,51): error TS6133: 'characterId' is declared but its value is never read.
+src/services/DialogueService.ts(93,72): error TS6133: 'npcId' is declared but its value is never read.
+src/services/DialogueService.ts(107,27): error TS6133: 'characterId' is declared but its value is never read.
+src/services/DialogueService.ts(107,48): error TS6133: 'npcId' is declared but its value is never read.
+src/services/DialogueService.ts(107,63): error TS6133: 'state' is declared but its value is never read.
+src/services/DialogueService.ts(121,26): error TS6133: 'characterId' is declared but its value is never read.
+src/services/DialogueService.ts(121,47): error TS6133: 'npcId' is declared but its value is never read.
+src/services/EquipmentService.ts(15,3): error TS6196: 'InventoryItemWithDetails' is declared but never used.
+src/services/EquipmentService.ts(16,3): error TS6196: 'EquipmentItemWithDetails' is declared but never used.
+src/services/EquipmentService.ts(23,42): error TS6133: 'ConflictError' is declared but its value is never read.
+src/services/EquipmentService.ts(41,25): error TS2345: Argument of type '{}' is not assignable to parameter of type 'string'.
+src/services/EquipmentService.ts(203,25): error TS2345: Argument of type '{}' is not assignable to parameter of type 'string'.
+src/services/EquipmentService.ts(313,11): error TS2739: Type '{ strength: number; dexterity: number; intelligence: number; wisdom: number; constitution: number; charisma: number; health: number; mana: number; stamina: number; damage: number; defense: number; critical_chance: number; critical_damage: number; attack_speed: number; movement_speed: number; }' is missing the following properties from type 'Record<StatType, number>': min_damage, max_damage
+src/services/EquipmentService.ts(378,11): error TS2740: Type '{}' is missing the following properties from type 'Record<StatType, number>': strength, dexterity, intelligence, wisdom, and 13 more.
+src/services/EquipmentService.ts(387,7): error TS2322: Type '{ setId: number; setName: string | undefined; equippedPieces: number; totalPieces: number; activeBonuses: { requiredPieces: number; bonusStats: Record<string, number>; active: boolean; }[]; }[]' is not assignable to type 'ActiveSetInfo[]'.
+  Type '{ setId: number; setName: string | undefined; equippedPieces: number; totalPieces: number; activeBonuses: { requiredPieces: number; bonusStats: Record<string, number>; active: boolean; }[]; }' is not assignable to type 'ActiveSetInfo'.
+    Types of property 'setName' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+src/services/EquipmentService.ts(395,11): error TS2740: Type '{}' is missing the following properties from type 'Record<StatType, number>': strength, dexterity, intelligence, wisdom, and 13 more.
+src/services/EquipmentService.ts(413,5): error TS2322: Type '{ stats: ItemStat[]; setInfo: { setId: any; setName: string | undefined; totalPieces: number; } | undefined; id: number; name: string; description?: string | undefined; itemType: ItemType; ... 12 more ...; updatedAt: Date; }[]' is not assignable to type 'ItemWithStats[]'.
+  Type '{ stats: ItemStat[]; setInfo: { setId: any; setName: string | undefined; totalPieces: number; } | undefined; id: number; name: string; description?: string; itemType: ItemType; ... 12 more ...; updatedAt: Date; }' is not assignable to type 'ItemWithStats'.
+    Types of property 'setInfo' are incompatible.
+      Type '{ setId: any; setName: string | undefined; totalPieces: number; } | undefined' is not assignable to type '{ setId: number; setName: string; totalPieces: number; } | undefined'.
+        Type '{ setId: any; setName: string | undefined; totalPieces: number; }' is not assignable to type '{ setId: number; setName: string; totalPieces: number; }'.
+          Types of property 'setName' are incompatible.
+            Type 'string | undefined' is not assignable to type 'string'.
+              Type 'undefined' is not assignable to type 'string'.
+src/services/EquipmentService.ts(423,30): error TS2339: Property 'setId' does not exist on type 'ItemSetInfo'.
+src/services/MonsterService.ts(162,7): error TS2741: Property 'respawnTime' is missing in type '{ id: string; name: string; createdAt: Date; updatedAt: Date; metadata: Record<string, unknown> | null; currentHp: number; maxHp: number; position: { x: number; y: number; z: number; }; ... 8 more ...; killedAt: Date | null; }' but required in type '{ id: string; monsterTypeId: string; zoneId: string; name: string; position: { x: number; y: number; z: number; }; currentHp: number; maxHp: number; state: string; aggroRadius: number; aggroList: string[]; ... 5 more ...; respawnTime: Date | null; }'.
+src/services/MonsterService.ts(219,7): error TS2741: Property 'respawnTime' is missing in type '{ id: string; monsterTypeId: string; zoneId: string; name: string; position: { x: number; y: number; z: number; }; currentHp: number; maxHp: number; state: string; aggroRadius: number; aggroList: string[]; ... 6 more ...; isDeleted: boolean; }' but required in type '{ id: string; monsterTypeId: string; zoneId: string; name: string; position: { x: number; y: number; z: number; }; currentHp: number; maxHp: number; state: string; aggroRadius: number; aggroList: string[]; ... 5 more ...; respawnTime: Date | null; }'.
+src/services/NPCService.ts(114,13): error TS6133: 'initialDialogue' is declared but its value is never read.
+src/services/NPCService.ts(114,45): error TS2339: Property 'root' does not exist on type '{}'.
+src/services/NPCService.ts(222,26): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{}'.
+  No index signature with a parameter of type 'string' was found on type '{}'.
+src/services/NPCService.ts(253,7): error TS2741: Property 'choices' is missing in type '{ dialogue: any; }' but required in type '{ dialogue: DialogueNode; choices: DialogueChoice[]; }'.
+src/services/NPCService.ts(417,21): error TS2339: Property 'includes' does not exist on type '{}'.
+src/services/NPCService.ts(417,51): error TS2339: Property 'includes' does not exist on type '{}'.
+src/services/ResourceService.ts(89,7): error TS2322: Type 'string' is not assignable to type '"item" | "combat" | "regen" | "skill" | "rest"'.
+src/services/SpawnService.ts(23,13): error TS6138: Property 'spawnPointRepository' is declared but its value is never read.
+src/services/SpawnService.ts(24,13): error TS6138: Property 'monsterService' is declared but its value is never read.
+src/services/SpawnService.ts(121,20): error TS6133: 'spawnPointId' is declared but its value is never read.
+
+> @aeturnis/shared@1.0.0 typecheck
+> tsc --noEmit
+

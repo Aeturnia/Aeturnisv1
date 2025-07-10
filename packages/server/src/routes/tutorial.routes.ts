@@ -6,6 +6,7 @@
 import { Router } from 'express';
 import { TutorialController } from '../controllers/tutorial.controller';
 import rateLimit from 'express-rate-limit';
+import { asyncHandler } from '../middleware/asyncHandler';
 
 const router = Router();
 const tutorialController = new TutorialController();
@@ -40,14 +41,14 @@ router.use(tutorialRateLimit);
  * @desc Test tutorial service functionality
  * @access Public
  */
-router.get('/test', tutorialController.testTutorialService.bind(tutorialController));
+router.get('/test', asyncHandler(tutorialController.testTutorialService.bind(tutorialController)));
 
 /**
  * @route GET /api/v1/tutorial/zone
  * @desc Get tutorial zone information
  * @access Public
  */
-router.get('/zone', tutorialController.getTutorialZone.bind(tutorialController));
+router.get('/zone', asyncHandler(tutorialController.getTutorialZone.bind(tutorialController)));
 
 /**
  * @route GET /api/v1/tutorial/status/:characterId
@@ -55,14 +56,14 @@ router.get('/zone', tutorialController.getTutorialZone.bind(tutorialController))
  * @access Public
  * @param {string} characterId - Character identifier
  */
-router.get('/status/:characterId', tutorialController.getTutorialStatus.bind(tutorialController));
+router.get('/status/:characterId', asyncHandler(tutorialController.getTutorialStatus.bind(tutorialController)));
 
 /**
  * @route GET /api/v1/tutorial/quests
  * @desc Get all tutorial quests
  * @access Public
  */
-router.get('/quests', tutorialController.getAllQuests.bind(tutorialController));
+router.get('/quests', asyncHandler(tutorialController.getAllQuests.bind(tutorialController)));
 
 /**
  * @route POST /api/v1/tutorial/progress
@@ -70,7 +71,7 @@ router.get('/quests', tutorialController.getAllQuests.bind(tutorialController));
  * @access Public
  * @body {UpdateTutorialProgressRequest} progress data
  */
-router.post('/progress', progressRateLimit, tutorialController.updateProgress.bind(tutorialController));
+router.post('/progress', progressRateLimit, asyncHandler(tutorialController.updateProgress.bind(tutorialController)));
 
 /**
  * @route GET /api/v1/tutorial/guidance/:characterId
@@ -78,7 +79,7 @@ router.post('/progress', progressRateLimit, tutorialController.updateProgress.bi
  * @access Public
  * @param {string} characterId - Character identifier
  */
-router.get('/guidance/:characterId', tutorialController.getGuidance.bind(tutorialController));
+router.get('/guidance/:characterId', asyncHandler(tutorialController.getGuidance.bind(tutorialController)));
 
 /**
  * @route GET /api/v1/tutorial/help
@@ -87,6 +88,6 @@ router.get('/guidance/:characterId', tutorialController.getGuidance.bind(tutoria
  * @query {string} context - Help context
  * @query {string} category - Help category
  */
-router.get('/help', tutorialController.getHelp.bind(tutorialController));
+router.get('/help', asyncHandler(tutorialController.getHelp.bind(tutorialController)));
 
 export { router as tutorialRoutes };

@@ -1,7 +1,8 @@
 import { logger } from '../utils/logger';
+import { IService } from './interfaces/IService';
 
 // Global service registry - exported for direct access
-export const globalServices = new Map<string, any>();
+export const globalServices = new Map<string, IService>();
 
 /**
  * Service Provider Registry
@@ -18,7 +19,7 @@ export class ServiceProvider {
   /**
    * Register a service with the provider
    */
-  static register<T>(name: string, service: T): void {
+  static register<T extends IService>(name: string, service: T): void {
     globalServices.set(name, service);
     logger.info(`Service registered: ${name} (total: ${globalServices.size})`);
   }
@@ -73,7 +74,7 @@ export class ServiceProvider {
   }
 
   // Instance methods for backward compatibility
-  register<T>(name: string, service: T): void {
+  register<T extends IService>(name: string, service: T): void {
     ServiceProvider.register(name, service);
   }
 

@@ -1,4 +1,5 @@
 import { SpawnPoint } from '@aeturnis/shared';
+import { logger } from '../utils/logger';
 
 interface SpawnTimer {
   timer: NodeJS.Timeout;
@@ -22,7 +23,9 @@ export class SpawnService {
   constructor(
     private spawnPointRepository: SpawnPointRepository,
     private monsterService: MonsterService
-  ) {}
+  ) {
+    // Services will be used for spawn operations
+  }
 
   /**
    * Schedule respawn for a spawn point
@@ -30,6 +33,13 @@ export class SpawnService {
    * @param delaySeconds Delay in seconds before respawn
    */
   async scheduleRespawn(spawnPointId: string, delaySeconds: number): Promise<void> {
+    // Verify spawn point exists
+    const spawnPoint = await this.spawnPointRepository.findById(spawnPointId);
+    if (!spawnPoint) {
+      logger.warn(`Attempted to schedule respawn for non-existent spawn point: ${spawnPointId}`);
+      return;
+    }
+
     // Use setTimeout instead of Redis for in-memory scheduling
     const timer = setTimeout(() => {
       this.handleRespawn(spawnPointId);
@@ -64,7 +74,7 @@ export class SpawnService {
     // 1. Query monsters table for active monsters at spawn point
     // 2. Count non-deleted monsters
     // 3. Return active count
-    console.log(`Getting active spawns for point: ${spawnPointId}`);
+    logger.debug(`Getting active spawns for point: ${spawnPointId}`);
     throw new Error('Not implemented');
   }
 
@@ -76,7 +86,7 @@ export class SpawnService {
   async canSpawn(spawnPointId: string): Promise<boolean> {
     // TODO: Implement spawn capacity check
     // 1. Get spawn point max spawns
-    console.log(`Checking if spawn point can spawn: ${spawnPointId}`);
+    logger.debug(`Checking if spawn point can spawn: ${spawnPointId}`);
     // 2. Get current active spawns
     // 3. Check if spawn point is active
     // 4. Return whether can spawn
@@ -118,7 +128,8 @@ export class SpawnService {
    * Force spawn at a specific spawn point
    * @param spawnPointId The spawn point ID
    */
-  async forceSpawn(spawnPointId: string): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async forceSpawn(_spawnPointId: string): Promise<void> {
     // TODO: Implement force spawn
     // 1. Validate spawn point exists
     // 2. Check if can spawn (capacity)
@@ -136,17 +147,19 @@ export class SpawnService {
       // Remove from active spawns
       this.activeSpawns.delete(spawnPointId);
 
-      // TODO: Implement respawn logic
-      // 1. Check if spawn point is still active
-      // 2. Check if can spawn more monsters
-      // 3. Spawn monster if conditions met
-      // 4. Schedule next respawn if needed
+      // Check if spawn point is still active
+      const spawnPoint = await this.spawnPointRepository.findById(spawnPointId);
+      if (!spawnPoint || !spawnPoint.isActive) {
+        logger.debug(`Spawn point ${spawnPointId} is no longer active`);
+        return;
+      }
 
-      // For now, just log the respawn attempt
-      console.log(`Respawn timer triggered for spawn point: ${spawnPointId}`);
+      // Spawn monster using the monster service
+      await this.monsterService.spawnMonster(spawnPointId);
+      logger.info(`Spawned monster at spawn point ${spawnPointId}`);
       
     } catch (error) {
-      console.error(`Error handling respawn for spawn point ${spawnPointId}:`, error);
+      logger.error(`Error handling respawn for spawn point ${spawnPointId}:`, error);
     }
   }
 

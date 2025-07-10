@@ -20,6 +20,12 @@ import { v4 as uuidv4 } from 'uuid';
  * Uses in-memory storage for bank data
  */
 export class MockBankService implements IBankService {
+  /**
+   * Get the service name (from IService)
+   */
+  getName(): string {
+    return 'MockBankService';
+  }
   // Mock bank storage: characterId -> bankType -> contents
   private banks: Map<string, Map<BankType, BankContents>> = new Map();
   

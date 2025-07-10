@@ -17,7 +17,7 @@ export class BankService {
     const cached = await this.cacheService.get<PersonalBank>(cacheKey);
     
     if (cached) {
-      return JSON.parse(cached);
+      return cached;
     }
 
     // Get character bank info
@@ -230,7 +230,7 @@ export class BankService {
         throw new Error(`Cannot exceed maximum of ${this.MAX_SLOTS} bank slots`);
       }
 
-      const totalCost = this.SLOT_COST * BigInt(additionalSlots);
+      const totalCost = BigInt(this.SLOT_COST) * BigInt(additionalSlots);
       
       if (character.gold < totalCost) {
         throw new Error('Insufficient gold for bank expansion');
@@ -333,14 +333,29 @@ export class BankService {
     });
   }
 
-  private formatBankSlots(rawSlots: Array<{ slot: number; itemId: string | null; quantity: number | null; lastAccessedBy: string | null; updatedAt: Date }>): BankSlot[] {
+  private formatBankSlots(rawSlots: Array<{ 
+    slot: number; 
+    itemId: number | null; 
+    quantity: number; 
+    id?: string;
+    characterId?: string;
+    userId?: string;
+    lastAccessedBy?: string | null;
+    createdAt?: Date;
+    updatedAt?: Date;
+  }>): BankSlot[] {
     return rawSlots.map(slot => ({
       slot: slot.slot,
-      itemId: slot.itemId,
+      itemId: slot.itemId !== null ? slot.itemId : undefined,
       quantity: slot.quantity,
     }));
   }
 }
 
 // Export singleton instance
-export const bankService = new BankService();
+const cacheService = new CacheService({
+  host: process.env.REDIS_HOST || 'localhost',
+  port: parseInt(process.env.REDIS_PORT || '6379'),
+  password: process.env.REDIS_PASSWORD
+});
+export const bankService = new BankService(cacheService);

@@ -26,6 +26,12 @@ import { v4 as uuidv4 } from 'uuid';
  * Uses predictable combat mechanics for testing
  */
 export class MockCombatService implements ICombatService {
+  /**
+   * Get the service name (from IService)
+   */
+  getName(): string {
+    return 'MockCombatService';
+  }
   // Active combat sessions
   private combatSessions: Map<string, CombatSession> = new Map();
   
@@ -233,25 +239,22 @@ export class MockCombatService implements ICombatService {
     return session;
   }
 
-  async processAction(action: CombatAction): Promise<CombatResult> {
-    logger.info(`MockCombatService: Processing action - type: ${action.type}`);
+  async processAction(sessionId: string, actorId: string, action: CombatAction): Promise<CombatResult> {
+    logger.info(`MockCombatService: Processing action - session: ${sessionId}, actor: ${actorId}, type: ${action.type}`);
     
-    // Find session from participants
-    const sessions = Array.from(this.combatSessions.values()).filter(s => s.status === 'active');
-    const session = sessions[0]; // Use first active session for mock
+    const session = this.combatSessions.get(sessionId);
     
     if (!session) {
       return {
-        sessionId: 'mock',
+        sessionId,
         action,
-        actorId: 'unknown',
-        message: 'No active combat session',
+        actorId,
+        message: 'Combat session not found',
         combatStatus: 'ended'
       };
     }
     
-    // Get current actor
-    const actorId = session.turnOrder[session.currentTurn % session.turnOrder.length];
+    // Get actor
     const actor = session.participants.find(p => p.charId === actorId);
     
     if (!actor) {
@@ -611,7 +614,7 @@ export class MockCombatService implements ICombatService {
     return session;
   }
 
-  async processCombatAction?(_sessionId: string, action: LegacyCombatAction): Promise<LegacyCombatResult> {
+  async processCombatAction?(sessionId: string, action: LegacyCombatAction): Promise<LegacyCombatResult> {
     // Convert to new action format and process
     const newAction: CombatAction = {
       type: action.type as any,
@@ -622,7 +625,19 @@ export class MockCombatService implements ICombatService {
       timestamp: Date.now()
     };
     
-    const result = await this.processAction(newAction);
+    // Need to determine the actor ID - for legacy compatibility, use the first participant
+    const session = await this.getSession(sessionId);
+    if (!session || session.participants.length === 0) {
+      return {
+        success: false,
+        message: 'Session not found or no participants',
+        combatEnded: true
+      };
+    }
+    
+    // Use the first participant as the actor for legacy compatibility
+    const actorId = session.participants[0].charId;
+    const result = await this.processAction(sessionId, actorId, newAction);
     
     // Convert back to legacy format
     return {

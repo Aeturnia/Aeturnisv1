@@ -14,13 +14,35 @@ module.exports = {
   },
   plugins: ['@typescript-eslint'],
   rules: {
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-unused-vars': ['error', { 
+      argsIgnorePattern: '^_',
+      varsIgnorePattern: '^_',
+      caughtErrorsIgnorePattern: '^_'
+    }],
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'warn',
     'prefer-const': 'error',
     'no-var': 'error',
-    'no-console': 'warn',
+    'no-console': process.env.NODE_ENV === 'production' 
+      ? ['error', { allow: ['warn', 'error'] }]
+      : ['warn', { allow: ['warn', 'error', 'info'] }],
   },
-  ignorePatterns: ['dist/', 'node_modules/'],
+  overrides: [
+    {
+      // Allow console in server startup and provider initialization
+      files: ['**/server.ts', '**/providers/**/*.ts'],
+      rules: {
+        'no-console': 'off'
+      }
+    },
+    {
+      // Stricter rules for services
+      files: ['**/services/**/*.ts'],
+      rules: {
+        'no-console': ['error', { allow: ['error'] }]
+      }
+    }
+  ],
+  ignorePatterns: ['dist/', 'node_modules/', '**/*.d.ts', 'src/types/express.d.ts'],
 };

@@ -1,10 +1,11 @@
 import { NPC, NPCInteraction } from '@aeturnis/shared';
+import { IService } from './IService';
 
 /**
  * Interface for NPC-related operations
  * This interface defines the contract that both mock and real implementations must follow
  */
-export interface INPCService {
+export interface INPCService extends IService {
   /**
    * Get all NPCs in a specific zone
    * @param zoneIdOrName - Zone UUID or zone name

@@ -3,7 +3,7 @@ import { CacheService } from './CacheService';
 import { db } from '../database/config';
 import { npcs, npcInteractions, zones } from '../database/schema';
 import { eq, and } from 'drizzle-orm';
-import { NPC, NPCInteraction, NPCType } from '@aeturnis/shared';
+import { NPC, NPCInteraction, NPCType, DialogueNode, DialogueChoice } from '@aeturnis/shared';
 
 export class NPCService {
   private cache: CacheService;
@@ -109,24 +109,25 @@ export class NPCService {
         .returning();
 
       // Get initial dialogue from NPC's metadata
-      const metadata = npc[0].metadata as Record<string, unknown>;
-      const dialogueTree = metadata?.dialogueTree;
-      const initialDialogue = dialogueTree?.root || {
-        nodeId: 'greeting',
-        text: `Hello! I'm ${npc[0].displayName}. How can I help you?`,
-        choices: [
-          {
-            id: 'services',
-            text: 'What services do you offer?',
-            nextNodeId: 'services'
-          },
-          {
-            id: 'goodbye',
-            text: 'Farewell',
-            nextNodeId: 'end'
-          }
-        ]
-      };
+      // TODO: Use initial dialogue from metadata when implementing dialogue state
+      // const metadata = npc[0].metadata as Record<string, unknown>;
+      // const dialogueTree = metadata?.dialogueTree;
+      // const initialDialogue = dialogueTree?.root || {
+      //   nodeId: 'greeting',
+      //   text: `Hello! I'm ${npc[0].displayName}. How can I help you?`,
+      //   choices: [
+      //     {
+      //       id: 'services',
+      //       text: 'What services do you offer?',
+      //       nextNodeId: 'services'
+      //     },
+      //     {
+      //       id: 'goodbye',
+      //       text: 'Farewell',
+      //       nextNodeId: 'end'
+      //     }
+      //   ]
+      // };
 
       logger.info(`Interaction started successfully: ${result[0].id}`);
       
@@ -150,7 +151,7 @@ export class NPCService {
   /**
    * Advance dialogue with an NPC
    */
-  async advanceDialogue(npcId: string, characterId: string, choiceId: string): Promise<{ dialogue: any; choices: any[] }> {
+  async advanceDialogue(npcId: string, characterId: string, choiceId: string): Promise<{ dialogue: DialogueNode; choices: DialogueChoice[] }> {
     try {
       logger.info(`Advancing dialogue for character ${characterId} and NPC ${npcId} with choice: ${choiceId}`);
       
@@ -219,7 +220,7 @@ export class NPCService {
           break;
         default:
           // Try to find in dialogue tree
-          nextDialogue = dialogueTree?.[choiceId] || {
+          nextDialogue = (dialogueTree as any)?.[choiceId] || {
             nodeId: 'default',
             text: 'I\'m not sure what you mean.',
             choices: [
@@ -251,7 +252,13 @@ export class NPCService {
 
       logger.info(`Dialogue advanced successfully for character ${characterId} and NPC ${npcId}`);
       return {
-        dialogue: nextDialogue
+        dialogue: {
+          id: nextDialogue.nodeId,
+          text: nextDialogue.text,
+          choices: nextDialogue.choices,
+          actions: nextDialogue.actions
+        },
+        choices: nextDialogue.choices || []
       };
     } catch (error) {
       logger.error(`Error advancing dialogue for character ${characterId} and NPC ${npcId}:`, error);
@@ -414,7 +421,7 @@ export class NPCService {
       // Verify NPC is a merchant
       const metadata = npc[0].metadata as Record<string, unknown>;
       const services = metadata?.services || [];
-      if (!services.includes('shop') && !services.includes('trade')) {
+      if (!Array.isArray(services) || (!services.includes('shop') && !services.includes('trade'))) {
         throw new Error(`NPC ${npcId} is not a merchant`);
       }
 

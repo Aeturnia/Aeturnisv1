@@ -427,7 +427,7 @@ router.get(
  * GET /api/v1/equipment/test
  * Test endpoint for equipment system
  */
-router.get('/test', asyncHandler(async (req, res) => {
+router.get('/test', asyncHandler(async (_req, res) => {
   res.json({
     success: true,
     message: 'Equipment system is operational',
