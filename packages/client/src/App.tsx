@@ -22,8 +22,8 @@ const SettingsScreen = lazy(() => import('./components/game/SettingsScreen').the
 
 // Service configuration
 const serviceConfig = {
-  apiBaseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3000',
-  wsUrl: import.meta.env.VITE_WS_URL || 'ws://localhost:3000',
+  apiBaseUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  wsUrl: import.meta.env.VITE_WS_URL || 'ws://localhost:5000',
   timeout: 30000,
   useMockServices: import.meta.env.VITE_USE_MOCKS === 'true',
   mockConfig: {
@@ -57,11 +57,15 @@ function App() {
     // Simple app initialization - services will be initialized by ServiceProvider
     const initializeApp = async () => {
       try {
+        console.log('Initializing Aeturnis Online app...')
+        console.log('Service config:', serviceConfig)
+        
         // Brief delay for smooth loading transition
-        await new Promise(resolve => setTimeout(resolve, 500))
+        await new Promise(resolve => setTimeout(resolve, 100))
         
         setIsAppReady(true)
         setIsLoading(false)
+        console.log('App initialized successfully!')
       } catch (error) {
         console.error('App initialization failed:', error)
         setIsLoading(false)
