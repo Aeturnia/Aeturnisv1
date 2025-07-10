@@ -242,20 +242,38 @@
     </div>
 
     <script>
+      // Debug: Verify JavaScript is loading
+      console.log('✅ Mock/Real Service Switching System JavaScript loaded');
+      
       // Mock/Real Service Switching System Functions
       function toggleDevPanel() {
+        console.log('🔧 toggleDevPanel() called');
         const panel = document.getElementById('dev-panel');
-        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        if (panel) {
+          panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+          console.log('🔧 Developer panel toggled:', panel.style.display);
+        } else {
+          console.error('❌ dev-panel element not found');
+        }
       }
       
       function toggleServiceTester() {
+        console.log('🧪 toggleServiceTester() called');
         const tester = document.getElementById('service-tester');
-        tester.style.display = tester.style.display === 'none' ? 'block' : 'none';
+        if (tester) {
+          tester.style.display = tester.style.display === 'none' ? 'block' : 'none';
+          console.log('🧪 Service tester toggled:', tester.style.display);
+        } else {
+          console.error('❌ service-tester element not found');
+        }
       }
       
       function toggleMockMode() {
+        console.log('🎭 toggleMockMode() called');
         const currentMode = localStorage.getItem('VITE_USE_MOCKS') === 'true';
+        console.log('🎭 Current mode:', currentMode ? 'Mock' : 'Real');
         localStorage.setItem('VITE_USE_MOCKS', (!currentMode).toString());
+        console.log('🎭 Switching to:', !currentMode ? 'Mock' : 'Real');
         window.location.reload();
       }
       
@@ -276,6 +294,7 @@
       }
       
       function testAllServices() {
+        console.log('🧪 testAllServices() called');
         console.log('Testing Mock/Real Service Switching System services...');
         logAction('🧪 Testing all services...');
         
@@ -294,6 +313,7 @@
       
       // Game Interface Functions
       function loadCharacterData() {
+        console.log('👤 loadCharacterData() called');
         const mockMode = localStorage.getItem('VITE_USE_MOCKS') === 'true';
         logAction('🔄 Loading character data...');
         
@@ -313,6 +333,7 @@
       }
       
       function loadInventoryData() {
+        console.log('🎒 loadInventoryData() called');
         const mockMode = localStorage.getItem('VITE_USE_MOCKS') === 'true';
         logAction('🔄 Loading inventory data...');
         
@@ -330,6 +351,7 @@
       }
       
       function startCombat() {
+        console.log('⚔️ startCombat() called');
         logAction('⚔️ Initiating combat sequence...');
         logAction('🎯 Finding suitable opponents...');
         logAction('💀 Goblin Warrior appeared!');
