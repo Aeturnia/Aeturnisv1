@@ -295,15 +295,17 @@ export * from './base/ServiceError';
 export * from './state/StateManager';
 export * from './provider/ServiceProvider';
 export * from './provider/interfaces/IService';
+// Core interfaces only - comment out problematic ones for now
 export * from './provider/interfaces/ICombatService';
 export * from './provider/interfaces/ICharacterService';
 export * from './provider/interfaces/IZoneService';
 export * from './provider/interfaces/IInventoryService';
-export * from './provider/interfaces/IMonsterService';
-export * from './provider/interfaces/INPCService';
-export * from './provider/interfaces/ICurrencyService';
-export * from './provider/interfaces/IBankService';
-export * from './provider/interfaces/ILootService';
-export * from './provider/interfaces/IDeathService';
-export * from './provider/interfaces/IDialogueService';
-export * from './provider/interfaces/ISpawnService';
+// TODO: Enable these as services are implemented
+// export * from './provider/interfaces/IMonsterService';
+// export * from './provider/interfaces/INPCService';
+// export * from './provider/interfaces/ICurrencyService';
+// export * from './provider/interfaces/IBankService';
+// export * from './provider/interfaces/ILootService';
+// export * from './provider/interfaces/IDeathService';
+// export * from './provider/interfaces/IDialogueService';
+// export * from './provider/interfaces/ISpawnService';

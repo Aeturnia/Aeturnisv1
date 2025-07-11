@@ -1,4 +1,5 @@
-import { IService, ServiceRegistry } from '../core/ServiceRegistry';
+import { ServiceRegistry } from '../core/ServiceRegistry';
+import { IService } from './interfaces/IService';
 
 export class ServiceProvider {
   private static instance: ServiceProvider;
