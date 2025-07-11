@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { onCLS, onFCP, onLCP, onTTFB, onINP, Metric } from 'web-vitals'
+import { CLIENT_VERSION, getClientVersionBanner } from './config/version'
 import App from './App.tsx'
 import './index.css'
 
@@ -41,6 +42,17 @@ onFCP(sendToAnalytics)  // First Contentful Paint
 onLCP(sendToAnalytics)  // Largest Contentful Paint
 onTTFB(sendToAnalytics) // Time to First Byte
 onINP(sendToAnalytics)  // Interaction to Next Paint (replaced FID)
+
+// Display client version information
+console.log(`
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                       ${getClientVersionBanner().padEnd(46)} ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║ Build Date:    ${CLIENT_VERSION.buildDate.padEnd(58)} ║
+║ Features:      ${CLIENT_VERSION.features.length.toString().padEnd(58)} ║
+║ Environment:   ${(import.meta.env.MODE || 'development').toUpperCase().padEnd(58)} ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+`)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

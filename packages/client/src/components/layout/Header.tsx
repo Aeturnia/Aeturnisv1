@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useTouch } from '../../hooks/useTouch'
 import { useIsMobile } from '../../utils/responsive'
+import { getClientVersionString } from '../../config/version'
 
 interface HeaderProps {
   showBackButton?: boolean
@@ -90,10 +91,15 @@ export function Header({
         <div className="flex items-center space-x-2">
           {rightActions}
           
-          {/* Connection status indicator */}
-          <div className="flex items-center space-x-1">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-xs text-dark-400">Online</span>
+          {/* Version and connection status */}
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-dark-400 font-mono">
+              {getClientVersionString()}
+            </span>
+            <div className="flex items-center space-x-1">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-xs text-dark-400">Online</span>
+            </div>
           </div>
         </div>
       </div>
