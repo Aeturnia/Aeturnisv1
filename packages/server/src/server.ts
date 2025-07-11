@@ -6,6 +6,7 @@ import { logger } from './utils/logger';
 import { initializeProviders } from './providers';
 import { ServerMonitor } from './utils/server-monitor';
 import { RestartDebugger } from './utils/restart-debugger';
+import { SERVER_VERSION, getVersionString, getFullVersionInfo } from './config/version';
 import os from 'os';
 
 // Initialize environment variables
@@ -218,6 +219,7 @@ function displayStartupBanner() {
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                              AETURNIS ONLINE                                 ║
 ║                          TypeScript MMORPG Backend                           ║
+║                          ${getFullVersionInfo().padEnd(42)} ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
 ║ Server Status: OPERATIONAL                                                   ║
 ║ Environment:   ${(process.env.NODE_ENV || 'development').toUpperCase().padEnd(8)} │ Port: ${PORT.toString().padEnd(4)} │ Host: ${HOST.padEnd(9)} ║
