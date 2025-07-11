@@ -131,6 +131,82 @@ const mockCharacter = { // Hardcoded data
 - Create a service factory for conditional mock/real instantiation
 
 This explains why the UI shows static data - it's not connected to the service layer we built.
+
+---
+
+# Working SOP Guidelines v1.0
+**Date**: 2025-07-11
+**Purpose**: Efficient implementation strategy for Claude Code + Replit Agent collaboration
+
+## Current System State
+
+### ✅ What's Working
+1. **Backend Services**: Fully operational on port 8080
+   - Real API endpoints active
+   - Database connected (PostgreSQL)
+   - WebSocket server on port 3001
+   - Authentication with JWT tokens
+   - 14 real database services (NO MOCK SERVICES)
+
+2. **Frontend Integration**: 
+   - Service hooks connected to real APIs
+   - State management with automatic updates
+   - WebSocket integration for real-time features
+   - Basic authentication flow
+
+3. **Development Environment**:
+   - Stable port configuration (8080)
+   - Server monitoring and restart debugging
+   - Health check endpoint responsive
+
+### ❌ Missing Features
+1. Mock/real service switching (VITE_USE_MOCKS defined but not implemented)
+2. Quick Action Toolbar (core gameplay feature)
+3. Dynamic Equipment Stats (shows hardcoded values)
+4. Error handling and retry logic in UI
+5. Offline mode UI feedback
+6. UI preference persistence
+7. Combat screen full integration
+8. Mobile HUD improvements
+
+## Division of Labor
+
+### Claude Code Responsibilities
+- **Architecture & Design**: System design, data models, API structure
+- **Complex Business Logic**: Calculations, game mechanics, algorithms
+- **Database Operations**: Schema changes, migrations, queries
+- **Service Layer**: API endpoints, service implementations
+- **Type Safety**: Interfaces, type definitions, contracts
+- **Security**: Authentication, authorization, data validation
+- **Performance**: Optimization, caching strategies
+- **Error Handling**: Retry logic, fallback mechanisms
+
+### Replit Agent Responsibilities
+- **UI Components**: Creating and styling React components
+- **Simple CRUD**: Basic data operations
+- **File Organization**: Imports, exports, folder structure
+- **Visual Design**: CSS, layouts, responsive design
+- **Testing**: Running tests, fixing simple failures
+- **Package Management**: npm installs, dependency updates
+- **Basic Refactoring**: Renaming, moving files
+- **UI State**: Local component state, form handling
+
+## Priority Implementation Order
+
+### Immediate (High Impact, Low Effort)
+1. **Quick Action Toolbar**
+   - Replit: UI components (5-8 slots, drag-drop)
+   - Claude: Cooldown system, action binding
+
+2. **Dynamic Equipment Stats**
+   - Claude: Calculate real stats from items
+   - Claude: Update stat display logic
+
+3. **Error Handling Layer**
+   - Claude: Service-level retry logic
+   - Replit: User-friendly error UI
+
+See Working_SOP_Guidelinesv1.md for complete implementation strategy.
 ```
 
 # Step 3.2 Feature Audit Findings
