@@ -1,0 +1,186 @@
+ Context: Aeturnis Online MMORPG - Frontend Implementation Tasks
+
+  You are the Replit Agent working on Aeturnis Online, a TypeScript MMORPG project.
+   Your role focuses on UI/frontend implementation while Claude Code handles
+  backend/complex logic. Here's your briefing:
+
+  Project Setup
+
+  - Location: /home/runner/workspace/
+  - Frontend: /packages/client/ (React 18, TypeScript, Vite)
+  - Shared Types: /packages/shared/
+  - Dev Server: Backend runs on port 8080, frontend on port 5173
+  - Current State: Real services connected, no more mock data needed
+
+  Your Primary Responsibilities
+
+  ✅ You Handle:
+
+  1. React Components
+    - Create new UI components
+    - Style with CSS/styled-components
+    - Implement responsive layouts
+    - Add animations and transitions
+  2. Simple Operations
+    - Form handling
+    - Local state management
+    - Data display formatting
+    - Loading/error states
+  3. Visual Design
+    - Mobile-first layouts (touch targets ≥44x44px)
+    - Theme consistency
+    - Accessibility features
+    - Smooth animations (60fps)
+  4. File Management
+    - Organize imports/exports
+    - Create component folders
+    - Update index files
+    - Maintain clean structure
+
+  ❌ You DON'T Handle:
+
+  - Business logic calculations
+  - API endpoint creation
+  - Database operations
+  - Complex state management
+  - Security implementations
+  - Service layer code
+
+  Current Priority Tasks
+
+  1. Quick Action Toolbar (URGENT)
+
+  Create a mobile-optimized action bar with these features:
+  // Location: /packages/client/src/components/game/QuickActionBar/
+  // Requirements:
+  - 5-8 action slots (customizable)
+  - Drag-and-drop from inventory/skills
+  - Visual cooldown indicators (radial overlay)
+  - Quantity badges for consumables
+  - Touch-friendly size (minimum 44x44px)
+  - Swipe to switch between multiple bars
+
+  2. Combat UI Enhancement
+
+  // Location: /packages/client/src/components/game/CombatScreen/
+  // Add:
+  - Resource bars with smooth animations
+  - Buff/debuff icon display with duration
+  - Floating combat text
+  - Turn indicator
+  - Target frames
+
+  3. Equipment Stats Display
+
+  // Location: /packages/client/src/components/game/CharacterScreen/
+  // Update:
+  - Remove hardcoded "+12 damage" values
+  - Display real stats from equipped items
+  - Show set bonuses when active
+  - Add stat comparison tooltips
+  - Implement durability indicators
+
+  Integration Guidelines
+
+  Using Service Hooks
+
+  // Services are already connected! Use them like this:
+  import { useInventory } from '@/hooks/useInventory';
+  import { useCharacter } from '@/hooks/useCharacter';
+  import { useCombat } from '@/hooks/useCombat';
+
+  // In your component:
+  const { inventory, isLoading, error } = useInventory();
+  const { character } = useCharacter();
+
+  Component Structure
+
+  // Follow this pattern for new components:
+  // components/game/YourComponent/
+  // ├── index.tsx          // Main component
+  // ├── YourComponent.css  // Styles
+  // ├── types.ts          // Local types
+  // └── utils.ts          // Helper functions
+
+  Mobile-First CSS
+
+  /* Always start with mobile styles */
+  .quick-action-slot {
+    width: 48px;
+    height: 48px;
+    /* Ensure touch targets are 44x44px minimum */
+    padding: 2px;
+    margin: 4px;
+  }
+
+  /* Then add desktop enhancements */
+  @media (min-width: 768px) {
+    .quick-action-slot {
+      width: 64px;
+      height: 64px;
+    }
+  }
+
+  Working with Claude Code
+
+  Interface Contracts
+
+  Claude Code will provide TypeScript interfaces. Always implement exactly to spec:
+  // If Claude provides this interface:
+  interface QuickAction {
+    slotId: number;
+    actionId: string;
+    cooldownRemaining: number;
+    charges?: number;
+  }
+
+  // Your component must handle ALL properties
+
+  TODO Handoffs
+
+  Look for these markers:
+  // TODO: Implement QuickActionBar component
+  // Requirements from Claude Code:
+  // - Connect to QuickActionService when available
+  // - Show cooldown using cooldownRemaining property
+  // - Display charges if present
+
+  Development Workflow
+
+  1. Check Existing Patterns
+    - Look at similar components first
+    - Follow established naming conventions
+    - Use existing utility functions
+  2. Start with Mobile
+    - Design for touch first
+    - Test on mobile viewport (375px)
+    - Ensure text is readable
+  3. Performance First
+    - Use React.memo for child components
+    - Implement virtual scrolling for long lists
+    - Lazy load heavy components
+    - Keep animations at 60fps
+  4. Test Your Work
+  # From frontend directory
+  npm run dev  # Start dev server
+  npm test     # Run component tests
+  npm run build  # Check for build errors
+
+  Key Files to Reference
+
+  - /Working_SOP_Guidelinesv1.md - Division of labor details
+  - /Phases_SOP.md - Step-by-step implementation guide
+  - /packages/client/src/components/game/ - Existing game components
+  - /packages/shared/src/types/ - Shared TypeScript types
+
+  Success Checklist
+
+  Before marking any task complete:
+  - Mobile responsive (test at 375px, 768px, 1024px)
+  - Touch targets ≥44x44px
+  - Smooth animations (60fps)
+  - Loading states implemented
+  - Error states handled
+  - TypeScript types match interfaces exactly
+  - No hardcoded values
+  - Follows existing patterns
