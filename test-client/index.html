@@ -3,8 +3,37 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Aeturnis Online - Testing Environment</title>
+    
+    <!-- Mobile-first viewport configuration -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Aeturnis Online">
+    <meta name="theme-color" content="#00bcd4">
+    
+    <!-- PWA manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/src/main.tsx" as="script">
+    
+    <title>Aeturnis Online - Mobile MMORPG</title>
+    
+    <!-- Prevent zoom on form inputs -->
+    <style>
+      input, textarea, select {
+        font-size: 16px !important;
+      }
+      
+      /* CSS custom properties for safe areas */
+      :root {
+        --safe-area-inset-top: env(safe-area-inset-top);
+        --safe-area-inset-right: env(safe-area-inset-right);
+        --safe-area-inset-bottom: env(safe-area-inset-bottom);
+        --safe-area-inset-left: env(safe-area-inset-left);
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

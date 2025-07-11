@@ -182,6 +182,48 @@ export async function initializeProviders(useMocks: boolean): Promise<void> {
     logger.info(`Service Provider initialized with ${registeredServices.length} MOCK services: ${registeredServices.join(', ')}`);
   } else {
     // Load real services when not using mocks
-    logger.info('Loading real services (not implemented yet)...');
+    logger.info('Loading real database-connected services...');
+    
+    // Load production database services
+    logger.info('Loading production services with database connections...');
+    
+    const services = [
+      { name: 'MonsterService', path: '../services/MonsterService' },
+      { name: 'NPCService', path: '../services/NPCService' },
+      { name: 'DeathService', path: '../services/death.service' },
+      { name: 'LootService', path: '../services/loot.service' },
+      { name: 'CombatService', path: '../services/CombatService' },
+      { name: 'BankService', path: '../services/BankService' },
+      { name: 'CurrencyService', path: '../services/CurrencyService' },
+      { name: 'DialogueService', path: '../services/DialogueService' },
+      { name: 'SpawnService', path: '../services/SpawnService' },
+      { name: 'ZoneService', path: '../services/ZoneService' },
+      { name: 'MovementService', path: '../services/MovementService' },
+      { name: 'ProgressionService', path: '../services/ProgressionService' },
+      { name: 'TutorialService', path: '../services/TutorialService' },
+      { name: 'AffinityService', path: '../services/AffinityService' }
+    ];
+
+    const loadedServices: string[] = [];
+    const failedServices: string[] = [];
+
+    for (const service of services) {
+      try {
+        const serviceModule = await import(service.path);
+        const ServiceClass = serviceModule[service.name];
+        provider.register(service.name, new ServiceClass());
+        loadedServices.push(service.name);
+      } catch (error) {
+        logger.error(`Failed to register ${service.name}:`, error);
+        failedServices.push(service.name);
+      }
+    }
+    
+    const registeredServices = provider.getRegisteredServices();
+    logger.info(`Service Provider: ${registeredServices.length}/14 real database services active`);
+    
+    if (failedServices.length > 0) {
+      logger.warn(`Failed services: ${failedServices.join(', ')}`);
+    }
   }
 }

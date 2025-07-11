@@ -6,6 +6,7 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { validateRequest } from '../middleware/validateRequest';
 import { CharacterRace, CharacterClass, CharacterGender } from '../types/character.types';
+import { serializeBigInt } from '../utils/bigint-serializer';
 
 const router = Router();
 const characterService = new CharacterService();
@@ -21,9 +22,42 @@ router.get(
     res.json({
       success: true,
       data: {
-        characters,
+        characters: serializeBigInt(characters),
         count: characters.length
       }
+    });
+  })
+);
+
+// Get current character
+router.get(
+  '/current',
+  authenticate,
+  asyncHandler(async (req: AuthRequest, res) => {
+    const userId = req.user!.userId;
+    const characters = await characterService.getCharactersByAccount(userId);
+    
+    if (characters.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'No characters found'
+      });
+    }
+    
+    // Get the most recently played character
+    const currentCharId = characters[0].id;
+    const character = await characterService.getCharacter(currentCharId);
+    
+    if (!character) {
+      return res.status(404).json({
+        success: false,
+        error: 'Character not found'
+      });
+    }
+    
+    return res.json({
+      success: true,
+      data: serializeBigInt(character)
     });
   })
 );
@@ -56,7 +90,7 @@ router.get(
 
     return res.json({
       success: true,
-      data: result
+      data: serializeBigInt(result)
     });
   })
 );
@@ -100,7 +134,7 @@ router.post(
 
       return res.status(201).json({
         success: true,
-        data: character
+        data: serializeBigInt(character)
       });
     } catch (error) {
       return res.status(400).json({
@@ -169,7 +203,7 @@ router.patch(
 
     return res.json({
       success: true,
-      data: updatedCharacter
+      data: serializeBigInt(updatedCharacter)
     });
   })
 );
@@ -204,7 +238,7 @@ router.post(
 
     return res.json({
       success: true,
-      data: updatedCharacter
+      data: serializeBigInt(updatedCharacter)
     });
   })
 );
@@ -284,7 +318,7 @@ router.patch(
 
     return res.json({
       success: true,
-      data: updatedCharacter
+      data: serializeBigInt(updatedCharacter)
     });
   })
 );
@@ -491,7 +525,7 @@ router.get(
           canPrestige,
           hasParagonUnlocked: hasParagon,
           prestigeLevel: character.prestigeLevel,
-          paragonPoints: character.paragonPoints.toString(),
+          paragonPoints: character.paragonPoints,
           paragonDistribution: character.paragonDistribution
         }
       }

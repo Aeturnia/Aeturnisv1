@@ -8,7 +8,7 @@ async function testLoginEndpoint() {
 
   const options = {
     hostname: 'localhost',
-    port: 5000,
+    port: 8080,
     path: '/api/auth/login',
     method: 'POST',
     headers: {
@@ -44,7 +44,7 @@ async function testLoginEndpoint() {
 
     req.on('error', (e) => {
       console.error('Request error:', e.message);
-      console.log('\nMake sure the server is running on port 5000');
+      console.log('\nMake sure the server is running on port 8080');
       reject(e);
     });
 

@@ -159,10 +159,10 @@ npm test --workspace=packages/server
 npm run test:watch
 
 # Test combat system with 6 monsters
-curl http://localhost:5000/api/v1/combat/test-monsters
+curl http://localhost:8080/api/v1/combat/test-monsters
 
 # Test character system
-curl http://localhost:5000/api/v1/characters/test
+curl http://localhost:8080/api/v1/characters/test
 ```
 
 ### Test Coverage

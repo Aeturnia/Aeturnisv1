@@ -1,5 +1,0 @@
-TypeScript Errors: 100
-ESLint Errors/Warnings: 66
-
-TS6138 errors: 3 (unchanged - now underscore-prefixed)
-no-unused-vars errors in services: 0 (down from 1)

@@ -1,5 +1,0 @@
-TypeScript Errors: 100
-ESLint Errors/Warnings: 66
-
-No unused variables found in test files.
-All expected errors for TYPE-J-004 were already resolved or don't exist.

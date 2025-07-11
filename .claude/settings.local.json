@@ -46,7 +46,13 @@
       "Bash([ -s \"$dir/unit.json\" ])",
       "Bash(head:*)",
       "Bash(touch:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(mv:*)",
+      "Bash(git checkout:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(node:*)",
+      "Bash(./verify-port-config.sh:*)"
     ],
     "deny": []
   }

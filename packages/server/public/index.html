@@ -3,11 +3,58 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Aeturnis Online - Testing Environment</title>
-    <script type="module" crossorigin src="/assets/index-CAHa10fh.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-Dq2UR-u8.css">
-  </head>
+    
+    <!-- Mobile-first viewport configuration -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Aeturnis Online">
+    <meta name="theme-color" content="#00bcd4">
+    
+    <!-- PWA manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="data:application/octet-stream;base64,aW1wb3J0IHsgU3RyaWN0TW9kZSB9IGZyb20gJ3JlYWN0JwppbXBvcnQgeyBjcmVhdGVSb290IH0gZnJvbSAncmVhY3QtZG9tL2NsaWVudCcKaW1wb3J0IHsgQnJvd3NlclJvdXRlciB9IGZyb20gJ3JlYWN0LXJvdXRlci1kb20nCmltcG9ydCB7IFF1ZXJ5Q2xpZW50LCBRdWVyeUNsaWVudFByb3ZpZGVyIH0gZnJvbSAnQHRhbnN0YWNrL3JlYWN0LXF1ZXJ5JwppbXBvcnQgeyBvbkNMUywgb25GQ1AsIG9uTENQLCBvblRURkIsIG9uSU5QLCBNZXRyaWMgfSBmcm9tICd3ZWItdml0YWxzJwppbXBvcnQgeyBDTElFTlRfVkVSU0lPTiwgZ2V0Q2xpZW50VmVyc2lvbkJhbm5lciB9IGZyb20gJy4vY29uZmlnL3ZlcnNpb24nCmltcG9ydCBBcHAgZnJvbSAnLi9BcHAudHN4JwppbXBvcnQgJy4vaW5kZXguY3NzJwoKLy8gQ3JlYXRlIGEgY2xpZW50IGZvciBSZWFjdCBRdWVyeQpjb25zdCBxdWVyeUNsaWVudCA9IG5ldyBRdWVyeUNsaWVudCh7CiAgZGVmYXVsdE9wdGlvbnM6IHsKICAgIHF1ZXJpZXM6IHsKICAgICAgcmV0cnk6IDEsCiAgICAgIHJlZmV0Y2hPbldpbmRvd0ZvY3VzOiBmYWxzZSwKICAgICAgLy8gTW9iaWxlLXNwZWNpZmljIHNldHRpbmdzCiAgICAgIHN0YWxlVGltZTogNSAqIDYwICogMTAwMCwgLy8gNSBtaW51dGVzCiAgICAgIGdjVGltZTogMTAgKiA2MCAqIDEwMDAsIC8vIDEwIG1pbnV0ZXMKICAgIH0sCiAgfSwKfSkKCi8vIFdlYiBWaXRhbHMgcmVwb3J0aW5nCmZ1bmN0aW9uIHNlbmRUb0FuYWx5dGljcyhtZXRyaWM6IE1ldHJpYykgewogIC8vIExvZyB0byBjb25zb2xlIGZvciBub3cKICBjb25zdCB2YWx1ZSA9IE1hdGgucm91bmQobWV0cmljLm5hbWUgPT09ICdDTFMnID8gbWV0cmljLnZhbHVlICogMTAwMCA6IG1ldHJpYy52YWx1ZSkKICBjb25zb2xlLmxvZyhgW1dlYiBWaXRhbHNdICR7bWV0cmljLm5hbWV9OiAke3ZhbHVlfWAsIHsKICAgIHZhbHVlOiBtZXRyaWMudmFsdWUsCiAgICByYXRpbmc6IG1ldHJpYy5yYXRpbmcsCiAgICBkZWx0YTogbWV0cmljLmRlbHRhLAogICAgaWQ6IG1ldHJpYy5pZCwKICAgIG5hdmlnYXRpb25UeXBlOiBtZXRyaWMubmF2aWdhdGlvblR5cGUKICB9KQogIAogIC8vIEluIHByb2R1Y3Rpb24sIHlvdSB3b3VsZCBzZW5kIHRoaXMgdG8geW91ciBhbmFseXRpY3MgZW5kcG9pbnQKICAvLyBFeGFtcGxlOiBmZXRjaCgnL2FwaS92MS9hbmFseXRpY3MnLCB7IG1ldGhvZDogJ1BPU1QnLCBib2R5OiBKU09OLnN0cmluZ2lmeShtZXRyaWMpIH0pCn0KCi8vIE1vbml0b3IgQ29yZSBXZWIgVml0YWxzCm9uQ0xTKHNlbmRUb0FuYWx5dGljcykgIC8vIEN1bXVsYXRpdmUgTGF5b3V0IFNoaWZ0Cm9uRkNQKHNlbmRUb0FuYWx5dGljcykgIC8vIEZpcnN0IENvbnRlbnRmdWwgUGFpbnQKb25MQ1Aoc2VuZFRvQW5hbHl0aWNzKSAgLy8gTGFyZ2VzdCBDb250ZW50ZnVsIFBhaW50Cm9uVFRGQihzZW5kVG9BbmFseXRpY3MpIC8vIFRpbWUgdG8gRmlyc3QgQnl0ZQpvbklOUChzZW5kVG9BbmFseXRpY3MpICAvLyBJbnRlcmFjdGlvbiB0byBOZXh0IFBhaW50IChyZXBsYWNlZCBGSUQpCgovLyBEaXNwbGF5IGNsaWVudCB2ZXJzaW9uIGluZm9ybWF0aW9uCmNvbnNvbGUubG9nKGAK4pWU4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWXCuKVkSAgICAgICAgICAgICAgICAgICAgICAgJHtnZXRDbGllbnRWZXJzaW9uQmFubmVyKCkucGFkRW5kKDQ2KX0g4pWRCuKVoOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVowrilZEgQnVpbGQgRGF0ZTogICAgJHtDTElFTlRfVkVSU0lPTi5idWlsZERhdGUucGFkRW5kKDU4KX0g4pWRCuKVkSBGZWF0dXJlczogICAgICAke0NMSUVOVF9WRVJTSU9OLmZlYXR1cmVzLmxlbmd0aC50b1N0cmluZygpLnBhZEVuZCg1OCl9IOKVkQrilZEgRW52aXJvbm1lbnQ6ICAgJHsoaW1wb3J0Lm1ldGEuZW52Lk1PREUgfHwgJ2RldmVsb3BtZW50JykudG9VcHBlckNhc2UoKS5wYWRFbmQoNTgpfSDilZEK4pWa4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWdCmApCgpjcmVhdGVSb290KGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdyb290JykhKS5yZW5kZXIoCiAgPFN0cmljdE1vZGU+CiAgICA8UXVlcnlDbGllbnRQcm92aWRlciBjbGllbnQ9e3F1ZXJ5Q2xpZW50fT4KICAgICAgPEJyb3dzZXJSb3V0ZXI+CiAgICAgICAgPEFwcCAvPgogICAgICA8L0Jyb3dzZXJSb3V0ZXI+CiAgICA8L1F1ZXJ5Q2xpZW50UHJvdmlkZXI+CiAgPC9TdHJpY3RNb2RlPiwKKQ==" as="script">
+    
+    <title>Aeturnis Online - Mobile MMORPG</title>
+    
+    <!-- Prevent zoom on form inputs -->
+    <style>
+      input, textarea, select {
+        font-size: 16px !important;
+      }
+      
+      /* CSS custom properties for safe areas */
+      :root {
+        --safe-area-inset-top: env(safe-area-inset-top);
+        --safe-area-inset-right: env(safe-area-inset-right);
+        --safe-area-inset-bottom: env(safe-area-inset-bottom);
+        --safe-area-inset-left: env(safe-area-inset-left);
+      }
+      
+      /* Prevent text selection on mobile */
+      * {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
+      
+      /* Allow text selection in input fields */
+      input, textarea {
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        user-select: text;
+      }
+    </style>
+    <script type="module" crossorigin src="/assets/index-DUBnp2Sp.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/react-vendor-BtP0CW_r.js">
+    <link rel="modulepreload" crossorigin href="/assets/router-vendor-Cn6bChYk.js">
+    <link rel="modulepreload" crossorigin href="/assets/query-vendor-VBf2NspY.js">
+    <link rel="modulepreload" crossorigin href="/assets/gesture-vendor-CKK3uJth.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CPy8b962.css">
+  <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
   <body>
     <div id="root"></div>
   </body>

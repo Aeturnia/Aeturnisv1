@@ -11,7 +11,7 @@ export class SocketService {
   }
 
   private init() {
-    // Initialize Socket.IO client connection to same port as Express (5000)
+    // Initialize Socket.IO client connection to same port as Express (8080)
     // Use same origin as the current page
     const socketUrl = window.location.origin;
     

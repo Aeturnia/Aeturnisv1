@@ -1,0 +1,54 @@
+Current Situation:
+I have a production-ready TypeScript MMORPG backend with Express.js, 14 mock services, PostgreSQL, and Socket.IO. The server enters a restart loop where it starts successfully but then crashes and restarts every ~10-15 seconds.
+
+Technical Context:
+
+Express server on port 8080
+14 MMORPG services: MonsterService, NPCService, DeathService, LootService, CombatService, BankService, CurrencyService, DialogueService, SpawnService, ZoneService, MovementService, ProgressionService, TutorialService, AffinityService
+PostgreSQL database with Drizzle ORM
+JWT authentication system
+Socket.IO real-time communication (temporarily disabled)
+Winston logging system
+Symptoms Observed:
+
+Server starts successfully and all services initialize properly
+Express server listener registers correctly on port 8080
+Health and API endpoints are accessible
+No error messages in logs during startup
+Server runs for 10-15 seconds then automatically restarts
+Process continues indefinitely in this restart loop
+Even with Socket.IO disabled, restart loop persists
+Already Attempted:
+
+Fixed port configuration mismatch (changed from 5000 to 8080)
+Temporarily disabled Socket.IO server
+Added comprehensive error handling
+Verified database connection stability
+Confirmed all 14 services initialize without errors
+Investigation Needed:
+
+Root Cause Analysis: What is triggering the automatic restarts?
+Process Management: Is this a Replit workflow issue, PM2, or Node.js process management?
+Memory Leaks: Could there be memory issues causing crashes?
+Uncaught Exceptions: Are there hidden exceptions not being logged?
+Event Loop Issues: Could there be blocking operations causing timeouts?
+Database Connections: Are there connection pool issues?
+Async/Await Problems: Are there unhandled promise rejections?
+Debugging Steps Required:
+
+Add comprehensive process monitoring and logging
+Implement memory usage tracking
+Add unhandled exception/rejection logging
+Check for event loop blocking
+Investigate database connection lifecycle
+Review all async operations for proper error handling
+Identify if this is a Replit platform-specific issue
+Files to Examine:
+
+packages/server/src/server.ts (main server file)
+packages/server/src/sockets/SocketServer.ts (Socket.IO configuration)
+packages/server/src/app.ts (Express app setup)
+Service provider initialization files
+Database configuration and connection handling
+Goal:
+Identify the exact cause of the restart loop and implement a permanent fix to achieve stable server operation with all services functional.

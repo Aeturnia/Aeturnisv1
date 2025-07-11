@@ -1,8 +1,0 @@
-
-> @aeturnis/monorepo@1.0.0 typecheck
-> npm run typecheck --workspaces --if-present
-
-
-> @aeturnis/server@1.0.0 typecheck
-> tsc --noEmit
-

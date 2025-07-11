@@ -1,10 +1,57 @@
 # Aeturnis Online Documentation
 
-**Last Updated:** July 05, 2025  
-**Project Status:** Phase 2 Core Game Systems - Visual Testing Environment Complete  
-**Implementation Phase:** 2.2 Complete - Economy & Currency Systems Operational + Full Testing Environment  
+**Last Updated:** July 10, 2025  
+**Project Status:** Phase 2 Core Game Systems - All TypeScript Errors Resolved  
+**Implementation Phase:** 2.8 Complete - Tutorial & Affinity Systems + Full Error Resolution  
 
 Welcome to the comprehensive documentation for Aeturnis Online MMORPG. The project currently features a production-ready Express.js API infrastructure with enterprise-grade security, authentication, and monitoring capabilities.
+
+## 📚 Documentation Structure
+
+### [Project Overview](./project-overview/)
+Core project information and guidelines:
+- [Glossary](./project-overview/aeturnis-glossary.md) - Game terms and concepts
+- [Roadmap](./project-overview/aeturnis-roadmap.md) - Development roadmap and milestones
+- [Phases](./project-overview/Phases.md) - Development phases breakdown
+- [Coding Standards](./project-overview/aeturnis_coding_sop.md) - Strict coding SOP
+- [AI Guidelines](./project-overview/CLAUDE.md) - Claude Code assistant guidelines
+
+### [Implementation](./implementation/)
+Development reports and implementation details:
+- [Phase 1 Reports](./implementation/reports/phase-1/) - Initial setup and core systems
+- [Phase 2 Reports](./implementation/reports/phase-2/) - Feature implementation
+- [Self Audits](./implementation/self-audits/) - Quality assurance reports
+- [Implementation Prompts](./implementation/prompts/) - Development prompts
+
+### [Error Resolution](./error-resolution/)
+Systematic error tracking and resolution:
+- [Error Catalog](./error-resolution/catalogs/ErrorCatalog.md) - Current error state (0 TypeScript errors!)
+- [Resolution Strategies](./error-resolution/strategies/) - Error fixing approaches
+- [Fix Reports](./error-resolution/fix-reports/) - Chunk-based fixes
+- [Type Units](./error-resolution/units/) - Unit-based error resolution
+
+### [Progress Tracking](./progress-tracking/)
+Project progress and completion tracking:
+- [Overall Progress](./progress-tracking/Overall-Progress-Summary.md)
+- [Phase 1 Completion](./progress-tracking/PHASE_1_COMPLETION_SUMMARY.md)
+- [Dashboards](./progress-tracking/dashboards/) - Visual progress tracking
+
+### [Service Provider](./service-provider/)
+Dependency injection and service architecture:
+- [Documentation](./service-provider/SERVICE_PROVIDER_DOCUMENTATION.md)
+- [Implementation](./service-provider/SERVICE_PROVIDER_IMPLEMENTATION.md)
+- [Expansion Analysis](./service-provider/SERVICE_PROVIDER_EXPANSION_ANALYSIS.md)
+
+### [Regression Testing](./regression-testing/)
+Test reports and infrastructure improvements.
+
+### [Admin](./admin/)
+Administrative documentation and TODOs.
+
+### [Assets](./assets/)
+Project assets and resources:
+- [Images](./assets/images/) - Screenshots, diagrams, architecture
+- [Text Dumps](./assets/text-dumps/) - Implementation text references
 
 ## Current Implementation Status
 
